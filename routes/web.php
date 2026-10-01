@@ -44,6 +44,12 @@ Route::middleware(['auth'])->group(function () {
     // Admin
     Route::resource('users', UserController::class);
 
+    // Reports & Audit
+    Route::get('/reports/inventory', [\App\Http\Controllers\ReportController::class, 'inventory'])->name('reports.inventory');
+    Route::get('/reports/sales', [\App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('/reports/production', [\App\Http\Controllers\ReportController::class, 'production'])->name('reports.production');
+    Route::get('/audit', [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit.index');
+
     // Logout
     Route::post('/logout', function () {
         auth()->logout();
