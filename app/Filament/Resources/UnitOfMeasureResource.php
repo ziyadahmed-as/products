@@ -3,31 +3,36 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UnitOfMeasureResource\Pages;
-use App\Filament\Resources\UnitOfMeasureResource\RelationManagers;
 use App\Models\UnitOfMeasure;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UnitOfMeasureResource extends Resource
 {
     protected static ?string $model = UnitOfMeasure::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-calculator';
+    protected static ?string $navigationGroup = 'Catalog';
+    protected static ?string $navigationLabel = 'Units of Measure';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required(),
-                Forms\Components\TextInput::make('code')
-                    ->required(),
-            ]);
+        return $form->schema([
+            Forms\Components\Section::make('Unit Details')
+                ->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->required()
+                        ->maxLength(100),
+                    Forms\Components\TextInput::make('code')
+                        ->required()
+                        ->unique(ignoreRecord: true)
+                        ->maxLength(20)
+                        ->label('Abbreviation / Code'),
+                ])->columns(2),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -35,44 +40,37 @@ class UnitOfMeasureResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
                 Tables\Columns\TextColumn::make('code')
-                    ->searchable(),
+                    ->searchable()
+                    ->badge(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('name');
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+    public static function getRelations(): array { return []; }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUnitOfMeasures::route('/'),
+            'index'  => Pages\ListUnitOfMeasures::route('/'),
             'create' => Pages\CreateUnitOfMeasure::route('/create'),
-            'edit' => Pages\EditUnitOfMeasure::route('/{record}/edit'),
+            'edit'   => Pages\EditUnitOfMeasure::route('/{record}/edit'),
         ];
     }
 }
