@@ -37,6 +37,18 @@ class PublicController extends Controller
         return view('public.home', compact('featuredProducts', 'latestProducts', 'topRatedProducts'));
     }
 
+    public function about()
+    {
+        $topRatedProducts = Product::with('category')
+            ->where('is_active', true)
+            ->whereIn('type', ['resale_product', 'manufactured_product'])
+            ->orderBy('rating', 'desc')
+            ->limit(4)
+            ->get();
+
+        return view('public.about', compact('topRatedProducts'));
+    }
+
     public function shop(Request $request)
     {
         $query = Product::with('category')

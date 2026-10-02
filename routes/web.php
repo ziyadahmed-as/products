@@ -18,7 +18,7 @@ use App\Http\Controllers\PublicController;
 
 // Public Routes
 Route::get('/', [PublicController::class, 'index'])->name('public.home');
-Route::get('/about', fn() => view('public.about'))->name('public.about');
+Route::get('/about', [PublicController::class, 'about'])->name('public.about');
 Route::get('/contact', fn() => view('public.contact'))->name('public.contact');
 Route::post('/contact', [PublicController::class, 'contactSend'])->name('public.contact.send');
 Route::get('/shop', [PublicController::class, 'shop'])->name('public.shop');

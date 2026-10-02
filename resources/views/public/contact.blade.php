@@ -17,7 +17,7 @@
                 </div>
                 <div>
                     <h4>Email Us</h4>
-                    <p>info@albareck.local</p>
+                    <p>{{ \App\Models\Setting::get('contact_email', 'info@albareck.local') }}</p>
                 </div>
             </div>
 
@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <h4>Call Us</h4>
-                    <p>+1 (234) 567-8900</p>
+                    <p>{{ \App\Models\Setting::get('contact_phone', '+1 (234) 567-8900') }}</p>
                 </div>
             </div>
 
@@ -37,7 +37,7 @@
                 </div>
                 <div>
                     <h4>Headquarters</h4>
-                    <p>123 Industrial Parkway<br>Manufacturing District, TX 75001</p>
+                    <p>{!! nl2br(e(\App\Models\Setting::get('contact_address', "123 Industrial Parkway\nManufacturing District, TX 75001"))) !!}</p>
                 </div>
             </div>
         </div>
