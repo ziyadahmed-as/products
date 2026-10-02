@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
     // Sales
     Route::resource('sales', SaleController::class);
     Route::resource('sale-returns', SaleReturnController::class);
+    Route::get('/invoice/{sale}', [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoice.show');
 
     // Production
     Route::resource('manufacturing-orders', ManufacturingOrderController::class);
