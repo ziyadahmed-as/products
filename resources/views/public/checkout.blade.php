@@ -2,73 +2,111 @@
 @section('title', 'Checkout')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h1 class="text-3xl font-bold text-white mb-8">Checkout</h1>
+<div class="pub-container" style="padding-top:3rem;padding-bottom:5rem;">
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <!-- Checkout Form -->
-        <div class="card">
-            <h2 class="text-xl font-bold text-white mb-6 border-b border-dark-800 pb-4">Shipping Information</h2>
-            
-            <form action="{{ route('public.placeOrder') }}" method="POST" class="space-y-5">
+    <h1 style="font-size:2rem;font-weight:900;margin-bottom:.4rem;">Checkout</h1>
+    <p style="color:var(--text-2);margin-bottom:2.5rem;">Fill in your details and we will contact you to confirm.</p>
+
+    @php
+        $cartItems = collect($cart)->map(fn($item, $id) => array_merge($item, ['id' => $id]));
+        $total = $cartItems->sum(fn($i) => $i['price'] * $i['quantity']);
+    @endphp
+
+    <div class="pub-checkout-layout">
+
+        {{-- Form --}}
+        <div class="pub-checkout-form">
+            <div class="pub-form-section-title">
+                <div class="pub-step-dot">1</div>
+                Your Information
+            </div>
+
+            @if($errors->any())
+            <div class="pub-error-box">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                <ul style="list-style:disc;padding-left:1rem;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+            </div>
+            @endif
+
+            <form action="{{ route('public.order.place') }}" method="POST">
                 @csrf
-                <div class="form-group">
-                    <label class="form-label">Full Name *</label>
-                    <input type="text" name="customer_name" required class="form-input" placeholder="John Doe">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Phone Number *</label>
-                    <input type="text" name="phone" required class="form-input" placeholder="+1 234 567 8900">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Delivery Address *</label>
-                    <textarea name="address" required class="form-textarea h-24" placeholder="Full street address, city, state..."></textarea>
+
+                <div class="pub-form-grid">
+                    <div class="pub-form-group">
+                        <label for="customer_name" class="pub-form-label">Full Name <span class="req">*</span></label>
+                        <input type="text" id="customer_name" name="customer_name" class="pub-input" placeholder="John Doe" value="{{ old('customer_name') }}">
+                    </div>
+                    <div class="pub-form-group">
+                        <label for="phone" class="pub-form-label">Phone Number <span class="req">*</span></label>
+                        <input type="tel" id="phone" name="phone" class="pub-input" placeholder="+1 (555) 000-0000" value="{{ old('phone') }}">
+                    </div>
                 </div>
 
-                <div class="pt-6">
-                    <button type="submit" class="btn-primary w-full justify-center text-lg py-3 shadow-lg shadow-primary-900/40">
-                        Place Order
-                    </button>
-                    <p class="text-xs text-dark-500 text-center mt-3">You will be contacted regarding payment processing after your order is submitted.</p>
+                <div class="pub-form-group" style="margin-bottom:1rem;">
+                    <label for="email" class="pub-form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="pub-input" placeholder="you@example.com" value="{{ old('email') }}">
                 </div>
+
+                <div class="pub-form-group" style="margin-bottom:1rem;">
+                    <label for="address" class="pub-form-label">Delivery Address <span class="req">*</span></label>
+                    <textarea id="address" name="address" class="pub-input" rows="3" placeholder="Street address, city, ZIP code…" style="resize:vertical;">{{ old('address') }}</textarea>
+                </div>
+
+                <div class="pub-form-group" style="margin-bottom:1.5rem;">
+                    <label for="notes" class="pub-form-label">Order Notes <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
+                    <textarea id="notes" name="notes" class="pub-input" rows="2" placeholder="Special delivery instructions…" style="resize:vertical;">{{ old('notes') }}</textarea>
+                </div>
+
+                <div class="pub-form-note">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Our team will contact you after order placement to confirm payment and delivery details.
+                </div>
+
+                <button type="submit" class="pub-btn pub-btn-primary pub-btn-full" style="padding:1.1rem;font-size:1rem;gap:.75rem;">
+                    <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Place Order — ${{ number_format($total, 2) }}
+                </button>
             </form>
         </div>
 
-        <!-- Order Summary -->
-        <div>
-            <div class="bg-dark-900/50 border border-dark-800 rounded-2xl p-6 sticky top-24">
-                <h2 class="text-xl font-bold text-white mb-6">Your Order</h2>
-                
-                <div class="space-y-4 mb-6">
-                    @php $total = 0; @endphp
-                    @foreach($cart as $item)
-                        @php $total += $item['price'] * $item['quantity']; @endphp
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-dark-800 text-dark-200 text-xs font-bold px-2 py-1 rounded">{{ $item['quantity'] }}x</span>
-                                <span class="text-white text-sm truncate max-w-[200px]">{{ $item['name'] }}</span>
-                            </div>
-                            <span class="text-dark-300">${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
-                        </div>
-                    @endforeach
-                </div>
+        {{-- Summary sidebar --}}
+        <div class="pub-order-summary">
+            <div class="pub-form-section-title">
+                <div class="pub-step-dot" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#34d399;">2</div>
+                Order Summary
+            </div>
 
-                <div class="border-t border-dark-800 pt-6">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-dark-300">Subtotal</span>
-                        <span class="text-white">${{ number_format($total, 2) }}</span>
+            <div class="pub-checkout-items">
+                @foreach($cartItems as $item)
+                <div class="pub-checkout-item">
+                    <div class="pub-checkout-item-img">
+                        @if(!empty($item['image']))<img src="{{ asset('storage/'.$item['image']) }}">
+                        @else<svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        @endif
                     </div>
-                    <div class="flex justify-between mb-6">
-                        <span class="text-dark-300">Shipping</span>
-                        <span class="text-dark-500 text-sm">TBD</span>
+                    <div style="flex:1;min-width:0;">
+                        <div class="pub-checkout-item-name">{{ $item['name'] }}</div>
+                        <div class="pub-checkout-item-qty">Qty: {{ $item['quantity'] }}</div>
                     </div>
-                    <div class="flex justify-between items-end">
-                        <span class="text-lg font-bold text-white">Total</span>
-                        <span class="text-3xl font-bold text-primary-400">${{ number_format($total, 2) }}</span>
-                    </div>
+                    <div class="pub-checkout-item-price">${{ number_format($item['price'] * $item['quantity'], 2) }}</div>
                 </div>
+                @endforeach
+            </div>
+
+            <div class="pub-summary-divider"></div>
+
+            <div class="pub-summary-row"><span>Items ({{ $cartItems->sum('quantity') }})</span><strong>${{ number_format($total, 2) }}</strong></div>
+            <div class="pub-summary-row"><span>Shipping</span><span class="pub-summary-free">Free</span></div>
+
+            <div class="pub-summary-divider"></div>
+
+            <div class="pub-summary-total">
+                <span>Total</span>
+                <span class="pub-summary-amount">${{ number_format($total, 2) }}</span>
+            </div>
+
+            <div style="margin-top:1.5rem;">
+                <a href="{{ route('public.cart') }}" style="display:block;text-align:center;font-size:.8rem;color:var(--text-3);">← Edit Cart</a>
             </div>
         </div>
     </div>

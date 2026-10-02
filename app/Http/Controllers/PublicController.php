@@ -15,12 +15,26 @@ class PublicController extends Controller
     {
         $featuredProducts = Product::with('category')
             ->where('is_active', true)
+            ->where('is_featured', true)
             ->whereIn('type', ['resale_product', 'manufactured_product'])
-            ->inRandomOrder()
-            ->limit(8)
+            ->limit(5)
             ->get();
 
-        return view('public.home', compact('featuredProducts'));
+        $latestProducts = Product::with('category')
+            ->where('is_active', true)
+            ->whereIn('type', ['resale_product', 'manufactured_product'])
+            ->orderBy('created_at', 'desc')
+            ->limit(4)
+            ->get();
+
+        $topRatedProducts = Product::with('category')
+            ->where('is_active', true)
+            ->whereIn('type', ['resale_product', 'manufactured_product'])
+            ->orderBy('rating', 'desc')
+            ->limit(4)
+            ->get();
+
+        return view('public.home', compact('featuredProducts', 'latestProducts', 'topRatedProducts'));
     }
 
     public function shop(Request $request)
@@ -37,7 +51,26 @@ class PublicController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $products = $query->paginate(12);
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'price_asc':
+                    $query->orderBy('selling_price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('selling_price', 'desc');
+                    break;
+                case 'rating':
+                    $query->orderBy('rating', 'desc');
+                    break;
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $products = $query->paginate(12)->withQueryString();
         $categories = Category::where('is_active', true)->get();
 
         return view('public.shop', compact('products', 'categories'));
@@ -156,5 +189,17 @@ class PublicController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Error placing order: ' . $e->getMessage());
         }
+    }
+
+    public function contactSend(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'nullable|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        return redirect()->back()->with('status', 'message-sent');
     }
 }

@@ -18,6 +18,9 @@ use App\Http\Controllers\PublicController;
 
 // Public Routes
 Route::get('/', [PublicController::class, 'index'])->name('public.home');
+Route::get('/about', fn() => view('public.about'))->name('public.about');
+Route::get('/contact', fn() => view('public.contact'))->name('public.contact');
+Route::post('/contact', [PublicController::class, 'contactSend'])->name('public.contact.send');
 Route::get('/shop', [PublicController::class, 'shop'])->name('public.shop');
 Route::get('/product/{product}', [PublicController::class, 'show'])->name('public.show');
 
@@ -26,7 +29,7 @@ Route::get('/cart', [PublicController::class, 'cart'])->name('public.cart');
 Route::post('/cart/add/{product}', [PublicController::class, 'addToCart'])->name('public.cart.add');
 Route::delete('/cart/remove/{id}', [PublicController::class, 'removeFromCart'])->name('public.cart.remove');
 Route::get('/checkout', [PublicController::class, 'checkout'])->name('public.checkout');
-Route::post('/checkout', [PublicController::class, 'placeOrder'])->name('public.placeOrder');
+Route::post('/checkout', [PublicController::class, 'placeOrder'])->name('public.order.place');
 
 // Auth routes
 Route::middleware(['auth'])->group(function () {
