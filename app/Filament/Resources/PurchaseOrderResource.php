@@ -19,6 +19,11 @@ class PurchaseOrderResource extends Resource
     protected static ?int $navigationSort = 1;
     protected static ?string $recordTitleAttribute = 'reference';
 
+
+    public static function canAccess(): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
     public static function form(Form $form): Form
     {
         return $form->schema([

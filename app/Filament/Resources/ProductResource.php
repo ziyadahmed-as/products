@@ -18,6 +18,43 @@ class ProductResource extends Resource
     protected static ?int $navigationSort = 1;
     protected static ?string $recordTitleAttribute = 'name';
 
+
+    public static function canAccess(): bool
+    {
+        // Allowed for sellers to view, restricted to their branches below.
+        return true;
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user->hasRole('Seller')) {
+            $branchIds = $user->branches()->pluck('branches.id');
+            // Only products that belong to the seller's branch
+            $query->whereHas('branches', fn ($q) => $q->whereIn('branches.id', $branchIds))
+                  ->whereIn('type', ['resale_product', 'manufactured_product']);
+        }
+
+        return $query;
+    }
+
+    public static function canCreate(): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -42,6 +79,7 @@ class ProductResource extends Resource
                         ->label('SKU / Item Code')
                         ->required()
                         ->unique(ignoreRecord: true)
+                        ->default(fn () => 'SKU-' . strtoupper(substr(uniqid(), -6)))
                         ->maxLength(100),
                     Forms\Components\Select::make('category_id')
                         ->label('Category')
@@ -99,6 +137,27 @@ class ProductResource extends Resource
                 ])
                 ->visible(fn (Forms\Get $get) => in_array($get('type'), [
                     'manufactured_product', 'resale_product',
+                ])),
+
+            Forms\Components\Section::make('Initial Stock')
+                ->description('Set the opening stock quantity for this product at a specific storage location.')
+                ->schema([
+                    Forms\Components\Select::make('initial_location_id')
+                        ->label('Storage Location')
+                        ->options(fn () => \App\Models\StorageLocation::where('is_active', true)->pluck('name', 'id'))
+                        ->searchable()
+                        ->preload()
+                        ->helperText('Leave blank to skip setting initial stock.'),
+                    Forms\Components\TextInput::make('initial_quantity')
+                        ->label('Opening Quantity')
+                        ->numeric()
+                        ->default(0)
+                        ->minValue(0)
+                        ->helperText('Stock will be added to inventory balance on save.'),
+                ])
+                ->columns(2)
+                ->visible(fn (Forms\Get $get) => in_array($get('type'), [
+                    'manufactured_product', 'resale_product', 'raw_material', 'consumable',
                 ])),
 
             Forms\Components\Section::make('Description & Image')
@@ -209,12 +268,21 @@ class ProductResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                    ->options([
-                        'manufactured_product' => 'Manufactured Product',
-                        'resale_product'       => 'Resale Product',
-                        'raw_material'         => 'Raw Material',
-                        'consumable'           => 'Consumable',
-                    ]),
+                    ->options(function () {
+                        $user = auth()->user();
+                        if ($user && $user->hasRole('Seller')) {
+                            return [
+                                'manufactured_product' => 'Manufactured Product',
+                                'resale_product'       => 'Resale Product',
+                            ];
+                        }
+                        return [
+                            'manufactured_product' => 'Manufactured Product',
+                            'resale_product'       => 'Resale Product',
+                            'raw_material'         => 'Raw Material',
+                            'consumable'           => 'Consumable',
+                        ];
+                    }),
                 Tables\Filters\SelectFilter::make('category')
                     ->relationship('category', 'name'),
                 Tables\Filters\TernaryFilter::make('is_featured')->label('Featured'),

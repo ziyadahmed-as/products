@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SaleResource\Pages;
 use App\Models\Sale;
 use App\Models\Product;
+use App\Models\StorageLocation;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\InventoryBalance;
 use App\Models\StockMovement;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
 
 class SaleResource extends Resource
 {
@@ -25,8 +27,55 @@ class SaleResource extends Resource
     protected static ?int $navigationSort = 1;
     protected static ?string $recordTitleAttribute = 'reference';
 
+    /**
+     * Sellers only see their own orders.
+     * Managers and Admins see all orders.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()->hasRole('Seller')) {
+            $query->where('user_id', auth()->id());
+        }
+
+        return $query;
+    }
+
+    /**
+     * Helper: get branch-scoped product IDs for the current seller.
+     */
+    private static function getSellerProductIds(): array
+    {
+        $user = auth()->user();
+        if ($user->hasRole('Seller')) {
+            $branchIds = $user->branches()->pluck('branches.id');
+            return Product::whereHas('branches', fn ($q) => $q->whereIn('branches.id', $branchIds))
+                ->whereIn('type', ['resale_product', 'manufactured_product'])
+                ->pluck('id')
+                ->toArray();
+        }
+        // Non-sellers see all sellable products
+        return Product::whereIn('type', ['resale_product', 'manufactured_product'])->pluck('id')->toArray();
+    }
+
+    /**
+     * Helper: get storage location IDs for the current seller's branches.
+     */
+    private static function getSellerLocationIds(): array
+    {
+        $user = auth()->user();
+        if ($user->hasRole('Seller')) {
+            $branchIds = $user->branches()->pluck('branches.id');
+            return StorageLocation::whereIn('branch_id', $branchIds)->pluck('id')->toArray();
+        }
+        return [];
+    }
+
     public static function form(Form $form): Form
     {
+        $isSeller = auth()->user()->hasRole('Seller');
+
         return $form->schema([
             Forms\Components\Section::make('Order Details')
                 ->schema([
@@ -56,10 +105,10 @@ class SaleResource extends Resource
                         ->default('pending'),
                     Forms\Components\Select::make('payment_status')
                         ->options([
-                            'pending' => 'Pending',
-                            'partial' => 'Partial',
-                            'paid'    => 'Paid',
-                            'refunded'=> 'Refunded',
+                            'pending'  => 'Pending',
+                            'partial'  => 'Partial',
+                            'paid'     => 'Paid',
+                            'refunded' => 'Refunded',
                         ])
                         ->required()
                         ->default('pending'),
@@ -69,15 +118,29 @@ class SaleResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('customer_name')
                         ->maxLength(255),
+
+                    // Sellers are locked to themselves; managers can assign to others
                     Forms\Components\Select::make('user_id')
                         ->label('Processed By')
                         ->relationship('user', 'name')
                         ->searchable()
                         ->preload()
-                        ->default(auth()->id()),
+                        ->default(auth()->id())
+                        ->disabled($isSeller)
+                        ->dehydrated(true),
+
+                    // Sellers can only pick locations in their assigned branches
                     Forms\Components\Select::make('storage_location_id')
                         ->label('Fulfillment Location')
-                        ->relationship('storageLocation', 'name')
+                        ->options(function () use ($isSeller) {
+                            if ($isSeller) {
+                                $locationIds = static::getSellerLocationIds();
+                                return StorageLocation::whereIn('id', $locationIds)
+                                    ->where('is_active', true)
+                                    ->pluck('name', 'id');
+                            }
+                            return StorageLocation::where('is_active', true)->pluck('name', 'id');
+                        })
                         ->searchable()
                         ->preload()
                         ->required()
@@ -89,10 +152,12 @@ class SaleResource extends Resource
                     Forms\Components\Repeater::make('lines')
                         ->relationship()
                         ->schema([
+                            // Sellers only see products from their assigned branch
                             Forms\Components\Select::make('product_id')
                                 ->label('Product')
                                 ->options(function () {
-                                    return Product::whereIn('type', ['resale_product', 'manufactured_product'])->pluck('name', 'id');
+                                    $ids = static::getSellerProductIds();
+                                    return Product::whereIn('id', $ids)->pluck('name', 'id');
                                 })
                                 ->required()
                                 ->reactive()
@@ -131,14 +196,11 @@ class SaleResource extends Resource
                         ->mutateRelationshipDataBeforeCreateUsing(function (array $data) {
                             $data['unit_cost'] = Product::find($data['product_id'])?->purchase_cost ?? 0;
                             return $data;
-                        })
+                        }),
                 ]),
 
             Forms\Components\Section::make('Financials')
                 ->schema([
-                    Forms\Components\Placeholder::make('totals_placeholder')
-                        ->content('Save order to calculate totals automatically.')
-                        ->columnSpanFull(),
                     Forms\Components\TextInput::make('subtotal')
                         ->required()->numeric()->prefix('$')->default(0)->readOnly(),
                     Forms\Components\TextInput::make('discount')
@@ -158,61 +220,44 @@ class SaleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('reference')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->copyable(),
+                    ->searchable()->sortable()->weight('bold')->copyable(),
                 Tables\Columns\TextColumn::make('customer_name')
+                    ->searchable()->placeholder('Guest'),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Seller')
                     ->searchable()
-                    ->placeholder('Guest'),
+                    ->toggleable()
+                    ->visible(fn () => !auth()->user()->hasRole('Seller')),
                 Tables\Columns\TextColumn::make('type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'online' => 'info',
-                        'pos'    => 'success',
-                        'direct' => 'warning',
-                        default  => 'gray',
+                        'online' => 'info', 'pos' => 'success', 'direct' => 'warning', default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending'    => 'gray',
-                        'confirmed'  => 'info',
-                        'processing' => 'warning',
-                        'shipped'    => 'primary',
-                        'completed'  => 'success',
-                        'cancelled'  => 'danger',
-                        default      => 'gray',
+                        'pending' => 'gray', 'confirmed' => 'info', 'processing' => 'warning',
+                        'shipped' => 'primary', 'completed' => 'success', 'cancelled' => 'danger', default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('payment_status')
-                    ->label('Payment')
-                    ->badge()
+                    ->label('Payment')->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'paid'     => 'success',
-                        'partial'  => 'warning',
-                        'pending'  => 'gray',
-                        'refunded' => 'danger',
-                        default    => 'gray',
+                        'paid' => 'success', 'partial' => 'warning', 'pending' => 'gray',
+                        'refunded' => 'danger', default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('total')
-                    ->money('USD')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('total')->money('USD')->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending', 'confirmed' => 'Confirmed',
-                        'processing' => 'Processing', 'shipped' => 'Shipped',
-                        'completed' => 'Completed', 'cancelled' => 'Cancelled',
+                        'pending' => 'Pending', 'confirmed' => 'Confirmed', 'processing' => 'Processing',
+                        'shipped' => 'Shipped', 'completed' => 'Completed', 'cancelled' => 'Cancelled',
                     ]),
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->label('Payment')
                     ->options([
-                        'pending' => 'Pending', 'partial' => 'Partial',
-                        'paid' => 'Paid', 'refunded' => 'Refunded',
+                        'pending' => 'Pending', 'partial' => 'Partial', 'paid' => 'Paid', 'refunded' => 'Refunded',
                     ]),
             ])
             ->actions([
@@ -231,10 +276,10 @@ class SaleResource extends Resource
                         DB::transaction(function () use ($record) {
                             foreach ($record->lines as $line) {
                                 $balance = InventoryBalance::firstOrCreate([
-                                    'product_id' => $line->product_id,
+                                    'product_id'         => $line->product_id,
                                     'storage_location_id' => $record->storage_location_id,
                                 ], ['quantity' => 0]);
-                                
+
                                 if ($balance->quantity < $line->quantity) {
                                     Notification::make()
                                         ->title('Insufficient Stock')
@@ -243,18 +288,18 @@ class SaleResource extends Resource
                                         ->send();
                                     throw new \Exception('Insufficient Stock');
                                 }
-                                
+
                                 $balance->decrement('quantity', $line->quantity);
-                                
+
                                 StockMovement::create([
-                                    'product_id' => $line->product_id,
+                                    'product_id'          => $line->product_id,
                                     'storage_location_id' => $record->storage_location_id,
-                                    'type' => 'out',
-                                    'quantity' => $line->quantity,
-                                    'unit_cost' => $line->unit_cost ?? 0,
-                                    'user_id' => auth()->id(),
-                                    'reference_type' => 'sale',
-                                    'reference_id' => $record->id,
+                                    'type'                => 'out',
+                                    'quantity'            => $line->quantity,
+                                    'unit_cost'           => $line->unit_cost ?? 0,
+                                    'user_id'             => auth()->id(),
+                                    'reference_type'      => 'sale',
+                                    'reference_id'        => $record->id,
                                 ]);
                             }
                             $record->update(['status' => 'confirmed']);

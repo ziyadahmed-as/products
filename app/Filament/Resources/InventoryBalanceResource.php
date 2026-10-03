@@ -17,8 +17,15 @@ class InventoryBalanceResource extends Resource
     protected static ?string $navigationGroup = 'Inventory';
     protected static ?string $navigationLabel = 'Stock Levels';
     protected static ?int $navigationSort = 1;
+
     protected static ?string $recordTitleAttribute = 'id';
 
+
+
+    public static function canAccess(): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
     public static function form(Form $form): Form
     {
         return $form->schema([

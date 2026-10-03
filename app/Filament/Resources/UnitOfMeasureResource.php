@@ -18,6 +18,11 @@ class UnitOfMeasureResource extends Resource
     protected static ?string $navigationLabel = 'Units of Measure';
     protected static ?int $navigationSort = 3;
 
+
+    public static function canAccess(): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
     public static function form(Form $form): Form
     {
         return $form->schema([

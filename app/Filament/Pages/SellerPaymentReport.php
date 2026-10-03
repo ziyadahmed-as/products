@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use App\Models\Sale;
+use App\Models\Product;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
@@ -24,11 +25,14 @@ class SellerPaymentReport extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        $user = auth()->user();
+        $isSeller = $user->hasRole('Seller');
+
         return $table
             ->query(
                 Sale::query()
-                    // If seller (not admin), show only their sales
-                    ->when(!auth()->user()->hasRole('super_admin'), fn ($q) => $q->where('user_id', auth()->id()))
+                    // Sellers only see their own sales
+                    ->when($isSeller, fn ($q) => $q->where('user_id', $user->id))
                     ->latest()
             )
             ->columns([
@@ -41,7 +45,7 @@ class SellerPaymentReport extends Page implements HasTable
                     ->label('Seller')
                     ->searchable()
                     ->sortable()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                    ->visible(!$isSeller),
                 TextColumn::make('lines')
                     ->label('Products & Qty')
                     ->formatStateUsing(function ($record) {
@@ -78,9 +82,7 @@ class SellerPaymentReport extends Page implements HasTable
                     ->dateTime()
                     ->sortable(),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 \Filament\Tables\Actions\Action::make('print')
                     ->label('Invoice')

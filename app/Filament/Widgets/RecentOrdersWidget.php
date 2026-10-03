@@ -16,9 +16,15 @@ class RecentOrdersWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
+        $user = auth()->user();
+        $isSeller = $user->hasRole('Seller');
+
         return $table
             ->query(
-                Sale::query()->latest()->limit(8)
+                Sale::query()
+                    ->when($isSeller, fn ($q) => $q->where('user_id', $user->id))
+                    ->latest()
+                    ->limit(8)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('reference')

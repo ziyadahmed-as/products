@@ -14,13 +14,18 @@ class RevenueChartWidget extends ChartWidget
 
     protected function getData(): array
     {
+        $user = auth()->user();
+        $isSeller = $user->hasRole('Seller');
+        
         $data   = [];
         $labels = [];
 
         for ($i = 5; $i >= 0; $i--) {
             $month  = Carbon::now()->subMonths($i);
             $labels[] = $month->format('M Y');
-            $data[]   = Sale::whereYear('created_at', $month->year)
+            $data[]   = Sale::query()
+                ->when($isSeller, fn ($q) => $q->where('user_id', $user->id))
+                ->whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->sum('total');
         }

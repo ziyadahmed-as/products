@@ -16,8 +16,15 @@ class StockReceiptResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-inbox-arrow-down';
     protected static ?string $navigationGroup = 'Inventory';
     protected static ?int $navigationSort = 2;
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $recordTitleAttribute = 'reference';
 
+
+    public static function canAccess(): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
     public static function form(Form $form): Form
     {
         return $form->schema([

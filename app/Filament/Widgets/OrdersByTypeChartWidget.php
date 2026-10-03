@@ -15,11 +15,15 @@ class OrdersByTypeChartWidget extends ChartWidget
 
     protected function getData(): array
     {
+        $user = auth()->user();
+        $isSeller = $user->hasRole('Seller');
         $start = Carbon::now()->startOfMonth();
 
-        $online  = Sale::where('type', 'online')->where('created_at', '>=', $start)->count();
-        $pos     = Sale::where('type', 'pos')->where('created_at', '>=', $start)->count();
-        $direct  = Sale::where('type', 'direct')->where('created_at', '>=', $start)->count();
+        $query = Sale::query()->when($isSeller, fn ($q) => $q->where('user_id', $user->id));
+
+        $online  = (clone $query)->where('type', 'online')->where('created_at', '>=', $start)->count();
+        $pos     = (clone $query)->where('type', 'pos')->where('created_at', '>=', $start)->count();
+        $direct  = (clone $query)->where('type', 'direct')->where('created_at', '>=', $start)->count();
 
         return [
             'datasets' => [

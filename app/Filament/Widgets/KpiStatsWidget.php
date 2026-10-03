@@ -18,35 +18,30 @@ class KpiStatsWidget extends BaseWidget
 
     protected function getStats(): array
     {
+        $user       = auth()->user();
+        $isSeller   = $user->hasRole('Seller');
+        
         $today      = Carbon::today();
         $thisMonth  = Carbon::now()->startOfMonth();
         $lastMonth  = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
 
-        // ─── Sales KPIs ───
-        $salesThisMonth = Sale::where('created_at', '>=', $thisMonth)->sum('total');
-        $salesLastMonth = Sale::whereBetween('created_at', [$lastMonth, $lastMonthEnd])->sum('total');
+        // ─── Sales KPIs (Scoped for Seller) ───
+        $salesQuery = Sale::query();
+        if ($isSeller) {
+            $salesQuery->where('user_id', $user->id);
+        }
+
+        $salesThisMonth = (clone $salesQuery)->where('created_at', '>=', $thisMonth)->sum('total');
+        $salesLastMonth = (clone $salesQuery)->whereBetween('created_at', [$lastMonth, $lastMonthEnd])->sum('total');
         $salesTrend     = $salesLastMonth > 0
             ? round((($salesThisMonth - $salesLastMonth) / $salesLastMonth) * 100, 1)
             : 100;
 
-        $ordersToday     = Sale::whereDate('created_at', $today)->count();
-        $pendingOrders   = Sale::where('status', 'pending')->count();
+        $ordersToday     = (clone $salesQuery)->whereDate('created_at', $today)->count();
+        $pendingOrders   = (clone $salesQuery)->where('status', 'pending')->count();
 
-        // ─── Inventory KPIs ───
-        $lowStockCount = InventoryBalance::whereHas('product', function ($q) {
-            $q->whereColumn('quantity', '<=', 'minimum_stock_level');
-        })->count();
-
-        // ─── Manufacturing KPIs ───
-        $activeProduction = ManufacturingOrder::whereIn('status', ['planned', 'in_progress'])->count();
-        $completedThisMonth = ManufacturingOrder::where('status', 'completed')
-            ->where('created_at', '>=', $thisMonth)->count();
-
-        // ─── Product KPIs ───
-        $totalActiveProducts = Product::where('is_active', true)->count();
-
-        return [
+        $stats = [
             Stat::make('Revenue This Month', '$' . number_format($salesThisMonth, 2))
                 ->description(($salesTrend >= 0 ? '▲ ' : '▼ ') . abs($salesTrend) . '% vs last month')
                 ->descriptionIcon($salesTrend >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
@@ -57,26 +52,41 @@ class KpiStatsWidget extends BaseWidget
                 ->description($pendingOrders . ' pending approval')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($pendingOrders > 0 ? 'warning' : 'success'),
-
-            Stat::make('Low Stock Alerts', $lowStockCount)
-                ->description($lowStockCount > 0 ? 'Products below reorder point' : 'All stock levels healthy')
-                ->descriptionIcon($lowStockCount > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-check-circle')
-                ->color($lowStockCount > 0 ? 'danger' : 'success'),
-
-            Stat::make('Active Products', $totalActiveProducts)
-                ->description('Listed in storefront')
-                ->descriptionIcon('heroicon-m-cube')
-                ->color('info'),
-
-            Stat::make('Production Orders', $activeProduction)
-                ->description($completedThisMonth . ' completed this month')
-                ->descriptionIcon('heroicon-m-cog-6-tooth')
-                ->color($activeProduction > 0 ? 'warning' : 'gray'),
-
+                
             Stat::make('Pending Orders', $pendingOrders)
                 ->description('Awaiting processing')
                 ->descriptionIcon('heroicon-m-queue-list')
                 ->color($pendingOrders > 5 ? 'danger' : ($pendingOrders > 0 ? 'warning' : 'success')),
         ];
+
+        // ─── Non-Seller KPIs ───
+        if (!$isSeller) {
+            $lowStockCount = InventoryBalance::whereHas('product', function ($q) {
+                $q->whereColumn('quantity', '<=', 'minimum_stock_level');
+            })->count();
+
+            $activeProduction = ManufacturingOrder::whereIn('status', ['planned', 'in_progress'])->count();
+            $completedThisMonth = ManufacturingOrder::where('status', 'completed')
+                ->where('created_at', '>=', $thisMonth)->count();
+
+            $totalActiveProducts = Product::where('is_active', true)->count();
+
+            $stats[] = Stat::make('Low Stock Alerts', $lowStockCount)
+                ->description($lowStockCount > 0 ? 'Products below reorder point' : 'All stock levels healthy')
+                ->descriptionIcon($lowStockCount > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-check-circle')
+                ->color($lowStockCount > 0 ? 'danger' : 'success');
+
+            $stats[] = Stat::make('Active Products', $totalActiveProducts)
+                ->description('Listed in storefront')
+                ->descriptionIcon('heroicon-m-cube')
+                ->color('info');
+
+            $stats[] = Stat::make('Production Orders', $activeProduction)
+                ->description($completedThisMonth . ' completed this month')
+                ->descriptionIcon('heroicon-m-cog-6-tooth')
+                ->color($activeProduction > 0 ? 'warning' : 'gray');
+        }
+
+        return $stats;
     }
 }

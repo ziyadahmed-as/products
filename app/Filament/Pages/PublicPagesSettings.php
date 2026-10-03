@@ -24,6 +24,11 @@ class PublicPagesSettings extends Page implements HasForms
 
     protected static string $view = 'filament.pages.public-pages-settings';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->hasRole('super_admin');
+    }
+
     public ?array $data = [];
 
     public function mount(): void

@@ -17,11 +17,18 @@ class StockMovementResource extends Resource
     protected static ?string $navigationGroup = 'Inventory';
     protected static ?string $navigationLabel = 'Movement History';
     protected static ?int $navigationSort = 5;
+
     // Read-only audit log — no create/edit needed
+
     protected static bool $canCreate = false;
 
     public static function canCreate(): bool { return false; }
 
+
+    public static function canAccess(): bool
+    {
+        return !auth()->user()->hasRole('Seller');
+    }
     public static function form(Form $form): Form
     {
         return $form->schema([
