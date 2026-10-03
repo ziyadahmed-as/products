@@ -101,13 +101,13 @@ class ManufacturingOrderResource extends Resource
                         ->label('Additional Costs')
                         ->required()
                         ->numeric()
-                        ->prefix('$')
+                        ->prefix('Br ')
                         ->default(0),
                     Forms\Components\TextInput::make('total_cost')
                         ->label('Total Cost')
                         ->required()
                         ->numeric()
-                        ->prefix('$')
+                        ->prefix('Br ')
                         ->default(0),
                 ])->columns(2),
         ]);
@@ -152,7 +152,7 @@ class ManufacturingOrderResource extends Resource
                         default       => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('total_cost')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('planned_date')
                     ->date()

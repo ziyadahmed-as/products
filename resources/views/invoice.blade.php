@@ -90,8 +90,8 @@
                         <small style="color: #777;">SKU: {{ $line->product->sku ?? 'N/A' }}</small>
                     </td>
                     <td class="right">{{ $line->quantity }}</td>
-                    <td class="right">${{ number_format($line->unit_price, 2) }}</td>
-                    <td class="right">${{ number_format($line->total, 2) }}</td>
+                    <td class="right">Br{{ number_format($line->unit_price, 2) }}</td>
+                    <td class="right">Br{{ number_format($line->total, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -101,27 +101,27 @@
             <table>
                 <tr>
                     <th class="right">Subtotal:</th>
-                    <td class="right">${{ number_format($sale->subtotal, 2) }}</td>
+                    <td class="right">Br{{ number_format($sale->subtotal, 2) }}</td>
                 </tr>
                 <tr>
                     <th class="right">Discount:</th>
-                    <td class="right">${{ number_format($sale->discount, 2) }}</td>
+                    <td class="right">Br{{ number_format($sale->discount, 2) }}</td>
                 </tr>
                 <tr>
                     <th class="right">Tax:</th>
-                    <td class="right">${{ number_format($sale->tax, 2) }}</td>
+                    <td class="right">Br{{ number_format($sale->tax, 2) }}</td>
                 </tr>
                 <tr class="total-row">
                     <th class="right">Total:</th>
-                    <td class="right">${{ number_format($sale->total, 2) }}</td>
+                    <td class="right">Br{{ number_format($sale->total, 2) }}</td>
                 </tr>
                 <tr>
                     <th class="right">Paid Amount:</th>
-                    <td class="right" style="color: #166534;">${{ number_format($sale->paid_amount, 2) }}</td>
+                    <td class="right" style="color: #166534;">Br{{ number_format($sale->paid_amount, 2) }}</td>
                 </tr>
                 <tr>
                     <th class="right">Balance Due:</th>
-                    <td class="right" style="color: #991b1b; font-weight: bold;">${{ number_format($sale->total - $sale->paid_amount, 2) }}</td>
+                    <td class="right" style="color: #991b1b; font-weight: bold;">Br{{ number_format($sale->total - $sale->paid_amount, 2) }}</td>
                 </tr>
             </table>
         </div>
@@ -133,3 +133,4 @@
     </div>
 </body>
 </html>
+

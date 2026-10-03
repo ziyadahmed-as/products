@@ -137,7 +137,7 @@ class QuickSell extends Page implements HasForms
                                     ->columnSpan(4),
                                 Forms\Components\TextInput::make('unit_price')
                                     ->label('Price')
-                                    ->prefix('$')
+                                    ->prefix('Br ')
                                     ->numeric()
                                     ->required()
                                     ->reactive()
@@ -194,7 +194,7 @@ class QuickSell extends Page implements HasForms
                                     ->columnSpan(2),
                                 Forms\Components\TextInput::make('total')
                                     ->label('Line Total')
-                                    ->prefix('$')
+                                    ->prefix('Br ')
                                     ->numeric()
                                     ->readOnly()
                                     ->columnSpan(2),
@@ -376,3 +376,4 @@ class QuickSell extends Page implements HasForms
         $this->mount();
     }
 }
+

@@ -47,7 +47,7 @@ class SaleReturnResource extends Resource
                     Forms\Components\TextInput::make('refund_amount')
                         ->required()
                         ->numeric()
-                        ->prefix('$')
+                        ->prefix('Br ')
                         ->default(0),
                 ])->columns(2),
             Forms\Components\Section::make('Reason')
@@ -80,7 +80,7 @@ class SaleReturnResource extends Resource
                         default     => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('refund_amount')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

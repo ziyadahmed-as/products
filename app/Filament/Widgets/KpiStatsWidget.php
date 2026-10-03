@@ -42,7 +42,7 @@ class KpiStatsWidget extends BaseWidget
         $pendingOrders   = (clone $salesQuery)->where('status', 'pending')->count();
 
         $stats = [
-            Stat::make('Revenue This Month', '$' . number_format($salesThisMonth, 2))
+            Stat::make('Revenue This Month', 'Br ' . number_format($salesThisMonth, 2))
                 ->description(($salesTrend >= 0 ? '▲ ' : '▼ ') . abs($salesTrend) . '% vs last month')
                 ->descriptionIcon($salesTrend >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($salesTrend >= 0 ? 'success' : 'danger')

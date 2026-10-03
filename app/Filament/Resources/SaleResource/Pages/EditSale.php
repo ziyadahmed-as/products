@@ -6,50 +6,58 @@ use App\Filament\Resources\SaleResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
+use App\Models\InventoryBalance;
+use App\Models\StockMovement;
+use App\Models\Product;
+use Filament\Notifications\Notification;
+
 class EditSale extends EditRecord
 {
     protected static string $resource = SaleResource::class;
 
-    protected array $paymentData = [];
-
-    protected function mutateFormDataBeforeSave(array $data): array
-    {
-        if (!empty($data['new_payment_amount']) && $data['new_payment_amount'] > 0) {
-            $this->paymentData = [
-                'amount'    => $data['new_payment_amount'],
-                'method'    => $data['new_payment_method'] ?? 'cash',
-                'reference' => $data['new_payment_reference'] ?? null,
-            ];
-        }
-        
-        unset($data['new_payment_amount']);
-        unset($data['new_payment_method']);
-        unset($data['new_payment_reference']);
-
-        return $data;
-    }
-
     protected function afterSave(): void
     {
-        if (!empty($this->paymentData)) {
-            $this->record->payments()->create([
-                'amount'    => $this->paymentData['amount'],
-                'method'    => $this->paymentData['method'],
-                'reference' => $this->paymentData['reference'],
-                'date'      => now(),
-            ]);
-
-            // Recalculate Sale payment status
-            $totalPaid = $this->record->payments()->sum('amount');
-            $this->record->paid_amount = $totalPaid;
-            if ($totalPaid >= $this->record->total) {
-                $this->record->payment_status = 'paid';
-            } elseif ($totalPaid > 0) {
-                $this->record->payment_status = 'partial';
-            } else {
-                $this->record->payment_status = 'pending';
+        $sale = $this->record;
+        
+        if ($sale->status === 'completed' && !$sale->is_stock_deducted) {
+            foreach ($sale->lines as $line) {
+                $productId = $line->product_id;
+                $qtyToDeduct = (float)$line->quantity;
+                $locationId = $sale->storage_location_id;
+                
+                $balance = InventoryBalance::firstOrCreate(
+                    [
+                        'product_id' => $productId,
+                        'storage_location_id' => $locationId
+                    ],
+                    ['quantity' => 0]
+                );
+                
+                $balance->decrement('quantity', $qtyToDeduct);
+                
+                StockMovement::create([
+                    'product_id' => $productId,
+                    'storage_location_id' => $locationId,
+                    'user_id' => auth()->id(),
+                    'type' => 'out',
+                    'quantity' => $qtyToDeduct,
+                    'reference' => 'Sale: ' . $sale->reference,
+                    'notes' => 'Sale completed',
+                ]);
+                
+                // Sync master product quantity
+                $product = Product::find($productId);
+                if ($product) {
+                    $product->syncQuantity();
+                }
             }
-            $this->record->save();
+            
+            $sale->updateQuietly(['is_stock_deducted' => true]);
+            
+            Notification::make()
+                ->title('Stock Deducted')
+                ->success()
+                ->send();
         }
     }
 

@@ -52,7 +52,7 @@ class RecentOrdersWidget extends BaseWidget
                         'paid' => 'success', 'partial' => 'warning', 'pending' => 'gray', default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('total')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Date')

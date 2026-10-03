@@ -100,8 +100,8 @@
                         </td>
                         <td class="text-dark-300">{{ $product->category->name ?? '—' }}</td>
                         <td class="text-dark-300">{{ $product->unit->code ?? '—' }}</td>
-                        <td class="text-dark-300">${{ number_format($product->purchase_cost ?? 0, 2) }}</td>
-                        <td class="font-semibold text-white">${{ number_format($product->selling_price ?? 0, 2) }}</td>
+                        <td class="text-dark-300">Br{{ number_format($product->purchase_cost ?? 0, 2) }}</td>
+                        <td class="font-semibold text-white">Br{{ number_format($product->selling_price ?? 0, 2) }}</td>
                         <td class="text-dark-300">{{ $product->minimum_stock_level }}</td>
                         <td>
                             @if($product->is_active)
@@ -154,3 +154,4 @@
 
 </div>
 @endsection
+

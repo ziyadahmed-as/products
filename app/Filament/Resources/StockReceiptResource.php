@@ -62,7 +62,7 @@ class StockReceiptResource extends Resource
                     Forms\Components\TextInput::make('total_cost')
                         ->required()
                         ->numeric()
-                        ->prefix('$')
+                        ->prefix('Br ')
                         ->default(0),
                 ])->columns(2),
 
@@ -98,7 +98,7 @@ class StockReceiptResource extends Resource
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_cost')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

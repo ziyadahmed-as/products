@@ -38,7 +38,7 @@ class PaymentResource extends Resource
                     Forms\Components\TextInput::make('amount')
                         ->required()
                         ->numeric()
-                        ->prefix('$'),
+                        ->prefix('Br '),
                     Forms\Components\Select::make('method')
                         ->options([
                             'cash'          => 'Cash',
@@ -65,7 +65,7 @@ class PaymentResource extends Resource
                     ->searchable()
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('amount')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('method')
                     ->badge()

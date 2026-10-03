@@ -110,7 +110,7 @@ class ProductResource extends Resource
                             Forms\Components\TextInput::make('purchase_cost')
                                 ->label('Purchase / Production Cost')
                                 ->numeric()
-                                ->prefix('$')
+                                ->prefix('Br ')
                                 ->minValue(0)
                                 ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
@@ -120,7 +120,7 @@ class ProductResource extends Resource
                                 }),
                             Forms\Components\TextInput::make('selling_price')
                                 ->numeric()
-                                ->prefix('$')
+                                ->prefix('Br ')
                                 ->minValue(0)
                                 ->visible(fn (Forms\Get $get) => in_array($get('type'), [
                                     'manufactured_product', 'resale_product',
@@ -145,7 +145,7 @@ class ProductResource extends Resource
                                 ->default(0),
                             Forms\Components\TextInput::make('total_value')
                                 ->label('Total Stock Value')
-                                ->prefix('$')
+                                ->prefix('Br ')
                                 ->readOnly()
                                 ->default('0.00')
                                 ->dehydrated(false)
@@ -246,11 +246,11 @@ class ProductResource extends Resource
                     ->searchable()
                     ->placeholder('—'),
                 Tables\Columns\TextColumn::make('selling_price')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable()
                     ->placeholder('—'),
                 Tables\Columns\TextColumn::make('purchase_cost')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->visible(fn () => !auth()->user()->hasRole('Seller')),

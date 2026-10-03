@@ -27,7 +27,7 @@
                 </svg>
             </div>
             <div>
-                <p class="stat-value">${{ number_format($summary['total_revenue'] ?? 0, 2) }}</p>
+                <p class="stat-value">Br{{ number_format($summary['total_revenue'] ?? 0, 2) }}</p>
                 <p class="stat-label">Total Revenue</p>
             </div>
         </div>
@@ -49,7 +49,7 @@
                 </svg>
             </div>
             <div>
-                <p class="stat-value text-yellow-400">${{ number_format($summary['unpaid'] ?? 0, 2) }}</p>
+                <p class="stat-value text-yellow-400">Br{{ number_format($summary['unpaid'] ?? 0, 2) }}</p>
                 <p class="stat-label">Outstanding</p>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 </svg>
             </div>
             <div>
-                <p class="stat-value">${{ number_format($summary['today'] ?? 0, 2) }}</p>
+                <p class="stat-value">Br{{ number_format($summary['today'] ?? 0, 2) }}</p>
                 <p class="stat-label">Today's Revenue</p>
             </div>
         </div>
@@ -130,8 +130,8 @@
                         <td>{{ $sale->customer_name ?? 'Walk-in' }}</td>
                         <td class="text-dark-300">{{ $sale->user->name ?? '—' }}</td>
                         <td class="text-dark-300">{{ $sale->lines_count ?? $sale->lines->count() }}</td>
-                        <td class="font-bold text-white">${{ number_format($sale->total, 2) }}</td>
-                        <td class="text-dark-300">${{ number_format($sale->paid_amount, 2) }}</td>
+                        <td class="font-bold text-white">Br{{ number_format($sale->total, 2) }}</td>
+                        <td class="text-dark-300">Br{{ number_format($sale->paid_amount, 2) }}</td>
                         <td>
                             @if($sale->payment_status === 'Paid')
                                 <span class="badge-green">Paid</span>
@@ -176,3 +176,4 @@
     </div>
 </div>
 @endsection
+

@@ -22,7 +22,7 @@ class PaymentsRelationManager extends RelationManager
                 Forms\Components\TextInput::make('amount')
                     ->required()
                     ->numeric()
-                    ->prefix('$'),
+                    ->prefix('Br '),
                 Forms\Components\Select::make('method')
                     ->options([
                         'cash'          => 'Cash',
@@ -44,7 +44,7 @@ class PaymentsRelationManager extends RelationManager
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('amount')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('method')
                     ->badge()

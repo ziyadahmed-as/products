@@ -6,7 +6,7 @@
     <div class="page-header">
         <div>
             <h1>Sales Report</h1>
-            <p class="text-dark-400 text-sm mt-1">Total Revenue: ${{ number_format($summary['total_revenue'], 2) }} | Unpaid: ${{ number_format($summary['unpaid'], 2) }}</p>
+            <p class="text-dark-400 text-sm mt-1">Total Revenue: Br{{ number_format($summary['total_revenue'], 2) }} | Unpaid: Br{{ number_format($summary['unpaid'], 2) }}</p>
         </div>
         <button onclick="window.print()" class="btn-secondary">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,8 +50,8 @@
                         <td class="text-dark-300">{{ $sale->created_at->format('Y-m-d') }}</td>
                         <td class="font-mono text-primary-400">{{ $sale->reference }}</td>
                         <td class="font-medium text-white">{{ $sale->customer_name ?? 'Walk-in' }}</td>
-                        <td class="font-bold text-white">${{ number_format($sale->total, 2) }}</td>
-                        <td class="text-dark-300">${{ number_format($sale->paid_amount, 2) }}</td>
+                        <td class="font-bold text-white">Br{{ number_format($sale->total, 2) }}</td>
+                        <td class="text-dark-300">Br{{ number_format($sale->paid_amount, 2) }}</td>
                         <td>
                             @if($sale->payment_status === 'Paid')
                                 <span class="badge-green">Paid</span>
@@ -73,3 +73,4 @@
     </div>
 </div>
 @endsection
+

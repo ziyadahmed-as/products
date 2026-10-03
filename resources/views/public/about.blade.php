@@ -64,7 +64,7 @@
                             </div>
                             <h3 class="pub-product-name">{{ $product->name }}</h3>
                             <div class="pub-product-footer">
-                                <span class="pub-price">${{ number_format($product->selling_price, 2) }}</span>
+                                <span class="pub-price">Br{{ number_format($product->selling_price, 2) }}</span>
                                 <span class="pub-add-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg></span>
                             </div>
                         </div>
@@ -76,3 +76,4 @@
     </div>
 </div>
 @endsection
+

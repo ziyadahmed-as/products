@@ -96,7 +96,7 @@
                                 <span class="badge-green">OK</span>
                             @endif
                         </td>
-                        <td class="text-dark-300">${{ number_format($value, 2) }}</td>
+                        <td class="text-dark-300">Br{{ number_format($value, 2) }}</td>
                     </tr>
                     @empty
                     <tr>
@@ -115,3 +115,4 @@
 
 </div>
 @endsection
+

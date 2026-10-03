@@ -6,7 +6,7 @@
     <div class="page-header">
         <div>
             <h1>Inventory Report</h1>
-            <p class="text-dark-400 text-sm mt-1">Total estimated value: ${{ number_format($totalValue, 2) }}</p>
+            <p class="text-dark-400 text-sm mt-1">Total estimated value: Br{{ number_format($totalValue, 2) }}</p>
         </div>
         <button onclick="window.print()" class="btn-secondary">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,8 +36,8 @@
                         <td class="text-dark-300">{{ $balance->product->category->name ?? '—' }}</td>
                         <td class="text-dark-300">{{ $balance->storageLocation->name ?? '—' }}</td>
                         <td class="font-bold text-white">{{ $balance->quantity }}</td>
-                        <td class="text-dark-300">${{ number_format($balance->product->purchase_cost ?? 0, 2) }}</td>
-                        <td class="text-dark-300">${{ number_format($balance->quantity * ($balance->product->purchase_cost ?? 0), 2) }}</td>
+                        <td class="text-dark-300">Br{{ number_format($balance->product->purchase_cost ?? 0, 2) }}</td>
+                        <td class="text-dark-300">Br{{ number_format($balance->quantity * ($balance->product->purchase_cost ?? 0), 2) }}</td>
                     </tr>
                     @empty
                     <tr>
@@ -50,3 +50,4 @@
     </div>
 </div>
 @endsection
+

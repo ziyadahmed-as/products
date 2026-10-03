@@ -64,7 +64,7 @@
 
                 <button type="submit" class="pub-btn pub-btn-primary pub-btn-full" style="padding:1.1rem;font-size:1rem;gap:.75rem;">
                     <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Place Order — ${{ number_format($total, 2) }}
+                    Place Order — Br{{ number_format($total, 2) }}
                 </button>
             </form>
         </div>
@@ -88,21 +88,21 @@
                         <div class="pub-checkout-item-name">{{ $item['name'] }}</div>
                         <div class="pub-checkout-item-qty">Qty: {{ $item['quantity'] }}</div>
                     </div>
-                    <div class="pub-checkout-item-price">${{ number_format($item['price'] * $item['quantity'], 2) }}</div>
+                    <div class="pub-checkout-item-price">Br{{ number_format($item['price'] * $item['quantity'], 2) }}</div>
                 </div>
                 @endforeach
             </div>
 
             <div class="pub-summary-divider"></div>
 
-            <div class="pub-summary-row"><span>Items ({{ $cartItems->sum('quantity') }})</span><strong>${{ number_format($total, 2) }}</strong></div>
+            <div class="pub-summary-row"><span>Items ({{ $cartItems->sum('quantity') }})</span><strong>Br{{ number_format($total, 2) }}</strong></div>
             <div class="pub-summary-row"><span>Shipping</span><span class="pub-summary-free">Free</span></div>
 
             <div class="pub-summary-divider"></div>
 
             <div class="pub-summary-total">
                 <span>Total</span>
-                <span class="pub-summary-amount">${{ number_format($total, 2) }}</span>
+                <span class="pub-summary-amount">Br{{ number_format($total, 2) }}</span>
             </div>
 
             <div style="margin-top:1.5rem;">
@@ -112,3 +112,4 @@
     </div>
 </div>
 @endsection
+

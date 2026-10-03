@@ -56,16 +56,16 @@ class SellerPaymentReport extends Page implements HasTable
                     ->html(),
                 TextColumn::make('total')
                     ->label('Invoice Total')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 TextColumn::make('paid_amount')
                     ->label('Amount Paid')
-                    ->money('USD')
+                    ->money('ETB')
                     ->sortable(),
                 TextColumn::make('balance')
                     ->label('Outstanding Balance')
                     ->state(fn (Sale $record) => $record->total - $record->paid_amount)
-                    ->money('USD')
+                    ->money('ETB')
                     ->color(fn ($state) => $state > 0 ? 'danger' : 'success'),
                 TextColumn::make('payment_status')
                     ->label('Status')

@@ -44,7 +44,7 @@
                 </svg>
             </div>
             <div>
-                <p class="stat-value">${{ number_format($stats['today_sales'] ?? 0, 2) }}</p>
+                <p class="stat-value">Br{{ number_format($stats['today_sales'] ?? 0, 2) }}</p>
                 <p class="stat-label">Today's Sales</p>
             </div>
         </div>
@@ -103,7 +103,7 @@
                         <tr>
                             <td class="font-mono text-primary-400">{{ $sale->reference }}</td>
                             <td>{{ $sale->customer_name ?? 'Walk-in' }}</td>
-                            <td class="font-semibold">${{ number_format($sale->total, 2) }}</td>
+                            <td class="font-semibold">Br{{ number_format($sale->total, 2) }}</td>
                             <td>
                                 @if($sale->payment_status === 'Paid')
                                     <span class="badge-green">Paid</span>
@@ -234,3 +234,4 @@
 
 </div>
 @endsection
+

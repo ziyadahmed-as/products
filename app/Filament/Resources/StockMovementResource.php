@@ -44,7 +44,7 @@ class StockMovementResource extends Resource
                         ->searchable()->preload()->disabled(),
                     Forms\Components\TextInput::make('type')->disabled(),
                     Forms\Components\TextInput::make('quantity')->numeric()->disabled(),
-                    Forms\Components\TextInput::make('unit_cost')->numeric()->prefix('$')->disabled(),
+                    Forms\Components\TextInput::make('unit_cost')->numeric()->prefix('Br ')->disabled(),
                 ])->columns(3),
         ]);
     }
@@ -65,7 +65,7 @@ class StockMovementResource extends Resource
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('quantity')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('unit_cost')->money('USD')->sortable(),
+                Tables\Columns\TextColumn::make('unit_cost')->money('ETB')->sortable(),
                 Tables\Columns\TextColumn::make('reference_type')
                     ->label('Source')->badge()->color('info'),
                 Tables\Columns\TextColumn::make('user.name')->label('By')->toggleable(),

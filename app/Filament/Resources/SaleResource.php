@@ -111,18 +111,7 @@ class SaleResource extends Resource
                             'refunded' => 'Refunded',
                         ])
                         ->required()
-                        ->default('pending')
-                        ->reactive()
-                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                            if ($state === 'paid') {
-                                $remaining = max(0, ((float)($get('total') ?? 0)) - ((float)($get('paid_amount') ?? 0)));
-                                if ($remaining > 0) {
-                                    $set('new_payment_amount', $remaining);
-                                }
-                            } elseif ($state === 'pending') {
-                                $set('new_payment_amount', 0);
-                            }
-                        }),
+                        ->default('pending'),
                 ])->columns(2),
 
             Forms\Components\Section::make('Customer & Location')
@@ -179,6 +168,17 @@ class SaleResource extends Resource
                                         $set('unit_price', $product->selling_price ?? 0);
                                         $qty = $get('quantity') ?: 1;
                                         $set('total', $qty * ($product->selling_price ?? 0));
+                                        
+                                        // Recalculate overall totals
+                                        $lines = $get('../../lines') ?? [];
+                                        $subtotal = collect($lines)->reduce(function ($sum, $line) {
+                                            return $sum + ((float)($line['quantity'] ?? 1) * (float)($line['unit_price'] ?? 0));
+                                        }, 0);
+                                        $set('../../subtotal', $subtotal);
+                                        
+                                        $disc = (float) ($get('../../discount') ?? 0);
+                                        $tax = (float) ($get('../../tax') ?? 0);
+                                        $set('../../total', $subtotal - $disc + $tax);
                                     }
                                 }),
                             Forms\Components\TextInput::make('quantity')
@@ -186,16 +186,38 @@ class SaleResource extends Resource
                                 ->required()
                                 ->default(1)
                                 ->minValue(1)
-                                ->reactive()
+                                ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, callable $get, callable $set) {
                                     $set('total', $state * ($get('unit_price') ?? 0));
+                                    
+                                    // Recalculate overall totals
+                                    $lines = $get('../../lines') ?? [];
+                                    $subtotal = collect($lines)->reduce(function ($sum, $line) {
+                                        return $sum + ((float)($line['quantity'] ?? 1) * (float)($line['unit_price'] ?? 0));
+                                    }, 0);
+                                    $set('../../subtotal', $subtotal);
+                                    
+                                    $disc = (float) ($get('../../discount') ?? 0);
+                                    $tax = (float) ($get('../../tax') ?? 0);
+                                    $set('../../total', $subtotal - $disc + $tax);
                                 }),
                             Forms\Components\TextInput::make('unit_price')
                                 ->numeric()
                                 ->required()
-                                ->reactive()
+                                ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, callable $get, callable $set) {
                                     $set('total', $state * ($get('quantity') ?? 1));
+                                    
+                                    // Recalculate overall totals
+                                    $lines = $get('../../lines') ?? [];
+                                    $subtotal = collect($lines)->reduce(function ($sum, $line) {
+                                        return $sum + ((float)($line['quantity'] ?? 1) * (float)($line['unit_price'] ?? 0));
+                                    }, 0);
+                                    $set('../../subtotal', $subtotal);
+                                    
+                                    $disc = (float) ($get('../../discount') ?? 0);
+                                    $tax = (float) ($get('../../tax') ?? 0);
+                                    $set('../../total', $subtotal - $disc + $tax);
                                 }),
                             Forms\Components\TextInput::make('total')
                                 ->numeric()
@@ -204,6 +226,18 @@ class SaleResource extends Resource
                         ])
                         ->columns(4)
                         ->defaultItems(1)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            $lines = $get('lines') ?? [];
+                            $subtotal = collect($lines)->reduce(function ($sum, $line) {
+                                return $sum + ((float)($line['quantity'] ?? 1) * (float)($line['unit_price'] ?? 0));
+                            }, 0);
+                            $set('subtotal', $subtotal);
+                            
+                            $disc = (float) ($get('discount') ?? 0);
+                            $tax = (float) ($get('tax') ?? 0);
+                            $set('total', $subtotal - $disc + $tax);
+                        })
                         ->mutateRelationshipDataBeforeCreateUsing(function (array $data) {
                             $data['unit_cost'] = Product::find($data['product_id'])?->purchase_cost ?? 0;
                             return $data;
@@ -213,38 +247,92 @@ class SaleResource extends Resource
             Forms\Components\Section::make('Financials')
                 ->schema([
                     Forms\Components\TextInput::make('subtotal')
-                        ->required()->numeric()->prefix('$')->default(0)->readOnly(),
+                        ->required()->numeric()->prefix('Br ')->default(0)->readOnly(),
                     Forms\Components\TextInput::make('discount')
-                        ->required()->numeric()->prefix('$')->default(0),
+                        ->required()->numeric()->prefix('Br ')->default(0)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
+                            $sub = (float) ($get('subtotal') ?? 0);
+                            $disc = (float) ($get('discount') ?? 0);
+                            $tax = (float) ($get('tax') ?? 0);
+                            $set('total', $sub - $disc + $tax);
+                        }),
                     Forms\Components\TextInput::make('tax')
-                        ->required()->numeric()->prefix('$')->default(0),
+                        ->required()->numeric()->prefix('Br ')->default(0)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
+                            $sub = (float) ($get('subtotal') ?? 0);
+                            $disc = (float) ($get('discount') ?? 0);
+                            $tax = (float) ($get('tax') ?? 0);
+                            $set('total', $sub - $disc + $tax);
+                        }),
                     Forms\Components\TextInput::make('total')
-                        ->required()->numeric()->prefix('$')->default(0)->readOnly(),
+                        ->required()->numeric()->prefix('Br ')->default(0)->readOnly(),
                     Forms\Components\TextInput::make('paid_amount')
-                        ->required()->numeric()->prefix('$')->default(0)->readOnly(),
+                        ->required()->numeric()->prefix('Br ')->default(0)->readOnly(),
                 ])->columns(5),
 
-            Forms\Components\Section::make('Register Payment')
-                ->description('You can quickly register a payment here upon saving. It will be added to the Payments list below.')
+            Forms\Components\Section::make('Payments')
                 ->schema([
-                    Forms\Components\TextInput::make('new_payment_amount')
-                        ->label('Register Paid Amount')
-                        ->numeric()
-                        ->prefix('$')
-                        ->nullable(),
-                    Forms\Components\Select::make('new_payment_method')
-                        ->label('Payment Method')
-                        ->options([
-                            'cash'          => 'Cash',
-                            'bank_transfer' => 'Bank Transfer',
-                            'credit_card'   => 'Credit Card',
-                            'online'        => 'Online Payment',
+                    Forms\Components\Repeater::make('payments')
+                        ->relationship()
+                        ->schema([
+                            Forms\Components\TextInput::make('amount')
+                                ->numeric()
+                                ->required()
+                                ->prefix('Br ')
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(function (callable $get, callable $set) {
+                                    $payments = $get('../../payments') ?? [];
+                                    $paid = collect($payments)->sum('amount');
+                                    $set('../../paid_amount', $paid);
+                                    
+                                    $total = (float)($get('../../total') ?? 0);
+                                    if ($total > 0) {
+                                        if ($paid >= $total) {
+                                            $set('../../payment_status', 'paid');
+                                        } elseif ($paid > 0) {
+                                            $set('../../payment_status', 'partial');
+                                        } else {
+                                            $set('../../payment_status', 'pending');
+                                        }
+                                    }
+                                }),
+                            Forms\Components\Select::make('method')
+                                ->options([
+                                    'cash'          => 'Cash',
+                                    'bank_transfer' => 'Bank Transfer',
+                                    'credit_card'   => 'Credit Card',
+                                    'online'        => 'Online Payment',
+                                ])
+                                ->required()
+                                ->default('cash'),
+                            Forms\Components\TextInput::make('reference')
+                                ->maxLength(100),
+                            Forms\Components\DatePicker::make('date')
+                                ->required()
+                                ->default(today()),
                         ])
-                        ->default('cash'),
-                    Forms\Components\TextInput::make('new_payment_reference')
-                        ->label('Reference / Receipt No.')
-                        ->maxLength(100),
-                ])->columns(3),
+                        ->columns(4)
+                        ->defaultItems(0)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            $payments = $get('payments') ?? [];
+                            $paid = collect($payments)->sum('amount');
+                            $set('paid_amount', $paid);
+                            
+                            $total = (float)($get('total') ?? 0);
+                            if ($total > 0) {
+                                if ($paid >= $total) {
+                                    $set('payment_status', 'paid');
+                                } elseif ($paid > 0) {
+                                    $set('payment_status', 'partial');
+                                } else {
+                                    $set('payment_status', 'pending');
+                                }
+                            }
+                        }),
+                ]),
         ]);
     }
 
@@ -278,7 +366,7 @@ class SaleResource extends Resource
                         'paid' => 'success', 'partial' => 'warning', 'pending' => 'gray',
                         'refunded' => 'danger', default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('total')->money('USD')->sortable(),
+                Tables\Columns\TextColumn::make('total')->money('ETB')->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->filters([
@@ -353,7 +441,7 @@ class SaleResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\PaymentsRelationManager::class,
+            // RelationManagers\PaymentsRelationManager::class,
         ];
     }
 

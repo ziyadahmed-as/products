@@ -42,10 +42,10 @@
                         </div>
                         <div class="pub-cart-item-row">
                             <div class="pub-cart-item-qty">
-                                ${{ number_format($item['price'], 2) }} × <strong>{{ $item['quantity'] }}</strong>
+                                Br{{ number_format($item['price'], 2) }} × <strong>{{ $item['quantity'] }}</strong>
                             </div>
                             <div style="display:flex;align-items:center;gap:1rem;">
-                                <span class="pub-cart-item-total">${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                                <span class="pub-cart-item-total">Br{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                                 <form action="{{ route('public.cart.remove', $item['id']) }}" method="POST">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="pub-cart-remove">
@@ -72,7 +72,7 @@
 
                 <div class="pub-summary-row">
                     <span>Subtotal ({{ $cartItems->sum('quantity') }} items)</span>
-                    <strong>${{ number_format($total, 2) }}</strong>
+                    <strong>Br{{ number_format($total, 2) }}</strong>
                 </div>
                 <div class="pub-summary-row">
                     <span>Shipping</span>
@@ -83,7 +83,7 @@
 
                 <div class="pub-summary-total">
                     <span>Total</span>
-                    <span class="pub-summary-amount">${{ number_format($total, 2) }}</span>
+                    <span class="pub-summary-amount">Br{{ number_format($total, 2) }}</span>
                 </div>
 
                 <a href="{{ route('public.checkout') }}" class="pub-btn pub-btn-primary pub-btn-full" style="margin-top:1.5rem;padding:1rem;font-size:1rem;gap:.75rem;">
@@ -100,3 +100,4 @@
     @endif
 </div>
 @endsection
+
