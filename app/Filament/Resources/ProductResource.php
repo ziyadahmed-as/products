@@ -114,7 +114,7 @@ class ProductResource extends Resource
                                 ->minValue(0)
                                 ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
-                                    $qty   = (float) ($get('initial_quantity') ?: 0);
+                                    $qty   = (float) ($get('quantity') ?: 0);
                                     $price = (float) ($state ?: 0);
                                     $set('total_value', number_format($qty * $price, 2));
                                 }),
@@ -125,8 +125,8 @@ class ProductResource extends Resource
                                 ->visible(fn (Forms\Get $get) => in_array($get('type'), [
                                     'manufactured_product', 'resale_product',
                                 ])),
-                            Forms\Components\TextInput::make('initial_quantity')
-                                ->label('Quantity (Opening Stock)')
+                            Forms\Components\TextInput::make('quantity')
+                                ->label('Quantity')
                                 ->numeric()
                                 ->required()
                                 ->default(0)
@@ -254,25 +254,26 @@ class ProductResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->visible(fn () => !auth()->user()->hasRole('Seller')),
-                Tables\Columns\TextColumn::make('minimum_stock_level')
-                    ->label('Min Stock')
-                    ->numeric()
-                    ->sortable()
-                    ->toggleable()
-                    ->visible(fn () => !auth()->user()->hasRole('Seller')),
-                Tables\Columns\TextColumn::make('available_qty')
-                    ->label('Available Qty')
+                Tables\Columns\TextColumn::make('quantity')
+                    ->label('Quantity')
                     ->state(function (\App\Models\Product $record): string {
                         $user = auth()->user();
-                        $branchIds = $user->branches()->pluck('branches.id');
-                        $qty = \App\Models\InventoryBalance::where('product_id', $record->id)
-                            ->whereHas('storageLocation', fn ($q) => $q->whereIn('branch_id', $branchIds))
-                            ->sum('quantity');
-                        return number_format($qty, 2);
+                        if ($user->hasRole('Seller')) {
+                            // Sellers: only their branch stock
+                            $branchIds = $user->branches()->pluck('branches.id');
+                            $qty = \App\Models\InventoryBalance::where('product_id', $record->id)
+                                ->whereHas('storageLocation', fn ($q) => $q->whereIn('branch_id', $branchIds))
+                                ->sum('quantity');
+                        } else {
+                            // Admins / Super Admins: total from products table (fast)
+                            $qty = $record->quantity ?? 0;
+                        }
+                        return number_format((float)$qty, 2);
                     })
+                    ->numeric(2)
+                    ->sortable()
                     ->badge()
-                    ->color(fn (string $state): string => (float)$state > 0 ? 'success' : 'danger')
-                    ->visible(fn () => auth()->user()->hasRole('Seller')),
+                    ->color(fn (string $state): string => (float)$state > 0 ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('rating')
                     ->numeric(1)
                     ->sortable()

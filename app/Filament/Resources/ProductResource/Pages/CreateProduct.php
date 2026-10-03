@@ -15,15 +15,14 @@ class CreateProduct extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Strip virtual fields so they don't hit the products table
-        unset($data['initial_quantity']);
+        // quantity is a real column now — no need to strip it
         return $data;
     }
 
     protected function afterCreate(): void
     {
         $data     = $this->data;
-        $quantity = (float) ($data['initial_quantity'] ?? 0);
+        $quantity = (float) ($data['quantity'] ?? 0);
 
         if ($quantity <= 0) {
             return;

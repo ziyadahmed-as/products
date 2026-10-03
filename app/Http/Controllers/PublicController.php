@@ -214,4 +214,31 @@ class PublicController extends Controller
 
         return redirect()->back()->with('status', 'message-sent');
     }
+
+
+    public function submitReview(Request $request, \App\Models\Product $product)
+    {
+        $validated = $request->validate([
+            'reviewer_name'  => 'required|string|max:255',
+            'reviewer_email' => 'nullable|email|max:255',
+            'rating'         => 'required|integer|min:1|max:5',
+            'comment'        => 'nullable|string|max:2000',
+            'order_reference'=> 'nullable|string|max:100',
+        ]);
+
+        \App\Models\ProductReview::create([
+            'product_id'      => $product->id,
+            'reviewer_name'   => $validated['reviewer_name'],
+            'reviewer_email'  => $validated['reviewer_email'] ?? null,
+            'rating'          => $validated['rating'],
+            'comment'         => $validated['comment'] ?? null,
+            'order_reference' => $validated['order_reference'] ?? null,
+            'is_approved'     => true,
+        ]);
+
+        // Recalculate product rating
+        $product->syncRating();
+
+        return redirect()->back()->with('review_success', 'Thank you for your review!');
+    }
 }

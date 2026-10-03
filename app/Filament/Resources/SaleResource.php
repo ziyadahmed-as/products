@@ -111,7 +111,18 @@ class SaleResource extends Resource
                             'refunded' => 'Refunded',
                         ])
                         ->required()
-                        ->default('pending'),
+                        ->default('pending')
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                            if ($state === 'paid') {
+                                $remaining = max(0, ((float)($get('total') ?? 0)) - ((float)($get('paid_amount') ?? 0)));
+                                if ($remaining > 0) {
+                                    $set('new_payment_amount', $remaining);
+                                }
+                            } elseif ($state === 'pending') {
+                                $set('new_payment_amount', 0);
+                            }
+                        }),
                 ])->columns(2),
 
             Forms\Components\Section::make('Customer & Location')
@@ -212,6 +223,28 @@ class SaleResource extends Resource
                     Forms\Components\TextInput::make('paid_amount')
                         ->required()->numeric()->prefix('$')->default(0)->readOnly(),
                 ])->columns(5),
+
+            Forms\Components\Section::make('Register Payment')
+                ->description('You can quickly register a payment here upon saving. It will be added to the Payments list below.')
+                ->schema([
+                    Forms\Components\TextInput::make('new_payment_amount')
+                        ->label('Register Paid Amount')
+                        ->numeric()
+                        ->prefix('$')
+                        ->nullable(),
+                    Forms\Components\Select::make('new_payment_method')
+                        ->label('Payment Method')
+                        ->options([
+                            'cash'          => 'Cash',
+                            'bank_transfer' => 'Bank Transfer',
+                            'credit_card'   => 'Credit Card',
+                            'online'        => 'Online Payment',
+                        ])
+                        ->default('cash'),
+                    Forms\Components\TextInput::make('new_payment_reference')
+                        ->label('Reference / Receipt No.')
+                        ->maxLength(100),
+                ])->columns(3),
         ]);
     }
 

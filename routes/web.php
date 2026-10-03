@@ -23,6 +23,7 @@ Route::get('/contact', fn() => view('public.contact'))->name('public.contact');
 Route::post('/contact', [PublicController::class, 'contactSend'])->name('public.contact.send');
 Route::get('/shop', [PublicController::class, 'shop'])->name('public.shop');
 Route::get('/product/{product}', [PublicController::class, 'show'])->name('public.show');
+Route::post('/product/{product}/review', [PublicController::class, 'submitReview'])->name('public.review.submit');
 
 // Cart & Checkout
 Route::get('/cart', [PublicController::class, 'cart'])->name('public.cart');

@@ -72,6 +72,11 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
     // Helpers
     public function isForSale(): bool
     {
@@ -81,5 +86,17 @@ class Product extends Model
     public function isRawMaterial(): bool
     {
         return $this->type === 'raw_material';
+    }
+
+    /**
+     * Recalculate rating and reviews_count from approved reviews.
+     */
+    public function syncRating(): void
+    {
+        $approved = $this->reviews()->where('is_approved', true);
+        $this->update([
+            'reviews_count' => $approved->count(),
+            'rating'        => round($approved->avg('rating') ?? 0, 1),
+        ]);
     }
 }
