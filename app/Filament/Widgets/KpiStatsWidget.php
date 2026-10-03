@@ -4,15 +4,18 @@ namespace App\Filament\Widgets;
 
 use App\Models\Sale;
 use App\Models\Product;
-use App\Models\StockMovement;
+use App\Models\StorageLocation;
 use App\Models\ManufacturingOrder;
 use App\Models\InventoryBalance;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Support\Carbon;
 
 class KpiStatsWidget extends BaseWidget
 {
+    use InteractsWithPageFilters;
+
     protected static ?int $sort = 1;
     protected ?string $heading = 'Business Overview';
 
@@ -20,33 +23,56 @@ class KpiStatsWidget extends BaseWidget
     {
         $user       = auth()->user();
         $isSeller   = $user->hasRole('Seller');
+        $isManager  = $user->hasRole('Manager');
         
-        $today      = Carbon::today();
-        $thisMonth  = Carbon::now()->startOfMonth();
-        $lastMonth  = Carbon::now()->subMonth()->startOfMonth();
-        $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+        $startDateStr = $this->filters['startDate'] ?? null;
+        $endDateStr   = $this->filters['endDate'] ?? null;
+        $branchId     = $this->filters['branch_id'] ?? null;
 
-        // ─── Sales KPIs (Scoped for Seller) ───
+        $startDate = $startDateStr ? Carbon::parse($startDateStr)->startOfDay() : Carbon::now()->startOfMonth();
+        $endDate   = $endDateStr ? Carbon::parse($endDateStr)->endOfDay() : Carbon::now()->endOfMonth();
+        $today     = Carbon::today();
+
+        // Calculate previous period for trend
+        $diffDays = $startDate->diffInDays($endDate) + 1;
+        $prevStartDate = (clone $startDate)->subDays($diffDays);
+        $prevEndDate   = (clone $endDate)->subDays($diffDays);
+
         $salesQuery = Sale::query();
+
+        // Branch filtering
+        if ($branchId) {
+            $locationIds = StorageLocation::where('branch_id', $branchId)->pluck('id');
+            $salesQuery->whereIn('storage_location_id', $locationIds);
+        } else {
+            if ($isManager || $isSeller) {
+                $branchIds = $user->branches()->pluck('branches.id');
+                $locationIds = StorageLocation::whereIn('branch_id', $branchIds)->pluck('id');
+                $salesQuery->whereIn('storage_location_id', $locationIds);
+            }
+        }
+
         if ($isSeller) {
             $salesQuery->where('user_id', $user->id);
         }
 
-        $salesThisMonth = (clone $salesQuery)->where('created_at', '>=', $thisMonth)->sum('total');
-        $salesLastMonth = (clone $salesQuery)->whereBetween('created_at', [$lastMonth, $lastMonthEnd])->sum('total');
-        $salesTrend     = $salesLastMonth > 0
-            ? round((($salesThisMonth - $salesLastMonth) / $salesLastMonth) * 100, 1)
+        $activeStatuses = ['confirmed', 'processing', 'shipped', 'completed'];
+        $salesThisPeriod = (clone $salesQuery)->whereIn('status', $activeStatuses)->whereBetween('created_at', [$startDate, $endDate])->sum('total');
+        $salesPrevPeriod = (clone $salesQuery)->whereIn('status', $activeStatuses)->whereBetween('created_at', [$prevStartDate, $prevEndDate])->sum('total');
+        $salesTrend = $salesPrevPeriod > 0
+            ? round((($salesThisPeriod - $salesPrevPeriod) / $salesPrevPeriod) * 100, 1)
             : 100;
 
         $ordersToday     = (clone $salesQuery)->whereDate('created_at', $today)->count();
-        $pendingOrders   = (clone $salesQuery)->where('status', 'pending')->count();
+        $pendingOrders   = (clone $salesQuery)->whereIn('status', ['pending'])->count();
+        $completedOrders = (clone $salesQuery)->whereBetween('created_at', [$startDate, $endDate])->whereIn('status', $activeStatuses)->count();
 
         $stats = [
-            Stat::make('Revenue This Month', 'Br ' . number_format($salesThisMonth, 2))
-                ->description(($salesTrend >= 0 ? '▲ ' : '▼ ') . abs($salesTrend) . '% vs last month')
+            Stat::make('Revenue (Selected Period)', 'Br ' . number_format($salesThisPeriod, 2))
+                ->description(($salesTrend >= 0 ? '? ' : '? ') . abs($salesTrend) . '% vs previous period')
                 ->descriptionIcon($salesTrend >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($salesTrend >= 0 ? 'success' : 'danger')
-                ->chart([max(0, $salesLastMonth / 1000), max(0, $salesThisMonth / 1000)]),
+                ->chart([max(0, $salesPrevPeriod / 1000), max(0, $salesThisPeriod / 1000)]),
 
             Stat::make('Orders Today', $ordersToday)
                 ->description($pendingOrders . ' pending approval')
@@ -54,20 +80,30 @@ class KpiStatsWidget extends BaseWidget
                 ->color($pendingOrders > 0 ? 'warning' : 'success'),
                 
             Stat::make('Pending Orders', $pendingOrders)
-                ->description('Awaiting processing')
+                ->description('Awaiting processing across all time')
                 ->descriptionIcon('heroicon-m-queue-list')
                 ->color($pendingOrders > 5 ? 'danger' : ($pendingOrders > 0 ? 'warning' : 'success')),
         ];
 
-        // ─── Non-Seller KPIs ───
+        // --- Non-Seller KPIs ---
         if (!$isSeller) {
-            $lowStockCount = InventoryBalance::whereHas('product', function ($q) {
-                $q->whereColumn('quantity', '<=', 'minimum_stock_level');
+            $invQuery = InventoryBalance::query();
+            if ($branchId) {
+                $locationIds = StorageLocation::where('branch_id', $branchId)->pluck('id');
+                $invQuery->whereIn('storage_location_id', $locationIds);
+            } else if ($isManager) {
+                $branchIds = $user->branches()->pluck('branches.id');
+                $locationIds = StorageLocation::whereIn('branch_id', $branchIds)->pluck('id');
+                $invQuery->whereIn('storage_location_id', $locationIds);
+            }
+
+            $lowStockCount = (clone $invQuery)->whereHas('product', function ($q) {
+                $q->whereColumn('inventory_balances.quantity', '<=', 'products.minimum_stock_level');
             })->count();
 
             $activeProduction = ManufacturingOrder::whereIn('status', ['planned', 'in_progress'])->count();
-            $completedThisMonth = ManufacturingOrder::where('status', 'completed')
-                ->where('created_at', '>=', $thisMonth)->count();
+            $completedThisPeriod = ManufacturingOrder::where('status', 'completed')
+                ->whereBetween('created_at', [$startDate, $endDate])->count();
 
             $totalActiveProducts = Product::where('is_active', true)->count();
 
@@ -82,7 +118,7 @@ class KpiStatsWidget extends BaseWidget
                 ->color('info');
 
             $stats[] = Stat::make('Production Orders', $activeProduction)
-                ->description($completedThisMonth . ' completed this month')
+                ->description($completedThisPeriod . ' completed in selected period')
                 ->descriptionIcon('heroicon-m-cog-6-tooth')
                 ->color($activeProduction > 0 ? 'warning' : 'gray');
         }

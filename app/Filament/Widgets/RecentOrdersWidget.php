@@ -3,28 +3,51 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Sale;
+use App\Models\StorageLocation;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class RecentOrdersWidget extends BaseWidget
 {
-    protected static ?int $sort = 3;
-    protected static ?string $heading = 'Recent Orders';
+    use InteractsWithPageFilters;
+
+    protected static ?int $sort = 4;
+    protected static ?string $heading = 'Orders in Selected Period';
     protected int | string | array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
         $user = auth()->user();
         $isSeller = $user->hasRole('Seller');
+        $isManager = $user->hasRole('Manager');
+        
+        $startDate = $this->filters['startDate'] ?? null;
+        $endDate   = $this->filters['endDate'] ?? null;
+        $branchId  = $this->filters['branch_id'] ?? null;
+
+        $startDate = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::now()->startOfMonth();
+        $endDate   = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfMonth();
 
         return $table
             ->query(
                 Sale::query()
+                    ->whereBetween('created_at', [$startDate, $endDate])
                     ->when($isSeller, fn ($q) => $q->where('user_id', $user->id))
+                    ->when($branchId, function ($q) use ($branchId) {
+                        $locationIds = StorageLocation::where('branch_id', $branchId)->pluck('id');
+                        return $q->whereIn('storage_location_id', $locationIds);
+                    })
+                    ->when(!$branchId && ($isManager || $isSeller), function ($q) use ($user) {
+                        $branchIds = $user->branches()->pluck('branches.id');
+                        $locationIds = StorageLocation::whereIn('branch_id', $branchIds)->pluck('id');
+                        return $q->whereIn('storage_location_id', $locationIds);
+                    })
                     ->latest()
-                    ->limit(8)
+                    ->limit(10)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('reference')

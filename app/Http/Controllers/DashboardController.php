@@ -12,10 +12,13 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        if (auth()->check() && auth()->user()->roles()->count() > 0) {
+            return redirect('/admin');
+        }
         $stats = [
             'total_products'  => Product::where('is_active', true)->count(),
-            'today_sales'     => Sale::whereDate('created_at', today())->sum('total'),
-            'low_stock'       => InventoryBalance::whereColumn('quantity', '<=', 'products.minimum_stock_level')
+            'today_sales'     => Sale::whereIn('status', ['confirmed', 'processing', 'shipped', 'completed'])->whereDate('created_at', today())->sum('total'),
+            'low_stock'       => InventoryBalance::whereColumn('inventory_balances.quantity', '<=', 'products.minimum_stock_level')
                                     ->join('products', 'inventory_balances.product_id', '=', 'products.id')
                                     ->count(),
             'active_orders'   => ManufacturingOrder::whereIn('status', ['Pending', 'In Progress'])->count(),
