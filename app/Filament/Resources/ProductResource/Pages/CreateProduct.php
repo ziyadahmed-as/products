@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Filament\Resources\ProductResource;
 use App\Models\InventoryBalance;
+use App\Models\StorageLocation;
 use App\Models\StockMovement;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
@@ -12,18 +13,39 @@ class CreateProduct extends CreateRecord
 {
     protected static string $resource = ProductResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        // Strip virtual fields so they don't hit the products table
+        unset($data['initial_quantity']);
+        return $data;
+    }
+
     protected function afterCreate(): void
     {
-        $data = $this->data;
+        $data     = $this->data;
+        $quantity = (float) ($data['initial_quantity'] ?? 0);
 
-        $locationId = $data['initial_location_id'] ?? null;
-        $quantity   = (float) ($data['initial_quantity'] ?? 0);
+        if ($quantity <= 0) {
+            return;
+        }
 
-        if ($locationId && $quantity > 0) {
+        // Get branch IDs assigned to the product
+        $branchIds = $this->record->branches()->pluck('branches.id');
+
+        if ($branchIds->isEmpty()) {
+            return;
+        }
+
+        // Get all active storage locations linked to those branches
+        $locations = StorageLocation::whereIn('branch_id', $branchIds)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($locations as $location) {
             $balance = InventoryBalance::firstOrCreate(
                 [
                     'product_id'          => $this->record->id,
-                    'storage_location_id' => $locationId,
+                    'storage_location_id' => $location->id,
                 ],
                 ['quantity' => 0]
             );
@@ -32,7 +54,7 @@ class CreateProduct extends CreateRecord
 
             StockMovement::create([
                 'product_id'          => $this->record->id,
-                'storage_location_id' => $locationId,
+                'storage_location_id' => $location->id,
                 'type'                => 'in',
                 'quantity'            => $quantity,
                 'unit_cost'           => $this->record->purchase_cost ?? 0,
@@ -41,12 +63,8 @@ class CreateProduct extends CreateRecord
                 'reference_id'        => $this->record->id,
             ]);
         }
-    }
 
-    protected function mutateFormDataBeforeCreate(array $data): array
-    {
-        // Strip virtual fields before saving to products table
-        unset($data['initial_location_id'], $data['initial_quantity']);
-        return $data;
+        // Sync the product's quantity column
+        $this->record->syncQuantity();
     }
 }

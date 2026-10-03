@@ -17,6 +17,7 @@ class Product extends Model
         'minimum_stock_level',
         'purchase_cost',
         'selling_price',
+        'quantity',
         'image',
         'is_active',
         'is_featured',
@@ -28,7 +29,18 @@ class Product extends Model
         'is_active'   => 'boolean',
         'is_featured' => 'boolean',
         'rating'      => 'float',
+        'quantity'    => 'float',
     ];
+
+    /**
+     * Sync the product's quantity column from the InventoryBalance totals.
+     * Call this after any stock change.
+     */
+    public function syncQuantity(): void
+    {
+        $total = $this->inventoryBalances()->sum('quantity');
+        $this->update(['quantity' => $total]);
+    }
 
     public function category()
     {

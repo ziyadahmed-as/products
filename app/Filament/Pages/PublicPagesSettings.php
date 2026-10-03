@@ -26,7 +26,7 @@ class PublicPagesSettings extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('super_admin');
+        return auth()->user()->hasRole('Super Admin');
     }
 
     public ?array $data = [];

@@ -20,7 +20,7 @@ class ActivityResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('super_admin');
+        return auth()->user()->hasRole('Super Admin');
     }
 
     public static function canCreate(): bool
