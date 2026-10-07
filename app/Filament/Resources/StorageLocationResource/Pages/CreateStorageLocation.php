@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateStorageLocation extends CreateRecord
 {
     protected static string $resource = StorageLocationResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

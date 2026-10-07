@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateStockReceipt extends CreateRecord
 {
     protected static string $resource = StockReceiptResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateStockMovement extends CreateRecord
 {
     protected static string $resource = StockMovementResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

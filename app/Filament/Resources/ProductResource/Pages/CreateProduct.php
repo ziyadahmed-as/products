@@ -66,4 +66,9 @@ class CreateProduct extends CreateRecord
         // Sync the product's quantity column
         $this->record->syncQuantity();
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
