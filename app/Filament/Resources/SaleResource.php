@@ -422,6 +422,8 @@ class SaleResource extends Resource
                                     'reference_type'      => 'sale',
                                     'reference_id'        => $record->id,
                                 ]);
+                                
+                                $line->product->syncQuantity();
                             }
                             $record->update(['status' => 'confirmed']);
                             Notification::make()->title('Order Confirmed and Stock Deducted')->success()->send();
