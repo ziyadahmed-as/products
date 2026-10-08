@@ -67,9 +67,9 @@
                 @endif
             </a>
             @auth
-                <a href="{{ route('dashboard') }}" class="pub-btn pub-btn-primary" style="padding:.5rem 1.1rem;font-size:.8rem;">Dashboard</a>
+                <a href="{{ route('client.dashboard') }}" class="pub-btn pub-btn-primary" style="padding:.5rem 1.1rem;font-size:.8rem;">My Account</a>
             @else
-                <a href="{{ route('login') }}" class="pub-login-btn">Login</a>
+                <a href="{{ route('client.login') }}" class="pub-login-btn">Login</a>
             @endauth
         </div>
     </div>

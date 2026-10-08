@@ -186,6 +186,7 @@ class PublicController extends Controller
             $sale = Sale::create([
                 'reference' => 'ORD-' . strtoupper(uniqid()),
                 'type' => 'customer_order',
+                'client_id' => auth()->id() ?? null,
                 'storage_location_id' => \App\Models\StorageLocation::first()->id ?? 1,
                 'customer_name' => $request->customer_name . ' (' . $request->phone . ') - ' . $request->address,
                 'subtotal' => $total,

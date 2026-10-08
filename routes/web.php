@@ -33,7 +33,25 @@ Route::post('/cart/update/{id}', [PublicController::class, 'updateCart'])->name(
 Route::get('/checkout', [PublicController::class, 'checkout'])->name('public.checkout');
 Route::post('/checkout', [PublicController::class, 'placeOrder'])->name('public.order.place');
 
-// Auth routes
+// Public Auth Routes
+Route::get('/client/login', [\App\Http\Controllers\ClientAuthController::class, 'showLogin'])->name('client.login');
+Route::post('/client/login', [\App\Http\Controllers\ClientAuthController::class, 'login'])->name('client.login.submit');
+Route::get('/client/register', [\App\Http\Controllers\ClientAuthController::class, 'showRegister'])->name('client.register');
+Route::post('/client/register', [\App\Http\Controllers\ClientAuthController::class, 'register'])->name('client.register.submit');
+Route::post('/client/logout', [\App\Http\Controllers\ClientAuthController::class, 'logout'])->name('client.logout');
+
+// Client Dashboard
+Route::middleware(['auth'])->prefix('client')->name('client.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\ClientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/orders', [\App\Http\Controllers\ClientDashboardController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order}', [\App\Http\Controllers\ClientDashboardController::class, 'showOrder'])->name('orders.show');
+    Route::post('/orders/{order}/rate/{product}', [\App\Http\Controllers\ClientDashboardController::class, 'submitRating'])->name('orders.rate');
+    Route::get('/reviews', [\App\Http\Controllers\ClientDashboardController::class, 'reviews'])->name('reviews');
+});
+
+// Admin Auth routes (redirected to filament login)
+Route::get('/login', fn() => redirect('/admin/login'))->name('login');
+
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard
@@ -73,6 +91,3 @@ Route::middleware(['auth'])->group(function () {
         return redirect('/');
     })->name('logout');
 });
-
-// Login / Register (simple redirect to Filament admin for now)
-Route::get('/login', fn() => redirect('/admin/login'))->name('login');
