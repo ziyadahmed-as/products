@@ -182,10 +182,10 @@ class SaleResource extends Resource
                                     }
                                 }),
                             Forms\Components\TextInput::make('quantity')
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->required()
                                 ->default(1)
-                                ->minValue(1)
+                                ->minValue(0.01)
                                 ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, callable $get, callable $set) {
                                     $set('total', $state * ($get('unit_price') ?? 0));
@@ -202,7 +202,7 @@ class SaleResource extends Resource
                                     $set('../../total', $subtotal - $disc + $tax);
                                 }),
                             Forms\Components\TextInput::make('unit_price')
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->required()
                                 ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, callable $get, callable $set) {
@@ -220,7 +220,7 @@ class SaleResource extends Resource
                                     $set('../../total', $subtotal - $disc + $tax);
                                 }),
                             Forms\Components\TextInput::make('total')
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->required()
                                 ->readOnly(),
                         ])
@@ -247,9 +247,9 @@ class SaleResource extends Resource
             Forms\Components\Section::make('Financials')
                 ->schema([
                     Forms\Components\TextInput::make('subtotal')
-                        ->required()->numeric()->prefix('Br ')->default(0)->readOnly(),
+                        ->required()->numeric()->step('any')->prefix('Br ')->default(0)->readOnly(),
                     Forms\Components\TextInput::make('discount')
-                        ->required()->numeric()->prefix('Br ')->default(0)
+                        ->required()->numeric()->step('any')->prefix('Br ')->default(0)
                         ->live(onBlur: true)
                         ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
                             $sub = (float) ($get('subtotal') ?? 0);
@@ -258,7 +258,7 @@ class SaleResource extends Resource
                             $set('total', $sub - $disc + $tax);
                         }),
                     Forms\Components\TextInput::make('tax')
-                        ->required()->numeric()->prefix('Br ')->default(0)
+                        ->required()->numeric()->step('any')->prefix('Br ')->default(0)
                         ->live(onBlur: true)
                         ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
                             $sub = (float) ($get('subtotal') ?? 0);
@@ -267,9 +267,23 @@ class SaleResource extends Resource
                             $set('total', $sub - $disc + $tax);
                         }),
                     Forms\Components\TextInput::make('total')
-                        ->required()->numeric()->prefix('Br ')->default(0)->readOnly(),
+                        ->required()->numeric()->step('any')->prefix('Br ')->default(0)->readOnly(),
                     Forms\Components\TextInput::make('paid_amount')
-                        ->required()->numeric()->prefix('Br ')->default(0)->readOnly(),
+                        ->required()->numeric()->step('any')->prefix('Br ')->default(0)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
+                            $paid = (float) ($get('paid_amount') ?? 0);
+                            $total = (float) ($get('total') ?? 0);
+                            if ($total > 0) {
+                                if ($paid >= $total) {
+                                    $set('payment_status', 'paid');
+                                } elseif ($paid > 0) {
+                                    $set('payment_status', 'partial');
+                                } else {
+                                    $set('payment_status', 'pending');
+                                }
+                            }
+                        }),
                 ])->columns(5),
 
             Forms\Components\Section::make('Payments')
@@ -278,7 +292,7 @@ class SaleResource extends Resource
                         ->relationship()
                         ->schema([
                             Forms\Components\TextInput::make('amount')
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->required()
                                 ->prefix('Br ')
                                 ->live(onBlur: true)
@@ -392,7 +406,7 @@ class SaleResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn (Sale $record) => $record->status === 'pending')
+                    ->visible(fn (Sale $record) => $record->status === 'pending' && !$record->is_stock_deducted)
                     ->action(function (Sale $record) {
                         DB::transaction(function () use ($record) {
                             foreach ($record->lines as $line) {
@@ -423,7 +437,7 @@ class SaleResource extends Resource
                                     'reference_id'        => $record->id,
                                 ]);
                                 
-                                $line->product->syncQuantity();
+                                $line->product->decrement('quantity', $qtyToDeduct ?? $line->quantity);
                             }
                             $record->update(['status' => 'confirmed']);
                             Notification::make()->title('Order Confirmed and Stock Deducted')->success()->send();

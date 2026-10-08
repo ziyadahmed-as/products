@@ -138,7 +138,7 @@ class QuickSell extends Page implements HasForms
                                 Forms\Components\TextInput::make('unit_price')
                                     ->label('Price')
                                     ->prefix('Br ')
-                                    ->numeric()
+                                    ->numeric()->step('any')
                                     ->required()
                                     ->reactive()
                                     ->afterStateUpdated(fn ($state, Forms\Get $get, Forms\Set $set) =>
@@ -147,10 +147,10 @@ class QuickSell extends Page implements HasForms
                                     ->columnSpan(2),
                                 Forms\Components\TextInput::make('quantity')
                                     ->label('Qty')
-                                    ->numeric()
+                                    ->numeric()->step('any')
                                     ->required()
                                     ->default(1)
-                                    ->minValue(1)
+                                    ->minValue(0.01)
                                     ->reactive()
                                     ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
                                         $set('total', (float)($state ?? 1) * (float)($get('unit_price') ?? 0));
@@ -195,7 +195,7 @@ class QuickSell extends Page implements HasForms
                                 Forms\Components\TextInput::make('total')
                                     ->label('Line Total')
                                     ->prefix('Br ')
-                                    ->numeric()
+                                    ->numeric()->step('any')
                                     ->readOnly()
                                     ->columnSpan(2),
                             ])

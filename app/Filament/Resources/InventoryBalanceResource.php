@@ -45,7 +45,7 @@ class InventoryBalanceResource extends Resource
                         ->required(),
                     Forms\Components\TextInput::make('quantity')
                         ->required()
-                        ->numeric()
+                        ->numeric()->step('any')
                         ->minValue(0)
                         ->default(0),
                 ])->columns(3),
@@ -79,7 +79,7 @@ class InventoryBalanceResource extends Resource
                     ->label('Location')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('quantity')
-                    ->numeric()
+                    ->numeric()->step('any')
                     ->sortable()
                     ->badge()
                     ->color(fn ($state) => $state <= 0 ? 'danger' : ($state < 10 ? 'warning' : 'success')),

@@ -109,7 +109,7 @@ class ProductResource extends Resource
                         ->schema([
                             Forms\Components\TextInput::make('purchase_cost')
                                 ->label('Purchase / Production Cost')
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->prefix('Br ')
                                 ->minValue(0)
                                 ->live(onBlur: true)
@@ -119,7 +119,7 @@ class ProductResource extends Resource
                                     $set('total_value', number_format($qty * $price, 2));
                                 }),
                             Forms\Components\TextInput::make('selling_price')
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->prefix('Br ')
                                 ->minValue(0)
                                 ->visible(fn (Forms\Get $get) => in_array($get('type'), [
@@ -127,7 +127,7 @@ class ProductResource extends Resource
                                 ])),
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Quantity')
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->required()
                                 ->default(0)
                                 ->minValue(0)
@@ -140,7 +140,7 @@ class ProductResource extends Resource
                             Forms\Components\TextInput::make('minimum_stock_level')
                                 ->label('Minimum Stock Level (Reorder Point)')
                                 ->required()
-                                ->numeric()
+                                ->numeric()->step('any')
                                 ->minValue(0)
                                 ->default(0),
                             Forms\Components\TextInput::make('total_value')

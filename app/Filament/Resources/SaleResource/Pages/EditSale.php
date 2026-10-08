@@ -19,7 +19,7 @@ class EditSale extends EditRecord
     {
         $sale = $this->record;
         
-        if ($sale->status === 'completed' && !$sale->is_stock_deducted) {
+        if (!$sale->is_stock_deducted) {
             foreach ($sale->lines as $line) {
                 $productId = $line->product_id;
                 $qtyToDeduct = (float)$line->quantity;
@@ -48,7 +48,7 @@ class EditSale extends EditRecord
                 // Sync master product quantity
                 $product = Product::find($productId);
                 if ($product) {
-                    $product->syncQuantity();
+                    $product->decrement('quantity', $qtyToDeduct ?? $line->quantity);
                 }
             }
             
