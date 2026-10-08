@@ -141,6 +141,18 @@ class PublicController extends Controller
         return redirect()->route('public.cart')->with('success', 'Product removed from cart.');
     }
 
+    public function updateCart(Request $request, $id)
+    {
+        $cart = session()->get('cart');
+        $quantity = max(1, (int) $request->input('quantity', 1));
+        
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] = $quantity;
+            session()->put('cart', $cart);
+        }
+        return redirect()->route('public.cart')->with('success', 'Cart updated successfully.');
+    }
+
     public function checkout()
     {
         $cart = session()->get('cart', []);

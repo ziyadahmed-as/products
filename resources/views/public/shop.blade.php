@@ -9,57 +9,52 @@
     </h1>
     <p style="color:var(--text-2);margin-bottom:2.5rem;">Browse our full catalog of high-quality manufactured &amp; resale goods.</p>
 
-    <div class="pub-shop-layout">
+    {{-- Horizontal Top Filter --}}
+    <div style="background:var(--bg-card); padding:1.5rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.05); margin-bottom:2rem; border:1px solid var(--border); transition: background-color 0.3s, border-color 0.3s;">
+        <div style="font-weight:700; font-size:1.1rem; margin-bottom:1rem; color:var(--text-1);">Filter &amp; Sort <span style="font-size:0.85rem; font-weight:normal; color:var(--text-2); margin-left:0.5rem;">({{ $products->total() }} Products found)</span></div>
 
-        {{-- Sidebar --}}
-        <aside class="pub-sidebar">
-            <div class="pub-sidebar-title">Filter &amp; Sort</div>
+        <form action="{{ route('public.shop') }}" method="GET" id="filter-form" style="display:flex; flex-wrap:wrap; gap:1.5rem; align-items:flex-end;">
 
-            <form action="{{ route('public.shop') }}" method="GET" id="filter-form">
+            <div class="pub-filter-group" style="margin-bottom:0; flex:1; min-width:200px;">
+                <label class="pub-filter-label">Search</label>
+                <input type="text" name="search" class="pub-input" placeholder="Product name…" value="{{ request('search') }}">
+            </div>
 
-                <div class="pub-filter-group">
-                    <label class="pub-filter-label">Search</label>
-                    <input type="text" name="search" class="pub-input" placeholder="Product name…" value="{{ request('search') }}">
-                </div>
+            <div class="pub-filter-group" style="margin-bottom:0; flex:1; min-width:180px;">
+                <label class="pub-filter-label">Category</label>
+                <select name="category_id" class="pub-select" onchange="document.getElementById('filter-form').submit()">
+                    <option value="">All Categories</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                <div class="pub-filter-group">
-                    <label class="pub-filter-label">Category</label>
-                    <select name="category_id" class="pub-select" onchange="document.getElementById('filter-form').submit()">
-                        <option value="">All Categories</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="pub-filter-group" style="margin-bottom:0; flex:1; min-width:180px;">
+                <label class="pub-filter-label">Sort By</label>
+                <select name="sort" class="pub-select" onchange="document.getElementById('filter-form').submit()">
+                    <option value="newest"     {{ request('sort','newest')=='newest'     ? 'selected':'' }}>Newest First</option>
+                    <option value="price_asc"  {{ request('sort')=='price_asc'  ? 'selected':'' }}>Price: Low → High</option>
+                    <option value="price_desc" {{ request('sort')=='price_desc' ? 'selected':'' }}>Price: High → Low</option>
+                    <option value="rating"     {{ request('sort')=='rating'     ? 'selected':'' }}>Highest Rated</option>
+                </select>
+            </div>
 
-                <div class="pub-filter-group">
-                    <label class="pub-filter-label">Sort By</label>
-                    <select name="sort" class="pub-select" onchange="document.getElementById('filter-form').submit()">
-                        <option value="newest"     {{ request('sort','newest')=='newest'     ? 'selected':'' }}>Newest First</option>
-                        <option value="price_asc"  {{ request('sort')=='price_asc'  ? 'selected':'' }}>Price: Low → High</option>
-                        <option value="price_desc" {{ request('sort')=='price_desc' ? 'selected':'' }}>Price: High → Low</option>
-                        <option value="rating"     {{ request('sort')=='rating'     ? 'selected':'' }}>Highest Rated</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="pub-btn pub-btn-primary pub-btn-full" style="margin-top:.5rem;">
-                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
-                    Apply Filters
+            <div style="display:flex; gap:1rem; align-items:center;">
+                <button type="submit" class="pub-btn pub-btn-primary" style="padding:0.6rem 1.25rem;">
+                    <svg style="width:16px;height:16px;margin-right:0.4rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
+                    Apply
                 </button>
 
                 @if(request()->hasAny(['search','category_id','sort']))
-                    <a href="{{ route('public.shop') }}" class="pub-clear-link">✕ Clear all filters</a>
+                    <a href="{{ route('public.shop') }}" class="pub-clear-link" style="margin-bottom:0;">✕ Clear</a>
                 @endif
-            </form>
-
-            <div class="pub-sidebar-count">
-                <div class="pub-sidebar-count-num">{{ $products->total() }}</div>
-                <div class="pub-sidebar-count-label">Products found</div>
             </div>
-        </aside>
+        </form>
+    </div>
 
-        {{-- Product Grid --}}
-        <div>
+    {{-- Product Grid Wrapper --}}
+    <div>
             @if($products->isEmpty())
                 <div class="pub-empty">
                     <div class="pub-empty-icon">
@@ -108,6 +103,5 @@
             @endif
         </div>
     </div>
-</div>
 @endsection
 

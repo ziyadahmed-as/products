@@ -40,9 +40,14 @@
                             <div class="pub-cart-item-name">{{ $item['name'] }}</div>
                             <div class="pub-cart-item-sku">{{ $item['sku'] }}</div>
                         </div>
-                        <div class="pub-cart-item-row">
+                        <div class="pub-cart-item-row" style="margin-top: 1rem;">
                             <div class="pub-cart-item-qty">
-                                Br{{ number_format($item['price'], 2) }} × <strong>{{ $item['quantity'] }}</strong>
+                                <form action="{{ route('public.cart.update', $item['id']) }}" method="POST" style="display:flex;align-items:center;gap:.5rem;">
+                                    @csrf
+                                    <span style="color:var(--text-2);font-size:.9rem;">Br{{ number_format($item['price'], 2) }} ×</span>
+                                    <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" style="width: 60px; padding: .25rem; border: 1px solid #ddd; border-radius: 4px; text-align: center;">
+                                    <button type="submit" class="pub-btn pub-btn-secondary" style="padding: .25rem .5rem; font-size: .8rem;">Update</button>
+                                </form>
                             </div>
                             <div style="display:flex;align-items:center;gap:1rem;">
                                 <span class="pub-cart-item-total">Br{{ number_format($item['price'] * $item['quantity'], 2) }}</span>

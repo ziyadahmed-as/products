@@ -29,6 +29,7 @@ Route::post('/product/{product}/review', [PublicController::class, 'submitReview
 Route::get('/cart', [PublicController::class, 'cart'])->name('public.cart');
 Route::post('/cart/add/{product}', [PublicController::class, 'addToCart'])->name('public.cart.add');
 Route::delete('/cart/remove/{id}', [PublicController::class, 'removeFromCart'])->name('public.cart.remove');
+Route::post('/cart/update/{id}', [PublicController::class, 'updateCart'])->name('public.cart.update');
 Route::get('/checkout', [PublicController::class, 'checkout'])->name('public.checkout');
 Route::post('/checkout', [PublicController::class, 'placeOrder'])->name('public.order.place');
 
