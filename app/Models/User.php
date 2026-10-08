@@ -52,4 +52,27 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Branch::class);
     }
+
+    /**
+     * Return the branch IDs this user is authorized to sell from.
+     * - Super Admin: all active branches
+     * - Manager: branches explicitly assigned via branch_user pivot
+     * - Seller: branches explicitly assigned via branch_user pivot
+     */
+    public function authorizedBranchIds(): \Illuminate\Support\Collection
+    {
+        if ($this->hasRole('Super Admin')) {
+            return Branch::where('is_active', true)->pluck('id');
+        }
+
+        return $this->branches()->pluck('branches.id');
+    }
+
+    /**
+     * Check whether this user is allowed to operate in the given branch.
+     */
+    public function canAccessBranch(int $branchId): bool
+    {
+        return $this->authorizedBranchIds()->contains($branchId);
+    }
 }

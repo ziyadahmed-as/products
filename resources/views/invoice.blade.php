@@ -68,8 +68,9 @@
                 <em>Sales Rep: {{ $sale->user->name ?? 'N/A' }}</em>
             </div>
             <div style="text-align: right;">
-                <h3>Fulfillment Location:</h3>
-                {{ $sale->storageLocation->name ?? 'Main Warehouse' }}
+                <h3>Branch & Location:</h3>
+                <strong>{{ $sale->branch->name ?? 'System Branch' }}</strong><br>
+                <em>{{ $sale->storageLocation->name ?? 'Main Warehouse' }}</em>
             </div>
         </div>
 
