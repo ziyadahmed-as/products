@@ -20,6 +20,7 @@ class ClientDashboardController extends Controller
     {
         $orders = Sale::where('client_id', Auth::id())
             ->where('type', 'customer_order')
+            ->withCount('lines')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -72,6 +73,7 @@ class ClientDashboardController extends Controller
 
         ProductReview::create([
             'product_id'      => $product->id,
+            'user_id'         => $userId,
             'reviewer_name'   => Auth::user()->name,
             'reviewer_email'  => Auth::user()->email,
             'rating'          => $validated['rating'],
@@ -87,13 +89,46 @@ class ClientDashboardController extends Controller
 
     public function reviews()
     {
-        // Assuming review ownership by email for now, since ProductReview doesn't explicitly have user_id
-        // But we can just use reviewer_email to fetch the authenticated user's reviews
-        $reviews = ProductReview::where('reviewer_email', Auth::user()->email)
+        $reviews = ProductReview::where(function ($q) {
+                $q->where('user_id', Auth::id())
+                  ->orWhere('reviewer_email', Auth::user()->email);
+            })
             ->with('product')
             ->orderBy('created_at', 'desc')
             ->get();
 
         return view('public.client.reviews', compact('reviews'));
+    }
+
+    public function profile()
+    {
+        return view('public.client.profile', ['user' => Auth::user()]);
+    }
+
+    public function updateProfile(\Illuminate\Http\Request $request)
+    {
+        $user = Auth::user();
+        $request->validate([
+            'name'         => 'required|string|max:255',
+            'phone'        => 'nullable|string|max:30',
+            'current_password'      => 'nullable|string',
+            'password'              => 'nullable|min:8|confirmed|required_with:current_password',
+            'password_confirmation' => 'nullable',
+        ]);
+
+        if ($request->filled('current_password')) {
+            if (! \Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Current password is incorrect.']);
+            }
+        }
+
+        $user->name  = $request->name;
+        $user->phone = $request->phone;
+        if ($request->filled('password')) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+        $user->save();
+
+        return back()->with('success', 'Profile updated successfully!');
     }
 }

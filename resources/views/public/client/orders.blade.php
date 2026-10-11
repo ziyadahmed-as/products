@@ -3,55 +3,45 @@
 
 @section('content')
 <div class="pub-container" style="padding-top:3rem;padding-bottom:5rem;">
-    <div style="display:flex; gap:2rem; flex-wrap:wrap;">
-        
-        {{-- Sidebar --}}
-        <div style="width:250px; flex-shrink:0;">
-            <div style="background:var(--bg-card); border-radius:12px; border:1px solid var(--border); overflow:hidden;">
-                <div style="padding:1.5rem; border-bottom:1px solid var(--border);">
-                    <div style="font-weight:700; color:var(--text-1);">{{ auth()->user()->name }}</div>
-                    <div style="font-size:0.85rem; color:var(--text-2);">{{ auth()->user()->email }}</div>
-                </div>
-                <div style="display:flex; flex-direction:column; padding:0.5rem 0;">
-                    <a href="{{ route('client.dashboard') }}" style="padding:0.75rem 1.5rem; color:var(--text-2);">Dashboard</a>
-                    <a href="{{ route('client.orders') }}" style="padding:0.75rem 1.5rem; color:var(--text-1); font-weight:600; border-left:3px solid var(--cyan); background:rgba(8,145,178,0.05);">My Orders</a>
-                    <a href="{{ route('client.reviews') }}" style="padding:0.75rem 1.5rem; color:var(--text-2);">My Reviews</a>
-                    <form action="{{ route('client.logout') }}" method="POST" style="margin:0;">
-                        @csrf
-                        <button type="submit" style="width:100%; text-align:left; padding:0.75rem 1.5rem; color:var(--text-2); background:none; border:none; cursor:pointer;">Log Out</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start;">
 
-        {{-- Content --}}
-        <div style="flex:1; min-width:300px;">
-            <h1 style="font-size:2rem; font-weight:800; color:var(--text-1); margin-bottom:1.5rem;">My Orders</h1>
-            
+        @include('public.client._sidebar', ['active' => 'orders'])
+
+        <div style="flex:1;min-width:300px;">
+            <h1 style="font-size:2rem;font-weight:800;color:var(--text-1);margin-bottom:1.5rem;">My Orders</h1>
+
             @if($orders->isEmpty())
-                <div style="background:var(--bg-card); padding:3rem; border-radius:12px; border:1px solid var(--border); text-align:center;">
-                    <div style="color:var(--text-2); margin-bottom:1rem;">You have not placed any orders yet.</div>
+                <div style="background:var(--bg-card);padding:3rem;border-radius:14px;border:1px solid var(--border);text-align:center;">
+                    <svg style="width:48px;height:48px;color:var(--text-3);margin:0 auto 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <div style="color:var(--text-2);margin-bottom:1rem;">You haven't placed any orders yet.</div>
                     <a href="{{ route('public.shop') }}" class="pub-btn pub-btn-primary">Browse Shop</a>
                 </div>
             @else
-                <div style="display:flex; flex-direction:column; gap:1rem;">
+                <div style="display:flex;flex-direction:column;gap:.875rem;">
                     @foreach($orders as $order)
-                        <div style="background:var(--bg-card); padding:1.5rem; border-radius:12px; border:1px solid var(--border); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem;">
-                            <div>
-                                <div style="font-weight:700; color:var(--text-1); font-size:1.1rem; margin-bottom:0.25rem;">{{ $order->reference }}</div>
-                                <div style="color:var(--text-2); font-size:0.85rem;">Date: {{ $order->created_at->format('d M Y') }} &bull; Total: Br{{ number_format($order->total, 2) }}</div>
-                            </div>
-                            <div style="display:flex; gap:1rem; align-items:center;">
-                                <span style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; background:var(--bg-card2); color:var(--text-1);">{{ $order->status }}</span>
-                                <span style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; background:{{ $order->payment_status == 'Paid' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)' }}; color:{{ $order->payment_status == 'Paid' ? '#10b981' : '#f59e0b' }};">{{ $order->payment_status }}</span>
-                                <a href="{{ route('client.orders.show', $order) }}" class="pub-btn pub-btn-secondary" style="padding:0.5rem 1rem;">View Order</a>
+                    @php
+                        $statusColors = ['Pending'=>'#f59e0b','Fulfilled'=>'#0ea5e9','Completed'=>'#10b981','Cancelled'=>'#ef4444'];
+                        $sc = $statusColors[$order->status] ?? '#94a3b8';
+                    @endphp
+                    <div style="background:var(--bg-card);padding:1.5rem;border-radius:12px;border:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
+                        <div>
+                            <div style="font-weight:700;color:var(--text-1);font-size:1rem;font-family:monospace;margin-bottom:.3rem;">{{ $order->reference }}</div>
+                            <div style="color:var(--text-3);font-size:.82rem;">
+                                {{ $order->created_at->format('d M Y, h:i A') }}
+                                &bull; <strong style="color:var(--text-2);">Br{{ number_format($order->total, 2) }}</strong>
+                                &bull; {{ $order->lines->count() ?? '?' }} item(s)
                             </div>
                         </div>
+                        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                            <span style="padding:.25rem .75rem;border-radius:50px;font-size:.72rem;font-weight:700;background:{{ $sc }}22;color:{{ $sc }};">{{ $order->status }}</span>
+                            <span style="padding:.25rem .75rem;border-radius:50px;font-size:.72rem;font-weight:700;background:{{ $order->payment_status == 'Paid' ? 'rgba(16,185,129,.15)' : 'rgba(245,158,11,.15)' }};color:{{ $order->payment_status == 'Paid' ? '#10b981' : '#f59e0b' }};">{{ $order->payment_status }}</span>
+                            <a href="{{ route('client.orders.show', $order) }}" class="pub-btn pub-btn-secondary" style="padding:.4rem 1rem;font-size:.82rem;">View Order →</a>
+                        </div>
+                    </div>
                     @endforeach
                 </div>
             @endif
         </div>
-
     </div>
 </div>
 @endsection

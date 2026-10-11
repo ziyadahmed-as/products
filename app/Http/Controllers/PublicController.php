@@ -165,9 +165,11 @@ class PublicController extends Controller
     public function placeOrder(Request $request)
     {
         $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string',
+            'customer_name'  => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'phone'          => 'required|string|max:30',
+            'address'        => 'required|string|max:1000',
+            'notes'          => 'nullable|string|max:1000',
         ]);
 
         $cart = session()->get('cart', []);
@@ -182,38 +184,57 @@ class PublicController extends Controller
                 $total += $item['price'] * $item['quantity'];
             }
 
-            // Create Sale (Customer Order)
             $sale = Sale::create([
-                'reference' => 'ORD-' . strtoupper(uniqid()),
-                'type' => 'customer_order',
-                'client_id' => auth()->id() ?? null,
+                'reference'           => 'ORD-' . strtoupper(uniqid()),
+                'type'                => 'customer_order',
+                'client_id'           => auth()->id() ?? null,
                 'storage_location_id' => \App\Models\StorageLocation::first()->id ?? 1,
-                'customer_name' => $request->customer_name . ' (' . $request->phone . ') - ' . $request->address,
-                'subtotal' => $total,
-                'total' => $total,
-                'paid_amount' => 0,
-                'payment_status' => 'Unpaid',
-                'status' => 'Pending'
+                'customer_name'       => $request->customer_name,
+                'customer_email'      => strtolower(trim($request->customer_email)),
+                'customer_phone'      => $request->phone,
+                'customer_address'    => $request->address,
+                'order_notes'         => $request->notes,
+                'subtotal'            => $total,
+                'total'               => $total,
+                'paid_amount'         => 0,
+                'payment_status'      => 'Unpaid',
+                'status'              => 'Pending',
             ]);
 
             foreach ($cart as $id => $item) {
                 SaleLine::create([
-                    'sale_id' => $sale->id,
+                    'sale_id'    => $sale->id,
                     'product_id' => $id,
-                    'quantity' => $item['quantity'],
+                    'quantity'   => $item['quantity'],
                     'unit_price' => $item['price'],
-                    'total' => $item['price'] * $item['quantity'],
+                    'total'      => $item['price'] * $item['quantity'],
                 ]);
             }
 
             session()->forget('cart');
             DB::commit();
 
-            return redirect()->route('public.home')->with('success', 'Order placed successfully! We will contact you shortly.');
+            // Store in session for the post-order account-creation prompt
+            session()->put('last_order_reference', $sale->reference);
+            session()->put('last_order_email', strtolower(trim($request->customer_email)));
+            session()->put('last_order_name', $request->customer_name);
+
+            return redirect()->route('public.order.success');
+
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Error placing order: ' . $e->getMessage());
         }
+    }
+
+    public function orderSuccess()
+    {
+        $reference = session('last_order_reference');
+        if (! $reference) {
+            return redirect()->route('public.home');
+        }
+        $order = Sale::where('reference', $reference)->first();
+        return view('public.order_success', compact('order'));
     }
 
     public function contactSend(Request $request)

@@ -10,7 +10,19 @@
     @php
         $cartItems = collect($cart)->map(fn($item, $id) => array_merge($item, ['id' => $id]));
         $total = $cartItems->sum(fn($i) => $i['price'] * $i['quantity']);
+        $authUser = auth()->user();
     @endphp
+
+    @if(! auth()->check())
+    <div style="background:rgba(8,145,178,.08);border:1px solid rgba(8,145,178,.25);border-radius:12px;padding:1rem 1.25rem;margin-bottom:2rem;display:flex;align-items:center;gap:.75rem;">
+        <svg style="width:18px;height:18px;color:var(--cyan);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span style="font-size:.875rem;color:var(--text-2);">
+            Have an account?
+            <a href="{{ route('client.login') }}" style="color:var(--cyan);font-weight:700;">Log in</a>
+            for faster checkout and automatic order tracking.
+        </span>
+    </div>
+    @endif
 
     <div class="pub-checkout-layout">
 
@@ -34,27 +46,44 @@
                 <div class="pub-form-grid">
                     <div class="pub-form-group">
                         <label for="customer_name" class="pub-form-label">Full Name <span class="req">*</span></label>
-                        <input type="text" id="customer_name" name="customer_name" class="pub-input" placeholder="John Doe" value="{{ old('customer_name') }}">
+                        <input type="text" id="customer_name" name="customer_name" class="pub-input"
+                               placeholder="John Doe"
+                               value="{{ old('customer_name', $authUser?->name) }}"
+                               {{ $authUser ? 'readonly' : '' }}
+                               style="{{ $authUser ? 'opacity:.8;cursor:not-allowed;' : '' }}">
                     </div>
                     <div class="pub-form-group">
                         <label for="phone" class="pub-form-label">Phone Number <span class="req">*</span></label>
-                        <input type="tel" id="phone" name="phone" class="pub-input" placeholder="+1 (555) 000-0000" value="{{ old('phone') }}">
+                        <input type="tel" id="phone" name="phone" class="pub-input"
+                               placeholder="+1 (555) 000-0000"
+                               value="{{ old('phone', $authUser?->phone) }}">
                     </div>
                 </div>
 
                 <div class="pub-form-group" style="margin-bottom:1rem;">
-                    <label for="email" class="pub-form-label">Email Address</label>
-                    <input type="email" id="email" name="email" class="pub-input" placeholder="you@example.com" value="{{ old('email') }}">
+                    <label for="customer_email" class="pub-form-label">Email Address <span class="req">*</span></label>
+                    <input type="email" id="customer_email" name="customer_email" class="pub-input"
+                           placeholder="you@example.com" required
+                           value="{{ old('customer_email', $authUser?->email) }}"
+                           {{ $authUser ? 'readonly' : '' }}
+                           style="{{ $authUser ? 'opacity:.8;cursor:not-allowed;' : '' }}">
+                    @if(! $authUser)
+                    <div style="font-size:.75rem;color:var(--text-3);margin-top:.3rem;">Used to link your order to an account</div>
+                    @endif
                 </div>
 
                 <div class="pub-form-group" style="margin-bottom:1rem;">
                     <label for="address" class="pub-form-label">Delivery Address <span class="req">*</span></label>
-                    <textarea id="address" name="address" class="pub-input" rows="3" placeholder="Street address, city, ZIP code…" style="resize:vertical;">{{ old('address') }}</textarea>
+                    <textarea id="address" name="address" class="pub-input" rows="3"
+                              placeholder="Street address, city, ZIP code…"
+                              style="resize:vertical;">{{ old('address') }}</textarea>
                 </div>
 
                 <div class="pub-form-group" style="margin-bottom:1.5rem;">
                     <label for="notes" class="pub-form-label">Order Notes <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
-                    <textarea id="notes" name="notes" class="pub-input" rows="2" placeholder="Special delivery instructions…" style="resize:vertical;">{{ old('notes') }}</textarea>
+                    <textarea id="notes" name="notes" class="pub-input" rows="2"
+                              placeholder="Special delivery instructions…"
+                              style="resize:vertical;">{{ old('notes') }}</textarea>
                 </div>
 
                 <div class="pub-form-note">
@@ -112,4 +141,3 @@
     </div>
 </div>
 @endsection
-

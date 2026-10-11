@@ -8,6 +8,7 @@ class Sale extends Model
 {
     protected $fillable = [
         'reference', 'type', 'user_id', 'client_id', 'branch_id', 'storage_location_id', 'customer_name',
+        'customer_email', 'customer_phone', 'customer_address', 'order_notes',
         'subtotal', 'discount', 'tax', 'total', 'paid_amount', 'payment_status', 'status',
         'is_stock_deducted',
     ];

@@ -204,10 +204,38 @@
     {{-- ── Write a Review Form ── --}}
     <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(14,165,233,0.2); border-radius:1.5rem; padding:2rem; box-shadow:0 8px 32px rgba(14,165,233,0.05);">
         <h3 style="font-family:'Outfit',sans-serif; font-size:1.25rem; font-weight:700; color:#fff; margin:0 0 0.5rem;">Write a Review</h3>
-        <p style="color:#64748b; font-size:0.85rem; margin:0 0 1.5rem;">Share your experience with this product. Your order reference helps verify your purchase.</p>
+        <p style="color:#64748b; font-size:0.85rem; margin:0 0 1.5rem;">Share your experience with this product.</p>
+
+        @guest
+        {{-- Guest login prompt --}}
+        <div style="background:rgba(8,145,178,.08);border:1px solid rgba(8,145,178,.25);border-radius:.875rem;padding:1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;">
+                <svg style="width:20px;height:20px;color:var(--cyan);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span style="font-size:.875rem;color:#94a3b8;">Log in to get a <strong style="color:#34d399;">Verified Purchase</strong> badge on your review</span>
+            </div>
+            <a href="{{ route('client.login') }}" style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1.1rem;background:rgba(8,145,178,.15);color:var(--cyan);border:1px solid rgba(8,145,178,.3);border-radius:.5rem;font-size:.82rem;font-weight:700;text-decoration:none;">
+                Log in →
+            </a>
+        </div>
+        @endguest
 
         <form method="POST" action="{{ route('public.review.submit', $product) }}">
             @csrf
+
+            @auth
+            {{-- Hidden pre-filled fields for logged-in users --}}
+            <input type="hidden" name="reviewer_name" value="{{ auth()->user()->name }}">
+            <input type="hidden" name="reviewer_email" value="{{ auth()->user()->email }}">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);padding:.75rem 1rem;border-radius:.75rem;">
+                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),#6366f1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0;">
+                    {{ strtoupper(substr(auth()->user()->name,0,1)) }}
+                </div>
+                <div>
+                    <div style="font-size:.875rem;font-weight:700;color:#e2e8f0;">{{ auth()->user()->name }}</div>
+                    <div style="font-size:.72rem;color:#34d399;">✓ Logged in — review will be verified</div>
+                </div>
+            </div>
+            @else
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div>
                     <label style="display:block; font-size:0.8rem; font-weight:600; color:#e2e8f0; margin-bottom:0.4rem;">Your Name *</label>
@@ -229,8 +257,9 @@
                 <input type="text" name="order_reference" value="{{ old('order_reference') }}"
                     style="width:100%; background:rgba(10,15,29,0.8); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.875rem; outline:none; font-family:'Inter',sans-serif;"
                     placeholder="e.g. ORD-A1B2C3">
-                <p style="font-size:0.7rem; color:#475569; margin-top:0.25rem;">Enter your order ID from checkout confirmation to mark as verified purchase.</p>
+                <p style="font-size:0.7rem; color:#475569; margin-top:0.25rem;">Enter your order ID to mark as verified purchase.</p>
             </div>
+            @endauth
 
             {{-- Star Rating Picker --}}
             <div style="margin-bottom:1rem;">
