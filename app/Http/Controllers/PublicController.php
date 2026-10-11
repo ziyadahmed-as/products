@@ -164,21 +164,68 @@ class PublicController extends Controller
 
     public function placeOrder(Request $request)
     {
-        $request->validate([
+        $rules = [
             'customer_name'  => 'required|string|max:255',
             'customer_email' => 'required|email|max:255',
             'phone'          => 'required|string|max:30',
             'address'        => 'required|string|max:1000',
             'notes'          => 'nullable|string|max:1000',
-        ]);
+        ];
+
+        if (! auth()->check()) {
+            $rules['password']              = 'required|min:8|confirmed';
+            $rules['password_confirmation'] = 'required';
+        }
+
+        $request->validate($rules);
 
         $cart = session()->get('cart', []);
         if (empty($cart)) {
             return redirect()->route('public.shop')->with('error', 'Your cart is empty.');
         }
 
+        $email = strtolower(trim($request->customer_email));
+
         DB::beginTransaction();
         try {
+            // Handle User Authentication / Registration
+            $userId = auth()->id();
+            if (! $userId) {
+                $user = \App\Models\User::where('email', $email)->first();
+                if ($user) {
+                    // Existing account: verify password to log in and protect account
+                    if (! \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+                        return redirect()->back()
+                            ->withInput()
+                            ->withErrors(['password' => 'An account with this email already exists. The password provided does not match. Please enter the correct password or log in first.']);
+                    }
+                    \Illuminate\Support\Facades\Auth::login($user);
+                    $userId = $user->id;
+                } else {
+                    // Create new Buyer Account
+                    $user = \App\Models\User::create([
+                        'name'      => $request->customer_name,
+                        'email'     => $email,
+                        'phone'     => $request->phone,
+                        'password'  => \Illuminate\Support\Facades\Hash::make($request->password),
+                        'is_active' => true,
+                    ]);
+
+                    if (\Spatie\Permission\Models\Role::where('name', 'Client')->exists()) {
+                        $user->assignRole('Client');
+                    }
+
+                    \Illuminate\Support\Facades\Auth::login($user);
+                    $userId = $user->id;
+                }
+
+                // Associate any previous orders for this email
+                Sale::where('customer_email', $email)
+                    ->whereNull('client_id')
+                    ->where('type', 'customer_order')
+                    ->update(['client_id' => $userId]);
+            }
+
             $total = 0;
             foreach ($cart as $item) {
                 $total += $item['price'] * $item['quantity'];
@@ -187,10 +234,10 @@ class PublicController extends Controller
             $sale = Sale::create([
                 'reference'           => 'ORD-' . strtoupper(uniqid()),
                 'type'                => 'customer_order',
-                'client_id'           => auth()->id() ?? null,
+                'client_id'           => $userId,
                 'storage_location_id' => \App\Models\StorageLocation::first()->id ?? 1,
                 'customer_name'       => $request->customer_name,
-                'customer_email'      => strtolower(trim($request->customer_email)),
+                'customer_email'      => $email,
                 'customer_phone'      => $request->phone,
                 'customer_address'    => $request->address,
                 'order_notes'         => $request->notes,
@@ -214,9 +261,8 @@ class PublicController extends Controller
             session()->forget('cart');
             DB::commit();
 
-            // Store in session for the post-order account-creation prompt
             session()->put('last_order_reference', $sale->reference);
-            session()->put('last_order_email', strtolower(trim($request->customer_email)));
+            session()->put('last_order_email', $email);
             session()->put('last_order_name', $request->customer_name);
 
             return redirect()->route('public.order.success');

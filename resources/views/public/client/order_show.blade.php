@@ -50,10 +50,10 @@
                         <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;">
                             @foreach($order->lines as $line)
                             @php
-                                $isRated = \App\Models\ProductReview::where('product_id', $line->product_id)
-                                    ->where(function($q){ $q->where('user_id', auth()->id())->orWhere('order_reference', request()->route('order')->reference ?? ''); })
+                                $existingReview = \App\Models\ProductReview::where('product_id', $line->product_id)
+                                    ->where(function($q){ $q->where('user_id', auth()->id())->orWhere('reviewer_email', auth()->user()->email); })
                                     ->where('order_reference', $order->reference)
-                                    ->exists();
+                                    ->first();
                             @endphp
                             <div style="display:flex;gap:1.25rem;align-items:flex-start;padding-bottom:1.5rem;border-bottom:1px solid var(--border);{{ $loop->last ? 'border:none;padding-bottom:0;' : '' }}">
                                 <div style="width:72px;height:72px;background:var(--bg-card2);border-radius:10px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);">
@@ -67,25 +67,30 @@
                                         Qty: {{ $line->quantity }} &bull; Br{{ number_format($line->unit_price, 2) }} each &bull; <strong style="color:var(--text-2);">Br{{ number_format($line->total, 2) }}</strong>
                                     </div>
 
-                                    @if($isRated)
-                                    <div style="color:#10b981;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:.35rem;">
-                                        <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        You've reviewed this product
-                                    </div>
-                                    @elseif($line->product)
+                                    @if($line->product)
                                     <div style="background:rgba(8,145,178,.05);border:1px solid rgba(8,145,178,.2);padding:1rem;border-radius:10px;">
-                                        <div style="font-weight:700;font-size:.85rem;color:var(--text-1);margin-bottom:.6rem;">Rate this product:</div>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+                                            <div style="font-weight:700;font-size:.85rem;color:var(--text-1);">
+                                                {{ $existingReview ? 'Update Your Review:' : 'Rate this product:' }}
+                                            </div>
+                                            @if($existingReview)
+                                            <span style="font-size:.75rem;color:#10b981;font-weight:600;display:inline-flex;align-items:center;gap:.25rem;">
+                                                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                Reviewed
+                                            </span>
+                                            @endif
+                                        </div>
                                         <form action="{{ route('client.orders.rate', [$order, $line->product]) }}" method="POST">
                                             @csrf
                                             <div class="star-rating" style="display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:.3rem;margin-bottom:.75rem;">
                                                 @for($s=5;$s>=1;$s--)
-                                                <input type="radio" id="star{{ $s }}-{{ $line->id }}" name="rating" value="{{ $s }}" required>
+                                                <input type="radio" id="star{{ $s }}-{{ $line->id }}" name="rating" value="{{ $s }}" required {{ ($existingReview && $existingReview->rating == $s) ? 'checked' : '' }}>
                                                 <label for="star{{ $s }}-{{ $line->id }}" title="{{ $s }} stars">★</label>
                                                 @endfor
                                             </div>
-                                            <textarea name="comment" rows="2" placeholder="Write a comment… (optional)" class="pub-input" style="width:100%;font-size:.82rem;padding:.5rem .75rem;margin-bottom:.625rem;"></textarea>
+                                            <textarea name="comment" rows="2" placeholder="Write a comment… (optional)" class="pub-input" style="width:100%;font-size:.82rem;padding:.5rem .75rem;margin-bottom:.625rem;">{{ old('comment', $existingReview?->comment) }}</textarea>
                                             <button type="submit" class="pub-btn pub-btn-primary" style="padding:.4rem 1.1rem;font-size:.82rem;">
-                                                Submit Review
+                                                {{ $existingReview ? 'Update Review' : 'Submit Review' }}
                                             </button>
                                         </form>
                                     </div>

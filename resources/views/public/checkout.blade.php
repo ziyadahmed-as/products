@@ -68,9 +68,25 @@
                            {{ $authUser ? 'readonly' : '' }}
                            style="{{ $authUser ? 'opacity:.8;cursor:not-allowed;' : '' }}">
                     @if(! $authUser)
-                    <div style="font-size:.75rem;color:var(--text-3);margin-top:.3rem;">Used to link your order to an account</div>
+                    <div style="font-size:.75rem;color:var(--text-3);margin-top:.3rem;">Your order will be linked to this email</div>
                     @endif
                 </div>
+
+                @if(! $authUser)
+                <div class="pub-form-grid" style="margin-bottom:1rem;background:rgba(8,145,178,.05);border:1px solid rgba(8,145,178,.2);border-radius:12px;padding:1rem;">
+                    <div class="pub-form-group" style="margin-bottom:0;">
+                        <label for="password" class="pub-form-label">Create Password <span class="req">*</span></label>
+                        <input type="password" id="password" name="password" class="pub-input" required
+                               placeholder="Min. 8 characters" autocomplete="new-password">
+                        <div style="font-size:.72rem;color:var(--text-3);margin-top:.3rem;">To access and track your order later</div>
+                    </div>
+                    <div class="pub-form-group" style="margin-bottom:0;">
+                        <label for="password_confirmation" class="pub-form-label">Confirm Password <span class="req">*</span></label>
+                        <input type="password" id="password_confirmation" name="password_confirmation" class="pub-input" required
+                               placeholder="Repeat password" autocomplete="new-password">
+                    </div>
+                </div>
+                @endif
 
                 <div class="pub-form-group" style="margin-bottom:1rem;">
                     <label for="address" class="pub-form-label">Delivery Address <span class="req">*</span></label>

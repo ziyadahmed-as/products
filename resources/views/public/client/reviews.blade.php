@@ -51,11 +51,19 @@
                             "{{ $review->comment }}"
                         </div>
                         @endif
-                        @if($review->product)
-                        <div style="margin-top:.75rem;">
-                            <a href="{{ route('public.show', $review->product) }}" style="font-size:.78rem;color:var(--cyan);font-weight:600;">View Product →</a>
+                        <div style="margin-top:.75rem;display:flex;gap:1rem;align-items:center;">
+                            @if($review->product)
+                            <a href="{{ route('public.show', $review->product) }}" style="font-size:.78rem;color:var(--cyan);font-weight:600;text-decoration:none;">View Product →</a>
+                            @endif
+                            @if($review->order_reference)
+                            @php
+                                $reviewOrder = \App\Models\Sale::where('reference', $review->order_reference)->where('client_id', auth()->id())->first();
+                            @endphp
+                            @if($reviewOrder)
+                            <a href="{{ route('client.orders.show', $reviewOrder) }}" style="font-size:.78rem;color:var(--text-2);font-weight:600;text-decoration:none;">Edit Review in Order →</a>
+                            @endif
+                            @endif
                         </div>
-                        @endif
                     </div>
                     @endforeach
                 </div>

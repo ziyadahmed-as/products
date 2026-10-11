@@ -13,13 +13,30 @@ class ClientDashboardController extends Controller
 {
     public function index()
     {
-        return view('public.client.dashboard');
+        $userId = Auth::id();
+        $recentOrders = Sale::where('client_id', $userId)
+            ->where('type', 'customer_order')
+            ->with(['lines.product'])
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        $totalOrders   = Sale::where('client_id', $userId)->where('type', 'customer_order')->count();
+        $totalSpent    = Sale::where('client_id', $userId)->where('type', 'customer_order')->sum('total');
+        $pendingOrders = Sale::where('client_id', $userId)->where('type', 'customer_order')->where('status', 'Pending')->count();
+        $myReviews     = ProductReview::where(function ($q) {
+            $q->where('user_id', Auth::id())
+              ->orWhere('reviewer_email', Auth::user()->email);
+        })->count();
+
+        return view('public.client.dashboard', compact('recentOrders', 'totalOrders', 'totalSpent', 'pendingOrders', 'myReviews'));
     }
 
     public function orders()
     {
         $orders = Sale::where('client_id', Auth::id())
             ->where('type', 'customer_order')
+            ->with(['lines.product'])
             ->withCount('lines')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -55,21 +72,23 @@ class ClientDashboardController extends Controller
             abort(403, 'You did not purchase this product in this order.');
         }
 
-        // 4. One rating per product per order check
-        $existingReview = ProductReview::where('product_id', $product->id)
-            ->where('order_reference', $order->reference)
-            // Assuming reviewer_email could track user, or add a user_id to reviews if needed.
-            // But order_reference + product_id is unique enough for this order.
-            ->first();
-
-        if ($existingReview) {
-            return redirect()->back()->with('error', 'You have already reviewed this product for this order.');
-        }
-
         $validated = $request->validate([
             'rating'  => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:2000',
         ]);
+
+        $existingReview = ProductReview::where('product_id', $product->id)
+            ->where('order_reference', $order->reference)
+            ->first();
+
+        if ($existingReview) {
+            $existingReview->update([
+                'rating'  => $validated['rating'],
+                'comment' => $validated['comment'] ?? null,
+            ]);
+            $product->syncRating();
+            return redirect()->back()->with('success', 'Your review for ' . $product->name . ' has been updated.');
+        }
 
         ProductReview::create([
             'product_id'      => $product->id,
