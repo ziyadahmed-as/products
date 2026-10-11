@@ -28,7 +28,7 @@
         </div>
         @endif
 
-        <form action="{{ route('client.login.submit') }}" method="POST">
+        <form action="{{ route('login.submit') }}" method="POST">
             @csrf
 
             <div style="margin-bottom:1rem;">

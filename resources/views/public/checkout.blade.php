@@ -18,7 +18,7 @@
         <svg style="width:18px;height:18px;color:var(--cyan);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span style="font-size:.875rem;color:var(--text-2);">
             Have an account?
-            <a href="{{ route('client.login') }}" style="color:var(--cyan);font-weight:700;">Log in</a>
+            <a href="{{ route('login') }}" style="color:var(--cyan);font-weight:700;">Log in</a>
             for faster checkout and automatic order tracking.
         </span>
     </div>

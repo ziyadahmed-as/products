@@ -12,8 +12,17 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        if (auth()->check() && auth()->user()->roles()->count() > 0) {
-            return redirect('/admin');
+        if (auth()->check()) {
+            $user = auth()->user();
+            if ($user->hasRole('Client') || $user->roles()->count() === 0) {
+                return redirect()->route('client.dashboard');
+            }
+            if ($user->hasRole('Seller')) {
+                return redirect('/admin/quick-sells');
+            }
+            if ($user->hasRole('Super Admin') || $user->hasRole('Manager')) {
+                return redirect('/admin');
+            }
         }
         $stats = [
             'total_products'  => Product::where('is_active', true)->count(),

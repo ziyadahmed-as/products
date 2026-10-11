@@ -67,9 +67,11 @@
                 @endif
             </a>
             @auth
-                <a href="{{ route('client.dashboard') }}" class="pub-btn pub-btn-primary" style="padding:.5rem 1.1rem;font-size:.8rem;">My Account</a>
+                <a href="{{ auth()->user()->getDashboardUrl() }}" class="pub-btn pub-btn-primary" style="padding:.5rem 1.1rem;font-size:.8rem;">
+                    {{ auth()->user()->hasRole('Client') || auth()->user()->roles->isEmpty() ? 'My Account' : 'Dashboard' }}
+                </a>
             @else
-                <a href="{{ route('client.login') }}" class="pub-login-btn">Login</a>
+                <a href="{{ route('login') }}" class="pub-login-btn">Login</a>
             @endauth
         </div>
     </div>

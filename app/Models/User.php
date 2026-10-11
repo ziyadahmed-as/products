@@ -75,4 +75,46 @@ class User extends Authenticatable
     {
         return $this->authorizedBranchIds()->contains($branchId);
     }
+
+    /**
+     * Get the default landing dashboard URL based on the user's role.
+     * - Super Admin -> /admin (Filament Admin Panel Dashboard)
+     * - Manager -> /admin (Filament Manager Workspace) or /dashboard
+     * - Seller -> /admin/quick-sells (Filament Quick Sell / POS)
+     * - Production Officer -> /admin/manufacturing-orders
+     * - Client / Buyer / Customer -> /client/dashboard
+     */
+    public function getDashboardUrl(): string
+    {
+        if ($this->hasRole('Super Admin')) {
+            return '/admin';
+        }
+
+        if ($this->hasRole('Manager')) {
+            return '/admin';
+        }
+
+        if ($this->hasRole('Seller')) {
+            return '/admin/quick-sells';
+        }
+
+        if ($this->hasRole('Production Officer')) {
+            return '/admin/manufacturing-orders';
+        }
+
+        if ($this->hasRole('Auditor')) {
+            return '/admin/activities';
+        }
+
+        if ($this->hasRole('Client')) {
+            return route('client.dashboard');
+        }
+
+        // Default internal users
+        if ($this->roles()->count() > 0) {
+            return '/admin';
+        }
+
+        return route('client.dashboard');
+    }
 }

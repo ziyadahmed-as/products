@@ -121,7 +121,7 @@
 
                 <div style="text-align:center;margin-top:1.25rem;font-size:.85rem;color:var(--text-2);">
                     Already have an account?
-                    <a href="{{ route('client.login') }}" style="color:var(--cyan);font-weight:600;">Log in instead →</a>
+                    <a href="{{ route('login') }}" style="color:var(--cyan);font-weight:600;">Log in instead →</a>
                 </div>
                 @endif
 

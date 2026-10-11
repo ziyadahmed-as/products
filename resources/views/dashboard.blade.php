@@ -7,7 +7,7 @@
     <!-- Greeting -->
     <div class="page-header">
         <div>
-            <h1 class="text-gradient">Welcome, {{ auth()->user()->name ?? 'User' }} 👋</h1>
+            <h1 class="text-gradient">Welcome, {{ auth()->user()->name ?? 'User' }} </h1>
             <p class="text-dark-400 text-sm mt-1">Here's what's happening across Albareck today.</p>
         </div>
         <a href="{{ route('sales.create') }}" class="btn-primary">

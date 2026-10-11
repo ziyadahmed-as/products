@@ -28,10 +28,13 @@ class ClientAuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Claim any guest orders that match this email
-            $this->claimOrders(Auth::user());
+            $user = Auth::user();
 
-            return redirect()->intended(route('client.dashboard'));
+            // Claim any guest orders that match this email
+            $this->claimOrders($user);
+
+            // Redirect based on role (Super Admin, Manager, Seller, Client)
+            return redirect()->intended($user->getDashboardUrl());
         }
 
         return back()->withErrors(['email' => 'These credentials do not match our records.'])->onlyInput('email');

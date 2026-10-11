@@ -36,10 +36,13 @@ Route::post('/checkout',            [PublicController::class, 'placeOrder'])->na
 // Order Success / Post-order account prompt
 Route::get('/order/success', [PublicController::class, 'orderSuccess'])->name('public.order.success');
 
-// ── Client Auth Routes ─────────────────────────────────────────────────────
+// ── Unified Authentication Routes (All Users: Super Admin, Manager, Seller, Client) ──
 Route::middleware('guest')->group(function () {
-    Route::get('/client/login',    [\App\Http\Controllers\ClientAuthController::class, 'showLogin'])->name('client.login');
+    Route::get('/login',           [\App\Http\Controllers\ClientAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',          [\App\Http\Controllers\ClientAuthController::class, 'login'])->name('login.submit');
+    Route::get('/client/login',    fn() => redirect()->route('login'))->name('client.login');
     Route::post('/client/login',   [\App\Http\Controllers\ClientAuthController::class, 'login'])->name('client.login.submit');
+    Route::get('/admin/login',     fn() => redirect()->route('login'))->name('filament.admin.auth.login');
     Route::get('/client/register', [\App\Http\Controllers\ClientAuthController::class, 'showRegister'])->name('client.register');
     Route::post('/client/register',[\App\Http\Controllers\ClientAuthController::class, 'register'])->name('client.register.submit');
 
@@ -54,17 +57,14 @@ Route::post('/client/logout', [\App\Http\Controllers\ClientAuthController::class
 
 // ── Client Dashboard (auth-protected) ─────────────────────────────────────
 Route::middleware(['auth'])->prefix('client')->name('client.')->group(function () {
-    Route::get('/dashboard',                              [\App\Http\Controllers\ClientDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/orders',                                 [\App\Http\Controllers\ClientDashboardController::class, 'orders'])->name('orders');
-    Route::get('/orders/{order}',                         [\App\Http\Controllers\ClientDashboardController::class, 'showOrder'])->name('orders.show');
-    Route::post('/orders/{order}/rate/{product}',         [\App\Http\Controllers\ClientDashboardController::class, 'submitRating'])->name('orders.rate');
-    Route::get('/reviews',                                [\App\Http\Controllers\ClientDashboardController::class, 'reviews'])->name('reviews');
-    Route::get('/profile',                                [\App\Http\Controllers\ClientDashboardController::class, 'profile'])->name('profile');
-    Route::put('/profile',                                [\App\Http\Controllers\ClientDashboardController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/dashboard',                      [\App\Http\Controllers\ClientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/orders',                         [\App\Http\Controllers\ClientDashboardController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order}',                 [\App\Http\Controllers\ClientDashboardController::class, 'showOrder'])->name('orders.show');
+    Route::post('/orders/{order}/rate/{product}', [\App\Http\Controllers\ClientDashboardController::class, 'submitRating'])->name('orders.rate');
+    Route::get('/reviews',                        [\App\Http\Controllers\ClientDashboardController::class, 'reviews'])->name('reviews');
+    Route::get('/profile',                        [\App\Http\Controllers\ClientDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile',                        [\App\Http\Controllers\ClientDashboardController::class, 'updateProfile'])->name('profile.update');
 });
-
-// ── Admin redirect ─────────────────────────────────────────────────────────
-Route::get('/login', fn() => redirect('/admin/login'))->name('login');
 
 // ── Admin / Internal Routes (auth required, non-client) ───────────────────
 Route::middleware(['auth'])->group(function () {
