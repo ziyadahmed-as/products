@@ -192,7 +192,7 @@ class ManufacturingService
      */
     public function issueMaterials(ManufacturingOrder $order, User $operator): void
     {
-        DB::transaction(function () use ($order, $operator) {
+        DB::transaction(function () use (&$order, $operator) {
             // Lock order for update to prevent concurrent submissions
             $order = ManufacturingOrder::where('id', $order->id)->lockForUpdate()->first();
 
@@ -335,6 +335,8 @@ class ManufacturingService
      */
     public function startProduction(ManufacturingOrder $order, User $operator): void
     {
+        $order->refresh();
+
         if (!$order->is_materials_issued) {
             throw new RuntimeException("Raw materials must be issued before starting production.");
         }
