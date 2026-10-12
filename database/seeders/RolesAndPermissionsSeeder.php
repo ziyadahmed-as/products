@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Models\User;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -15,16 +18,54 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        // Create permissions
+        $permissions = [
+            'view_manufacturing',
+            'create_manufacturing',
+            'edit_manufacturing',
+            'approve_manufacturing',
+            'issue_manufacturing_materials',
+            'complete_manufacturing',
+            'cancel_manufacturing',
+            'view_raw_materials',
+        ];
+
+        foreach ($permissions as $perm) {
+            Permission::firstOrCreate(['name' => $perm]);
+        }
+
         // Create roles
-        $superAdmin        = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Super Admin']);
-        $manager           = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Manager']);
-        $seller            = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Seller']);
-        $productionOfficer = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Production Officer']);
-        $auditor           = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Auditor']);
-        $client            = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Client']);
+        $superAdmin        = Role::firstOrCreate(['name' => 'Super Admin']);
+        $manager           = Role::firstOrCreate(['name' => 'Manager']);
+        $seller            = Role::firstOrCreate(['name' => 'Seller']);
+        $productionOfficer = Role::firstOrCreate(['name' => 'Production Officer']);
+        $auditor           = Role::firstOrCreate(['name' => 'Auditor']);
+        $client            = Role::firstOrCreate(['name' => 'Client']);
+
+        // Give permissions to roles
+        $superAdmin->givePermissionTo(Permission::all());
+        $manager->givePermissionTo([
+            'view_manufacturing',
+            'create_manufacturing',
+            'edit_manufacturing',
+            'approve_manufacturing',
+            'issue_manufacturing_materials',
+            'complete_manufacturing',
+            'cancel_manufacturing',
+            'view_raw_materials',
+        ]);
+        $productionOfficer->givePermissionTo([
+            'view_manufacturing',
+            'create_manufacturing',
+            'edit_manufacturing',
+            'issue_manufacturing_materials',
+            'complete_manufacturing',
+            'cancel_manufacturing',
+            'view_raw_materials',
+        ]);
 
         // Create initial Super Admin User
-        $adminUser = \App\Models\User::firstOrCreate(
+        $adminUser = User::firstOrCreate(
             ['email' => 'admin@albareck.local'],
             [
                 'name'      => 'Super Admin',
@@ -35,7 +76,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $adminUser->syncRoles([$superAdmin]);
 
         // Create Demo Manager User
-        $managerUser = \App\Models\User::firstOrCreate(
+        $managerUser = User::firstOrCreate(
             ['email' => 'manager@albareck.local'],
             [
                 'name'      => 'Store Manager',
@@ -46,7 +87,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $managerUser->syncRoles([$manager]);
 
         // Create Demo Seller User
-        $sellerUser = \App\Models\User::firstOrCreate(
+        $sellerUser = User::firstOrCreate(
             ['email' => 'seller@albareck.local'],
             [
                 'name'      => 'Sales Agent',
@@ -55,5 +96,16 @@ class RolesAndPermissionsSeeder extends Seeder
             ]
         );
         $sellerUser->syncRoles([$seller]);
+
+        // Create Demo Production Officer User
+        $productionUser = User::firstOrCreate(
+            ['email' => 'production@albareck.local'],
+            [
+                'name'      => 'Production Officer',
+                'password'  => bcrypt('password'),
+                'is_active' => true,
+            ]
+        );
+        $productionUser->syncRoles([$productionOfficer]);
     }
 }

@@ -92,20 +92,33 @@
             </a>
 
             <!-- PRODUCTION -->
-            <div class="sidebar-section">Production</div>
-            <a href="{{ route('manufacturing-orders.index') }}" class="sidebar-item {{ request()->routeIs('manufacturing-orders.*') ? 'active' : '' }}">
+            <div class="sidebar-section">Manufacturing</div>
+            <a href="{{ route('manufacturing.dashboard') }}" class="sidebar-item {{ request()->routeIs('manufacturing.dashboard') ? 'active' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                </svg>
+                Staff Dashboard
+            </a>
+            <a href="{{ route('manufacturing-orders.index') }}" class="sidebar-item {{ request()->routeIs('manufacturing-orders.index') || request()->routeIs('manufacturing-orders.show') ? 'active' : '' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-2"/>
                 </svg>
-                Manufacturing
+                Production Orders
+            </a>
+            <a href="{{ route('manufacturing-orders.create') }}" class="sidebar-item {{ request()->routeIs('manufacturing-orders.create') ? 'active' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Order
             </a>
             <a href="{{ route('recipes.index') }}" class="sidebar-item {{ request()->routeIs('recipes.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
-                Recipes
+                Recipes / BOM
             </a>
 
             <!-- MASTER DATA -->

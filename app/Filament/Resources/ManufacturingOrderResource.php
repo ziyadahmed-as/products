@@ -143,13 +143,15 @@ class ManufacturingOrderResource extends Resource
                     ->color('danger'),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft'       => 'gray',
-                        'planned'     => 'info',
-                        'in_progress' => 'warning',
-                        'completed'   => 'success',
-                        'cancelled'   => 'danger',
-                        default       => 'gray',
+                    ->color(fn (string $state): string => match (strtolower($state)) {
+                        'draft'                      => 'gray',
+                        'pending', 'pending_approval'=> 'warning',
+                        'approved', 'planned'        => 'info',
+                        'materials_issued'           => 'indigo',
+                        'in_progress'                => 'warning',
+                        'completed'                  => 'success',
+                        'cancelled'                  => 'danger',
+                        default                      => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('total_cost')
                     ->money('ETB')
@@ -161,14 +163,101 @@ class ManufacturingOrderResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'draft'       => 'Draft',
-                        'planned'     => 'Planned',
-                        'in_progress' => 'In Progress',
-                        'completed'   => 'Completed',
-                        'cancelled'   => 'Cancelled',
+                        'draft'            => 'Draft',
+                        'pending_approval' => 'Pending Approval',
+                        'approved'         => 'Approved',
+                        'materials_issued' => 'Materials Issued',
+                        'in_progress'      => 'In Progress',
+                        'completed'        => 'Completed',
+                        'cancelled'        => 'Cancelled',
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('issue_materials')
+                    ->label('Issue Materials')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->modalHeading('Issue Materials & Deduct Stock')
+                    ->modalDescription('This will atomically deduct all planned raw materials from inventory.')
+                    ->visible(fn (ManufacturingOrder $record): bool => in_array(strtolower($record->status), ['approved', 'planned', 'draft']) && !$record->is_materials_issued)
+                    ->action(function (ManufacturingOrder $record) {
+                        try {
+                            app(\App\Services\ManufacturingService::class)->issueMaterials($record, auth()->user());
+                            \Filament\Notifications\Notification::make()
+                                ->title('Materials Issued')
+                                ->body("Raw materials deducted for order #{$record->reference}")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Stock Issuance Failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                Tables\Actions\Action::make('start_production')
+                    ->label('Start')
+                    ->icon('heroicon-o-play')
+                    ->color('warning')
+                    ->visible(fn (ManufacturingOrder $record): bool => $record->is_materials_issued && in_array(strtolower($record->status), ['materials_issued', 'approved']))
+                    ->action(function (ManufacturingOrder $record) {
+                        try {
+                            app(\App\Services\ManufacturingService::class)->startProduction($record, auth()->user());
+                            \Filament\Notifications\Notification::make()
+                                ->title('Production Started')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                Tables\Actions\Action::make('complete_production')
+                    ->label('Complete')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (ManufacturingOrder $record): bool => $record->is_materials_issued && !$record->is_finished_registered && !in_array(strtolower($record->status), ['completed', 'cancelled']))
+                    ->form([
+                        Forms\Components\TextInput::make('good_quantity')
+                            ->label('Accepted Good Output')
+                            ->numeric()
+                            ->required()
+                            ->default(fn (ManufacturingOrder $record) => $record->planned_quantity),
+                        Forms\Components\TextInput::make('rejected_quantity')
+                            ->label('Rejected / Damaged Output')
+                            ->numeric()
+                            ->default(0),
+                        Forms\Components\TextInput::make('additional_costs')
+                            ->label('Additional Costs')
+                            ->numeric()
+                            ->default(fn (ManufacturingOrder $record) => $record->additional_costs),
+                        Forms\Components\Textarea::make('production_notes')
+                            ->label('Completion Notes'),
+                    ])
+                    ->action(function (ManufacturingOrder $record, array $data) {
+                        try {
+                            app(\App\Services\ManufacturingService::class)->completeProduction($record, $data, auth()->user());
+                            \Filament\Notifications\Notification::make()
+                                ->title('Production Completed')
+                                ->body("Accepted output registered into saleable inventory.")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Completion Failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])

@@ -17,6 +17,9 @@ class DashboardController extends Controller
             if ($user->hasRole('Client') || $user->roles()->count() === 0) {
                 return redirect()->route('client.dashboard');
             }
+            if ($user->hasRole('Production Officer')) {
+                return redirect()->route('manufacturing.dashboard');
+            }
             if ($user->hasRole('Seller')) {
                 return redirect('/admin/quick-sells');
             }

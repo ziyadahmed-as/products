@@ -6,6 +6,7 @@ use App\Http\Controllers\StockReceiptController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\ManufacturingOrderController;
+use App\Http\Controllers\ManufacturingDashboardController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UnitOfMeasureController;
@@ -81,7 +82,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('sale-returns', SaleReturnController::class);
     Route::get('/invoice/{sale}', [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoice.show');
 
-    // Production
+    // Production & Manufacturing
+    Route::get('/manufacturing/dashboard', [ManufacturingDashboardController::class, 'index'])->name('manufacturing.dashboard');
+    Route::post('/manufacturing-orders/{order}/submit-approval', [ManufacturingOrderController::class, 'submitApproval'])->name('manufacturing-orders.submit-approval');
+    Route::post('/manufacturing-orders/{order}/approve', [ManufacturingOrderController::class, 'approve'])->name('manufacturing-orders.approve');
+    Route::post('/manufacturing-orders/{order}/issue-materials', [ManufacturingOrderController::class, 'issueMaterials'])->name('manufacturing-orders.issue-materials');
+    Route::post('/manufacturing-orders/{order}/start-production', [ManufacturingOrderController::class, 'startProduction'])->name('manufacturing-orders.start-production');
+    Route::post('/manufacturing-orders/{order}/complete', [ManufacturingOrderController::class, 'complete'])->name('manufacturing-orders.complete');
+    Route::post('/manufacturing-orders/{order}/cancel', [ManufacturingOrderController::class, 'cancel'])->name('manufacturing-orders.cancel');
     Route::resource('manufacturing-orders', ManufacturingOrderController::class);
     Route::resource('recipes',              RecipeController::class);
 
