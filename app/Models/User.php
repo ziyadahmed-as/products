@@ -87,23 +87,23 @@ class User extends Authenticatable
     public function getDashboardUrl(): string
     {
         if ($this->hasRole('Super Admin')) {
-            return '/admin';
+            return route('dashboard');
         }
 
         if ($this->hasRole('Manager')) {
-            return '/admin';
+            return route('dashboard');
         }
 
         if ($this->hasRole('Seller')) {
-            return '/admin/quick-sells';
+            return route('sales.create');
         }
 
         if ($this->hasRole('Production Officer')) {
-            return '/admin/manufacturing-orders';
+            return route('manufacturing.dashboard');
         }
 
         if ($this->hasRole('Auditor')) {
-            return '/admin/activities';
+            return route('reports.index');
         }
 
         if ($this->hasRole('Client')) {
@@ -112,7 +112,7 @@ class User extends Authenticatable
 
         // Default internal users
         if ($this->roles()->count() > 0) {
-            return '/admin';
+            return route('dashboard');
         }
 
         return route('client.dashboard');

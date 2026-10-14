@@ -174,10 +174,19 @@ class ProductResource extends Resource
                 ->schema([
                     Forms\Components\Section::make('Store Status')
                         ->schema([
-                            Forms\Components\Hidden::make('type')
-                                ->default('manufactured_product'),
+                            Forms\Components\Select::make('type')
+                                ->label('Item Type')
+                                ->options([
+                                    'raw_material'         => 'Raw Material',
+                                    'manufactured_product' => 'Manufactured Product',
+                                    'resale_product'       => 'Resale Product',
+                                    'consumable'           => 'Consumable',
+                                ])
+                                ->default('raw_material')
+                                ->required()
+                                ->live(),
                             Forms\Components\Toggle::make('is_active')
-                                ->label('Active / Visible in Store')
+                                ->label('Active / Visible in Operations')
                                 ->default(true)
                                 ->required(),
                         ]),

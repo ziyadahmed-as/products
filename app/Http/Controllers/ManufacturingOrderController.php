@@ -27,8 +27,21 @@ class ManufacturingOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ManufacturingOrder::with(['product.unit', 'storageLocation', 'user', 'assignedUser', 'materialIssues.product'])
-            ->latest();
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer') || $user->hasRole('Auditor')),
+            403,
+            'Unauthorized access to manufacturing orders.'
+        );
+
+        $query = ManufacturingOrder::with(['product.unit', 'storageLocation.branch', 'user', 'assignedUser', 'materialIssues.product'])
+            ->latest('id');
+
+        // Branch scoping for managers and production officers
+        if (!$user->hasRole('Super Admin') && !$user->hasRole('Auditor')) {
+            $branchIds = $user->authorizedBranchIds();
+            $query->whereHas('storageLocation', fn ($q) => $q->whereIn('branch_id', $branchIds));
+        }
 
         // Status Filter
         if ($request->filled('status')) {
@@ -57,15 +70,21 @@ class ManufacturingOrderController extends Controller
 
         $orders = $query->paginate(15)->withQueryString();
 
+        $baseCountQuery = ManufacturingOrder::query();
+        if (!$user->hasRole('Super Admin') && !$user->hasRole('Auditor')) {
+            $branchIds = $user->authorizedBranchIds();
+            $baseCountQuery->whereHas('storageLocation', fn ($q) => $q->whereIn('branch_id', $branchIds));
+        }
+
         $statusCounts = [
-            'all'              => ManufacturingOrder::count(),
-            'draft'            => ManufacturingOrder::where('status', 'draft')->count(),
-            'pending_approval' => ManufacturingOrder::where('status', 'pending_approval')->count(),
-            'approved'         => ManufacturingOrder::where('status', 'approved')->count(),
-            'materials_issued' => ManufacturingOrder::where('status', 'materials_issued')->count(),
-            'in_progress'      => ManufacturingOrder::whereIn('status', ['in_progress', 'In Progress'])->count(),
-            'completed'        => ManufacturingOrder::where('status', 'completed')->count(),
-            'cancelled'        => ManufacturingOrder::where('status', 'cancelled')->count(),
+            'all'              => (clone $baseCountQuery)->count(),
+            'draft'            => (clone $baseCountQuery)->where('status', 'draft')->count(),
+            'pending_approval' => (clone $baseCountQuery)->where('status', 'pending_approval')->count(),
+            'approved'         => (clone $baseCountQuery)->where('status', 'approved')->count(),
+            'materials_issued' => (clone $baseCountQuery)->where('status', 'materials_issued')->count(),
+            'in_progress'      => (clone $baseCountQuery)->whereIn('status', ['in_progress', 'In Progress'])->count(),
+            'completed'        => (clone $baseCountQuery)->where('status', 'completed')->count(),
+            'cancelled'        => (clone $baseCountQuery)->where('status', 'cancelled')->count(),
         ];
 
         return view('manufacturing_orders.index', compact('orders', 'statusCounts'));
@@ -74,9 +93,16 @@ class ManufacturingOrderController extends Controller
     /**
      * Show the form for creating a new manufacturing order.
      */
-    public function create()
+    public function create(Request $request)
     {
-        // Eligible products: manufactured products or products with a recipe
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Only Super Admin, Managers, and Manufacturing Staff can create manufacturing orders.'
+        );
+
+        // Eligible finished products
         $products = Product::where('is_active', true)
             ->where(function ($q) {
                 $q->whereIn('type', ['manufactured_product', 'resale_product'])
@@ -92,7 +118,13 @@ class ManufacturingOrderController extends Controller
             ->orderBy('name')
             ->get();
 
-        $storageLocations = StorageLocation::where('is_active', true)->with('branch')->get();
+        // Scope storage locations to user's permitted branches
+        if ($user->hasRole('Super Admin')) {
+            $storageLocations = StorageLocation::where('is_active', true)->with('branch')->get();
+        } else {
+            $storageLocations = StorageLocation::whereIn('branch_id', $user->authorizedBranchIds())->where('is_active', true)->with('branch')->get();
+        }
+
         $recipes = Recipe::where('is_active', true)->with('materials.rawMaterial')->get();
         $units = UnitOfMeasure::orderBy('name')->get();
         $staffMembers = User::where('is_active', true)
@@ -105,13 +137,16 @@ class ManufacturingOrderController extends Controller
             $staffMembers = User::where('is_active', true)->get();
         }
 
+        $selectedProductId = $request->query('product_id');
+
         return view('manufacturing_orders.create', compact(
             'products',
             'rawMaterials',
             'storageLocations',
             'recipes',
             'units',
-            'staffMembers'
+            'staffMembers',
+            'selectedProductId'
         ));
     }
 
@@ -120,6 +155,13 @@ class ManufacturingOrderController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Only Super Admin, Managers, and Manufacturing Staff can create manufacturing orders.'
+        );
+
         $validated = $request->validate([
             'product_id'               => 'required|exists:products,id',
             'recipe_id'                => 'nullable|exists:recipes,id',
@@ -137,8 +179,13 @@ class ManufacturingOrderController extends Controller
             'materials.*.quantity'     => 'required_with:materials|numeric|min:0.001',
         ]);
 
+        $location = StorageLocation::findOrFail($validated['storage_location_id']);
+        if (!$user->hasRole('Super Admin') && !$user->canAccessBranch($location->branch_id)) {
+            abort(403, 'You are not authorized to create production orders for this branch storage location.');
+        }
+
         try {
-            $order = $this->service->createOrder($validated, auth()->user());
+            $order = $this->service->createOrder($validated, $user);
 
             return redirect()->route('manufacturing-orders.show', $order)
                 ->with('success', "Manufacturing Order #{$order->reference} created successfully.");
@@ -152,6 +199,13 @@ class ManufacturingOrderController extends Controller
      */
     public function show(ManufacturingOrder $manufacturing_order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer') || $user->hasRole('Auditor')),
+            403,
+            'Unauthorized to view this manufacturing order.'
+        );
+
         $order = $manufacturing_order->load([
             'product.unit',
             'product.category',
@@ -168,6 +222,12 @@ class ManufacturingOrderController extends Controller
             'stockMovements.storageLocation',
         ]);
 
+        // Branch check for manager / production officer
+        $branchId = $order->storageLocation?->branch_id;
+        if (!$user->hasRole('Super Admin') && !$user->hasRole('Auditor') && $branchId && !$user->canAccessBranch($branchId)) {
+            abort(403, 'You are not authorized to view manufacturing orders for this branch.');
+        }
+
         // Evaluate live stock availability for the materials
         $materialAvailability = [];
         foreach ($order->materialIssues as $issue) {
@@ -176,8 +236,8 @@ class ManufacturingOrderController extends Controller
                 ->sum('quantity');
 
             $totalStock = (float) $issue->product->quantity;
-
             $needed = (float) $issue->quantity_planned;
+
             $materialAvailability[$issue->id] = [
                 'available_location' => $availableInLocation,
                 'available_total'    => $totalStock,
@@ -195,6 +255,13 @@ class ManufacturingOrderController extends Controller
      */
     public function edit(ManufacturingOrder $manufacturing_order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Unauthorized to edit this manufacturing order.'
+        );
+
         if (!in_array(strtolower($manufacturing_order->status), ['draft', 'pending', 'pending_approval'])) {
             return redirect()->route('manufacturing-orders.show', $manufacturing_order)
                 ->with('error', "Only draft orders can be edited.");
@@ -203,7 +270,13 @@ class ManufacturingOrderController extends Controller
         $order = $manufacturing_order->load(['materialIssues.product']);
         $products = Product::where('is_active', true)->orderBy('name')->get();
         $rawMaterials = Product::where('is_active', true)->where('type', 'raw_material')->orderBy('name')->get();
-        $storageLocations = StorageLocation::where('is_active', true)->get();
+
+        if ($user->hasRole('Super Admin')) {
+            $storageLocations = StorageLocation::where('is_active', true)->get();
+        } else {
+            $storageLocations = StorageLocation::whereIn('branch_id', $user->authorizedBranchIds())->where('is_active', true)->get();
+        }
+
         $recipes = Recipe::where('is_active', true)->get();
         $units = UnitOfMeasure::orderBy('name')->get();
         $staffMembers = User::where('is_active', true)->get();
@@ -224,6 +297,13 @@ class ManufacturingOrderController extends Controller
      */
     public function update(Request $request, ManufacturingOrder $manufacturing_order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Unauthorized to update this manufacturing order.'
+        );
+
         if (!in_array(strtolower($manufacturing_order->status), ['draft', 'pending', 'pending_approval'])) {
             return redirect()->route('manufacturing-orders.show', $manufacturing_order)
                 ->with('error', "Cannot update order in current status.");
@@ -251,6 +331,13 @@ class ManufacturingOrderController extends Controller
      */
     public function destroy(ManufacturingOrder $manufacturing_order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager')),
+            403,
+            'Only Super Admin and Managers can delete manufacturing orders.'
+        );
+
         if (!in_array(strtolower($manufacturing_order->status), ['draft', 'pending', 'cancelled'])) {
             return redirect()->route('manufacturing-orders.index')
                 ->with('error', "Cannot delete an order that is {$manufacturing_order->status}.");
@@ -268,8 +355,15 @@ class ManufacturingOrderController extends Controller
      */
     public function submitApproval(ManufacturingOrder $order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Unauthorized to submit this order for approval.'
+        );
+
         try {
-            $this->service->submitForApproval($order, auth()->user());
+            $this->service->submitForApproval($order, $user);
             return back()->with('success', "Order #{$order->reference} submitted for approval.");
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -281,8 +375,15 @@ class ManufacturingOrderController extends Controller
      */
     public function approve(ManufacturingOrder $order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager')),
+            403,
+            'Only Super Admin and Store Managers can approve manufacturing orders.'
+        );
+
         try {
-            $this->service->approveOrder($order, auth()->user());
+            $this->service->approveOrder($order, $user);
             return back()->with('success', "Order #{$order->reference} has been approved.");
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -294,8 +395,20 @@ class ManufacturingOrderController extends Controller
      */
     public function issueMaterials(ManufacturingOrder $order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Unauthorized to issue materials for this manufacturing order.'
+        );
+
+        $branchId = $order->storageLocation?->branch_id;
+        if (!$user->hasRole('Super Admin') && $branchId && !$user->canAccessBranch($branchId)) {
+            abort(403, 'You are not authorized to process orders for this branch.');
+        }
+
         try {
-            $this->service->issueMaterials($order, auth()->user());
+            $this->service->issueMaterials($order, $user);
             return back()->with('success', "Raw materials successfully issued and stock deducted for Order #{$order->reference}.");
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -307,8 +420,20 @@ class ManufacturingOrderController extends Controller
      */
     public function startProduction(ManufacturingOrder $order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Unauthorized to start production for this order.'
+        );
+
+        $branchId = $order->storageLocation?->branch_id;
+        if (!$user->hasRole('Super Admin') && $branchId && !$user->canAccessBranch($branchId)) {
+            abort(403, 'You are not authorized to process orders for this branch.');
+        }
+
         try {
-            $this->service->startProduction($order, auth()->user());
+            $this->service->startProduction($order, $user);
             return back()->with('success', "Production started for Order #{$order->reference}.");
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -320,6 +445,18 @@ class ManufacturingOrderController extends Controller
      */
     public function complete(Request $request, ManufacturingOrder $order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Unauthorized to complete this manufacturing order.'
+        );
+
+        $branchId = $order->storageLocation?->branch_id;
+        if (!$user->hasRole('Super Admin') && $branchId && !$user->canAccessBranch($branchId)) {
+            abort(403, 'You are not authorized to process orders for this branch.');
+        }
+
         $validated = $request->validate([
             'good_quantity'      => 'required|numeric|min:0',
             'rejected_quantity'  => 'nullable|numeric|min:0',
@@ -334,7 +471,7 @@ class ManufacturingOrderController extends Controller
         ]);
 
         try {
-            $this->service->completeProduction($order, $validated, auth()->user());
+            $this->service->completeProduction($order, $validated, $user);
             return back()->with('success', "Production completed! Accepted finished goods registered in inventory.");
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -346,12 +483,24 @@ class ManufacturingOrderController extends Controller
      */
     public function cancel(Request $request, ManufacturingOrder $order)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer')),
+            403,
+            'Unauthorized to cancel this manufacturing order.'
+        );
+
+        $branchId = $order->storageLocation?->branch_id;
+        if (!$user->hasRole('Super Admin') && $branchId && !$user->canAccessBranch($branchId)) {
+            abort(403, 'You are not authorized to process orders for this branch.');
+        }
+
         $validated = $request->validate([
             'cancel_reason' => 'nullable|string|max:500',
         ]);
 
         try {
-            $this->service->cancelOrder($order, $validated['cancel_reason'] ?? null, auth()->user());
+            $this->service->cancelOrder($order, $validated['cancel_reason'] ?? null, $user);
             return back()->with('success', "Order #{$order->reference} cancelled. Any issued raw materials have been returned to inventory.");
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());

@@ -11,7 +11,7 @@ class SaleReturnController extends Controller
      */
     public function index()
     {
-        //
+        return redirect('/admin/sale-returns');
     }
 
     /**

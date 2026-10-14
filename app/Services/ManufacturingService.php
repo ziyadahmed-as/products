@@ -427,6 +427,35 @@ class ManufacturingService
                     ]);
                 }
 
+                // If extra materials consumed beyond initially issued, deduct the difference from inventory
+                if ($consumedQty > $issue->quantity_issued) {
+                    $extraConsumed = $consumedQty - $issue->quantity_issued;
+                    $balance = InventoryBalance::where('product_id', $issue->product_id)
+                        ->where('storage_location_id', $order->storage_location_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    $avail = (float) ($balance?->quantity ?? 0);
+                    if ($avail < $extraConsumed) {
+                        $rawProdName = $issue->product->name ?? "Raw Material #{$issue->product_id}";
+                        throw new RuntimeException("Insufficient stock in location for additional {$extraConsumed} units of {$rawProdName} consumed.");
+                    }
+
+                    $balance->decrement('quantity', $extraConsumed);
+                    Product::find($issue->product_id)?->syncQuantity();
+
+                    StockMovement::create([
+                        'product_id'          => $issue->product_id,
+                        'storage_location_id' => $order->storage_location_id,
+                        'type'                => 'out',
+                        'quantity'            => $extraConsumed,
+                        'unit_cost'           => $issue->unit_cost ?: ($issue->product->purchase_cost ?? 0),
+                        'user_id'             => $operator->id,
+                        'reference_type'      => ManufacturingOrder::class,
+                        'reference_id'        => $order->id,
+                    ]);
+                }
+
                 $issue->update([
                     'quantity_consumed' => $consumedQty,
                     'quantity_returned' => $returnedQty,

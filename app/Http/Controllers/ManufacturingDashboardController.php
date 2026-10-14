@@ -13,20 +13,42 @@ class ManufacturingDashboardController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Production Officer') || $user->hasRole('Auditor')),
+            403,
+            'Unauthorized access to manufacturing dashboard.'
+        );
+
+        $branchIds = null;
+        if (!$user->hasRole('Super Admin') && !$user->hasRole('Auditor')) {
+            $branchIds = $user->authorizedBranchIds();
+        }
+
+        $ordersBase = ManufacturingOrder::query();
+        if ($branchIds !== null) {
+            $ordersBase->whereHas('storageLocation', fn ($q) => $q->whereIn('branch_id', $branchIds));
+        }
+
         // Total & Status Counts
-        $totalOrders = ManufacturingOrder::count();
-        $pendingOrders = ManufacturingOrder::whereIn('status', ['draft', 'pending', 'pending_approval', 'planned', 'approved'])->count();
-        $inProgressOrders = ManufacturingOrder::whereIn('status', ['materials_issued', 'in_progress', 'In Progress'])->count();
-        $completedOrders = ManufacturingOrder::where('status', 'completed')->count();
-        $cancelledOrders = ManufacturingOrder::where('status', 'cancelled')->count();
+        $totalOrders = (clone $ordersBase)->count();
+        $pendingOrders = (clone $ordersBase)->whereIn('status', ['draft', 'pending', 'pending_approval', 'planned', 'approved'])->count();
+        $inProgressOrders = (clone $ordersBase)->whereIn('status', ['materials_issued', 'in_progress', 'In Progress'])->count();
+        $completedOrders = (clone $ordersBase)->where('status', 'completed')->count();
+        $cancelledOrders = (clone $ordersBase)->where('status', 'cancelled')->count();
 
         // Production output totals
-        $totalFinishedProduced = (float) ManufacturingOrder::where('status', 'completed')->sum('good_quantity');
-        $totalRejected = (float) ManufacturingOrder::where('status', 'completed')->sum('rejected_quantity');
-        $totalWastedMaterials = (float) MaterialIssue::sum('quantity_wasted');
+        $totalFinishedProduced = (float) (clone $ordersBase)->where('status', 'completed')->sum('good_quantity');
+        $totalRejected = (float) (clone $ordersBase)->where('status', 'completed')->sum('rejected_quantity');
+
+        $materialIssuesBase = MaterialIssue::query();
+        if ($branchIds !== null) {
+            $materialIssuesBase->whereHas('manufacturingOrder.storageLocation', fn ($q) => $q->whereIn('branch_id', $branchIds));
+        }
+        $totalWastedMaterials = (float) (clone $materialIssuesBase)->sum('quantity_wasted');
 
         // Efficiency
-        $completedList = ManufacturingOrder::where('status', 'completed')->where('planned_quantity', '>', 0)->get();
+        $completedList = (clone $ordersBase)->where('status', 'completed')->where('planned_quantity', '>', 0)->get();
         $avgEfficiency = $completedList->count() > 0
             ? round($completedList->avg(fn ($o) => $o->calculateEfficiency()), 1)
             : 100.0;
@@ -43,15 +65,15 @@ class ManufacturingDashboardController extends Controller
             ->with(['unit', 'category'])
             ->get();
 
-        // Active production orders needing materials
-        $activeOrders = ManufacturingOrder::with(['product.unit', 'assignedUser', 'storageLocation', 'materialIssues.product'])
+        // Active production orders needing materials or in progress
+        $activeOrders = (clone $ordersBase)->with(['product.unit', 'assignedUser', 'storageLocation', 'materialIssues.product'])
             ->whereIn('status', ['draft', 'pending_approval', 'approved', 'materials_issued', 'in_progress', 'In Progress', 'Pending'])
-            ->latest()
+            ->latest('id')
             ->limit(10)
             ->get();
 
         // Recent completed manufacturing history
-        $recentCompleted = ManufacturingOrder::with(['product.unit', 'assignedUser', 'materialIssues.product'])
+        $recentCompleted = (clone $ordersBase)->with(['product.unit', 'assignedUser', 'materialIssues.product'])
             ->where('status', 'completed')
             ->latest('actual_completion_date')
             ->limit(5)
@@ -60,16 +82,20 @@ class ManufacturingDashboardController extends Controller
         // Raw materials overview with current quantities
         $rawMaterialsList = Product::where('type', 'raw_material')
             ->where('is_active', true)
-            ->with(['unit', 'category'])
+            ->with(['unit', 'category', 'inventoryBalances.storageLocation'])
             ->orderBy('name')
             ->paginate(10);
 
         // Recent stock movements for manufacturing
-        $recentStockMovements = StockMovement::where('reference_type', ManufacturingOrder::class)
+        $movementsQuery = StockMovement::where('reference_type', ManufacturingOrder::class)
             ->with(['product', 'storageLocation', 'user'])
-            ->latest()
-            ->limit(10)
-            ->get();
+            ->latest('id');
+
+        if ($branchIds !== null) {
+            $movementsQuery->whereHas('storageLocation', fn ($q) => $q->whereIn('branch_id', $branchIds));
+        }
+
+        $recentStockMovements = $movementsQuery->limit(10)->get();
 
         return view('manufacturing_orders.dashboard', compact(
             'totalOrders',

@@ -119,8 +119,44 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/activity/export',     [\App\Http\Controllers\AuditTrailController::class, 'export'])->name('reports.activity.export');
     Route::get('/audit',                       [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit.index');
 
+    // ── POS API Helpers (AJAX) ─────────────────────────────────────────────
+    Route::get('/api/products/search', function (\Illuminate\Http\Request $request) {
+        $user = auth()->user();
+        $q    = $request->input('q', '');
+        $branchId = $request->input('branch_id');
+
+        $query = \App\Models\Product::with(['unit', 'category'])
+            ->where('is_active', true)
+            ->whereIn('type', ['resale_product', 'manufactured_product'])
+            ->where(function ($sq) use ($q) {
+                $sq->where('name', 'like', "%{$q}%")
+                   ->orWhere('sku', 'like', "%{$q}%");
+            })
+            ->limit(10);
+
+        return response()->json($query->get()->map(function ($p) {
+            return [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'sku'           => $p->sku,
+                'selling_price' => $p->selling_price ?? 0,
+                'quantity'      => $p->quantity ?? 0,
+                'unit_code'     => $p->unit?->code ?? $p->unit?->name ?? 'unit',
+            ];
+        }));
+    })->name('api.products.search');
+
+    Route::get('/api/branches/{branch}/locations', function (\App\Models\Branch $branch) {
+        $locations = \App\Models\StorageLocation::where('branch_id', $branch->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        return response()->json($locations);
+    })->name('api.branches.locations');
+
     Route::post('/logout', function () {
         auth()->logout();
         return redirect('/');
     })->name('logout');
 });
+

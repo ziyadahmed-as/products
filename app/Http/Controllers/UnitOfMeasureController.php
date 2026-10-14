@@ -11,7 +11,7 @@ class UnitOfMeasureController extends Controller
      */
     public function index()
     {
-        //
+        return redirect('/admin/unit-of-measures');
     }
 
     /**
