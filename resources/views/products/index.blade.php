@@ -1,43 +1,81 @@
 @extends('layouts.app')
-@section('title', 'Products')
+@section('title', 'Product & Raw Material Inventory')
 
 @section('content')
-<div class="space-y-5">
+<div class="space-y-6">
 
     <!-- Header -->
-    <div class="page-header">
+    <div class="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1>Products</h1>
-            <p class="text-dark-400 text-sm mt-1">Manage all resale products, raw materials, and manufactured goods.</p>
+            <h1 class="text-2xl font-bold text-white tracking-tight">Product & Raw Material Inventory</h1>
+            <p class="text-dark-400 text-sm mt-1">Manage catalog items, register new raw materials, and oversee available stock.</p>
         </div>
-        <a href="{{ route('products.create') }}" class="btn-primary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Add Product
+        <div class="flex items-center gap-3">
+            @hasanyrole('Super Admin|Manager')
+            <a href="{{ route('stock-receipts.create') }}" class="btn-secondary flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                </svg>
+                Receive Stock
+            </a>
+            <a href="{{ route('products.create') }}" class="btn-primary flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Register Item
+            </a>
+            @endhasanyrole
+        </div>
+    </div>
+
+    <!-- Quick Stat Badges -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <a href="{{ route('products.index') }}"
+           class="p-4 rounded-xl bg-dark-900 border transition {{ !request('type') && !request('stock_status') ? 'border-primary-500 shadow-lg shadow-primary-500/10' : 'border-dark-800 hover:border-dark-700' }}">
+            <span class="text-xs font-semibold uppercase tracking-wider text-dark-400">All Items</span>
+            <div class="text-xl font-bold text-white mt-1">{{ number_format($counts['all']) }}</div>
+        </a>
+        <a href="{{ route('products.index', ['type' => 'raw_material']) }}"
+           class="p-4 rounded-xl bg-dark-900 border transition {{ request('type') === 'raw_material' ? 'border-amber-500 shadow-lg shadow-amber-500/10' : 'border-dark-800 hover:border-dark-700' }}">
+            <span class="text-xs font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span> Raw Materials
+            </span>
+            <div class="text-xl font-bold text-white mt-1">{{ number_format($counts['raw_material']) }}</div>
+        </a>
+        <a href="{{ route('products.index', ['type' => 'manufactured_product']) }}"
+           class="p-4 rounded-xl bg-dark-900 border transition {{ request('type') === 'manufactured_product' ? 'border-purple-500 shadow-lg shadow-purple-500/10' : 'border-dark-800 hover:border-dark-700' }}">
+            <span class="text-xs font-semibold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span> Manufactured
+            </span>
+            <div class="text-xl font-bold text-white mt-1">{{ number_format($counts['manufactured']) }}</div>
+        </a>
+        <a href="{{ route('products.index', ['type' => 'resale_product']) }}"
+           class="p-4 rounded-xl bg-dark-900 border transition {{ request('type') === 'resale_product' ? 'border-cyan-500 shadow-lg shadow-cyan-500/10' : 'border-dark-800 hover:border-dark-700' }}">
+            <span class="text-xs font-semibold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Resale Goods
+            </span>
+            <div class="text-xl font-bold text-white mt-1">{{ number_format($counts['resale']) }}</div>
+        </a>
+        <a href="{{ route('products.index', ['stock_status' => 'low']) }}"
+           class="p-4 rounded-xl bg-dark-900 border transition {{ request('stock_status') === 'low' ? 'border-rose-500 shadow-lg shadow-rose-500/10' : 'border-dark-800 hover:border-dark-700' }}">
+            <span class="text-xs font-semibold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span> Low Stock Alert
+            </span>
+            <div class="text-xl font-bold text-rose-400 mt-1">{{ number_format($counts['low_stock']) }}</div>
         </a>
     </div>
 
     <!-- Filters -->
-    <div class="card">
-        <form method="GET" class="flex flex-wrap gap-3 items-end">
-            <div class="form-group flex-1 min-w-[160px]">
-                <label class="form-label">Search</label>
+    <div class="card p-4 bg-dark-900 border border-dark-800 rounded-2xl">
+        <form method="GET" action="{{ route('products.index') }}" class="flex flex-wrap gap-3 items-end">
+            <div class="form-group flex-1 min-w-[200px]">
+                <label class="form-label text-xs">Search Products / Materials</label>
                 <input name="search" value="{{ request('search') }}" type="text"
-                       class="form-input" placeholder="Name, SKU...">
+                       class="form-input text-xs" placeholder="Search by name, SKU, or specification...">
             </div>
-            <div class="form-group min-w-[140px]">
-                <label class="form-label">Type</label>
-                <select name="type" class="form-select">
-                    <option value="">All Types</option>
-                    <option value="resale_product"      {{ request('type') === 'resale_product' ? 'selected' : '' }}>Resale</option>
-                    <option value="raw_material"        {{ request('type') === 'raw_material' ? 'selected' : '' }}>Raw Material</option>
-                    <option value="manufactured_product"{{ request('type') === 'manufactured_product' ? 'selected' : '' }}>Manufactured</option>
-                </select>
-            </div>
-            <div class="form-group min-w-[140px]">
-                <label class="form-label">Category</label>
-                <select name="category_id" class="form-select">
+            <div class="form-group min-w-[150px]">
+                <label class="form-label text-xs">Category</label>
+                <select name="category_id" class="form-select text-xs">
                     <option value="">All Categories</option>
                     @foreach($categories as $cat)
                         <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
@@ -46,99 +84,151 @@
                     @endforeach
                 </select>
             </div>
+            <div class="form-group min-w-[140px]">
+                <label class="form-label text-xs">Item Type</label>
+                <select name="type" class="form-select text-xs">
+                    <option value="">All Types</option>
+                    <option value="raw_material"        {{ request('type') === 'raw_material' ? 'selected' : '' }}>Raw Material</option>
+                    <option value="manufactured_product"{{ request('type') === 'manufactured_product' ? 'selected' : '' }}>Manufactured Product</option>
+                    <option value="resale_product"      {{ request('type') === 'resale_product' ? 'selected' : '' }}>Resale Product</option>
+                    <option value="consumable"          {{ request('type') === 'consumable' ? 'selected' : '' }}>Consumable</option>
+                </select>
+            </div>
+            <div class="form-group min-w-[120px]">
+                <label class="form-label text-xs">Status</label>
+                <select name="status" class="form-select text-xs">
+                    <option value="">All Statuses</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                </select>
+            </div>
             <div class="flex gap-2">
-                <button type="submit" class="btn-primary">Filter</button>
-                <a href="{{ route('products.index') }}" class="btn-secondary">Reset</a>
+                <button type="submit" class="btn-primary text-xs px-4 py-2">Filter</button>
+                <a href="{{ route('products.index') }}" class="btn-secondary text-xs px-3 py-2">Reset</a>
             </div>
         </form>
     </div>
 
     <!-- Table -->
-    <div class="card p-0">
-        <div class="table-wrapper rounded-2xl">
+    <div class="card p-0 bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="table-wrapper">
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>SKU</th>
-                        <th>Type</th>
-                        <th>Category</th>
-                        <th>Unit</th>
-                        <th>Cost</th>
-                        <th>Price</th>
-                        <th>Min Stock</th>
-                        <th>Status</th>
-                        <th class="text-right">Actions</th>
+                    <tr class="text-left text-xs uppercase tracking-wider text-dark-400 bg-dark-950/60 border-b border-dark-800">
+                        <th class="py-3 px-4">Item & Code</th>
+                        <th class="py-3 px-4">Type</th>
+                        <th class="py-3 px-4">Category</th>
+                        <th class="py-3 px-4">Unit</th>
+                        <th class="py-3 px-4 text-right">In Stock</th>
+                        <th class="py-3 px-4 text-right">Min Stock</th>
+                        <th class="py-3 px-4 text-right">Cost Price</th>
+                        <th class="py-3 px-4 text-right">Selling Price</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-dark-800 text-sm">
                     @forelse($products as $product)
-                    <tr>
-                        <td>
-                            <div class="flex items-center gap-3">
-                                @if($product->image)
-                                    <img src="{{ asset('storage/'.$product->image) }}" class="w-8 h-8 rounded-lg object-cover">
-                                @else
-                                    <div class="w-8 h-8 rounded-lg bg-dark-800 flex items-center justify-center">
-                                        <svg class="w-4 h-4 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                                        </svg>
-                                    </div>
-                                @endif
-                                <span class="font-medium text-white">{{ $product->name }}</span>
-                            </div>
+                    <tr class="hover:bg-dark-800/40 transition">
+                        <td class="py-3 px-4">
+                            <a href="{{ route('products.show', $product) }}" class="font-medium text-white hover:text-primary-400 transition flex items-center gap-2">
+                                <span>{{ $product->name }}</span>
+                            </a>
+                            <span class="font-mono text-xs text-primary-400/90 block mt-0.5">{{ $product->sku }}</span>
                         </td>
-                        <td class="font-mono text-primary-400 text-xs">{{ $product->sku }}</td>
-                        <td>
-                            @if($product->type === 'resale_product')
-                                <span class="badge-blue">Resale</span>
-                            @elseif($product->type === 'raw_material')
-                                <span class="badge-yellow">Raw Material</span>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            @if($product->type === 'raw_material')
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/25">
+                                    Raw Material
+                                </span>
+                            @elseif($product->type === 'manufactured_product')
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/25">
+                                    Manufactured
+                                </span>
+                            @elseif($product->type === 'resale_product')
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/25">
+                                    Resale
+                                </span>
                             @else
-                                <span class="badge-purple">Manufactured</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold bg-dark-700 text-dark-300">
+                                    Consumable
+                                </span>
                             @endif
                         </td>
-                        <td class="text-dark-300">{{ $product->category->name ?? '—' }}</td>
-                        <td class="text-dark-300">{{ $product->unit->code ?? '—' }}</td>
-                        <td class="text-dark-300">Br{{ number_format($product->purchase_cost ?? 0, 2) }}</td>
-                        <td class="font-semibold text-white">Br{{ number_format($product->selling_price ?? 0, 2) }}</td>
-                        <td class="text-dark-300">{{ $product->minimum_stock_level }}</td>
-                        <td>
+                        <td class="py-3 px-4 text-dark-300 text-xs whitespace-nowrap">
+                            {{ $product->category->name ?? '—' }}
+                        </td>
+                        <td class="py-3 px-4 text-dark-300 text-xs whitespace-nowrap">
+                            {{ $product->unit->name ?? $product->unit->code ?? '—' }}
+                        </td>
+                        <td class="py-3 px-4 text-right font-mono text-xs whitespace-nowrap">
+                            @php
+                                $isLow = $product->minimum_stock_level > 0 && $product->quantity <= $product->minimum_stock_level;
+                                $isOut = $product->quantity <= 0;
+                            @endphp
+                            <span class="font-bold {{ $isOut ? 'text-rose-400' : ($isLow ? 'text-amber-400' : 'text-emerald-400') }}">
+                                {{ number_format($product->quantity, 2) }}
+                            </span>
+                            <span class="text-dark-500 text-[11px]">{{ $product->unit?->code ?? '' }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right font-mono text-xs text-dark-400 whitespace-nowrap">
+                            {{ number_format($product->minimum_stock_level, 2) }}
+                        </td>
+                        <td class="py-3 px-4 text-right font-mono text-xs text-dark-300 whitespace-nowrap">
+                            Br {{ number_format($product->purchase_cost ?? 0, 2) }}
+                        </td>
+                        <td class="py-3 px-4 text-right font-mono text-xs whitespace-nowrap">
+                            @if(in_array($product->type, ['resale_product', 'manufactured_product']))
+                                <span class="font-semibold text-white">Br {{ number_format($product->selling_price ?? 0, 2) }}</span>
+                            @else
+                                <span class="text-dark-500">—</span>
+                            @endif
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
                             @if($product->is_active)
-                                <span class="badge-green">Active</span>
+                                <span class="badge-green text-xs">Active</span>
                             @else
-                                <span class="badge-gray">Inactive</span>
+                                <span class="badge-gray text-xs">Inactive</span>
                             @endif
                         </td>
-                        <td class="text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('products.edit', $product) }}" class="btn-icon" title="Edit">
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="{{ route('products.show', $product) }}" class="btn-icon" title="View details & stock">
+                                    <svg class="w-4 h-4 text-dark-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </a>
+
+                                @hasanyrole('Super Admin|Manager')
+                                @if(in_array($product->type, ['raw_material', 'resale_product', 'consumable']))
+                                <a href="{{ route('stock-receipts.create', ['product_id' => $product->id]) }}"
+                                   class="btn-icon text-emerald-400 hover:text-emerald-300" title="Receive Stock">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </a>
+                                @endif
+
+                                <a href="{{ route('products.edit', $product) }}" class="btn-icon" title="Edit details">
+                                    <svg class="w-4 h-4 text-dark-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
-                                <form method="POST" action="{{ route('products.destroy', $product) }}"
-                                      onsubmit="return confirm('Deactivate this product?')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn-icon" title="Deactivate">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                                        </svg>
-                                    </button>
-                                </form>
+                                @endhasanyrole
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-12">
+                        <td colspan="10" class="text-center py-16 text-dark-500">
                             <div class="w-14 h-14 rounded-2xl bg-dark-800 flex items-center justify-center mx-auto mb-3">
                                 <svg class="w-7 h-7 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
                                 </svg>
                             </div>
-                            <p class="text-dark-500 font-medium">No products found</p>
-                            <p class="text-dark-600 text-sm mt-1">Start by adding your first product</p>
+                            <p class="font-medium text-dark-400">No products or raw materials found</p>
+                            <p class="text-xs text-dark-600 mt-1">Try adjusting your search criteria or register a new item.</p>
                         </td>
                     </tr>
                     @endforelse
@@ -146,12 +236,11 @@
             </table>
         </div>
         @if($products->hasPages())
-        <div class="px-6 py-4 border-t border-dark-800">
-            {{ $products->withQueryString()->links() }}
+        <div class="px-6 py-4 border-t border-dark-800 bg-dark-900/60">
+            {{ $products->links() }}
         </div>
         @endif
     </div>
 
 </div>
 @endsection
-

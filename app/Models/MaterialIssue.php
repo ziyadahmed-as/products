@@ -43,4 +43,12 @@ class MaterialIssue extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'unit_of_measure_id');
     }
+
+    /**
+     * Backward-compatible accessor for quantity_consumed
+     */
+    public function getQuantityUsedAttribute(): float
+    {
+        return (float) ($this->quantity_consumed ?? 0);
+    }
 }

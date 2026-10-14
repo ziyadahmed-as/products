@@ -22,4 +22,9 @@ class StockReceipt extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function stockMovements()
+    {
+        return $this->morphMany(StockMovement::class, 'reference');
+    }
 }

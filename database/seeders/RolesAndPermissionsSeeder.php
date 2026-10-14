@@ -28,6 +28,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'complete_manufacturing',
             'cancel_manufacturing',
             'view_raw_materials',
+            'create_raw_materials',
+            'edit_raw_materials',
+            'view_stock_receipts',
+            'create_stock_receipts',
         ];
 
         foreach ($permissions as $perm) {
@@ -53,6 +57,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'complete_manufacturing',
             'cancel_manufacturing',
             'view_raw_materials',
+            'create_raw_materials',
+            'edit_raw_materials',
+            'view_stock_receipts',
+            'create_stock_receipts',
         ]);
         $productionOfficer->givePermissionTo([
             'view_manufacturing',
@@ -62,6 +70,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'complete_manufacturing',
             'cancel_manufacturing',
             'view_raw_materials',
+            'view_stock_receipts',
         ]);
 
         // Create initial Super Admin User
