@@ -150,4 +150,168 @@ class ClientDashboardController extends Controller
 
         return back()->with('success', 'Profile updated successfully!');
     }
+
+    /**
+     * Client Personal Spending & Order Reports
+     */
+    public function reports(Request $request)
+    {
+        $userId = Auth::id();
+        $query = Sale::where('client_id', $userId)
+            ->where('type', 'customer_order')
+            ->with(['lines.product'])
+            ->latest('id');
+
+        // Date Period filter
+        $period = $request->input('period');
+        if ($period === 'today') {
+            $query->whereDate('created_at', \Carbon\Carbon::today());
+        } elseif ($period === 'this_week') {
+            $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()]);
+        } elseif ($period === 'this_month') {
+            $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfMonth(), \Carbon\Carbon::now()->endOfMonth()]);
+        } elseif ($period === 'this_year') {
+            $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfYear(), \Carbon\Carbon::now()->endOfYear()]);
+        } elseif ($request->filled('from') || $request->filled('to')) {
+            if ($request->filled('from')) {
+                $query->where('created_at', '>=', \Carbon\Carbon::parse($request->from)->startOfDay());
+            }
+            if ($request->filled('to')) {
+                $query->where('created_at', '<=', \Carbon\Carbon::parse($request->to)->endOfDay());
+            }
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->filled('search')) {
+            $term = '%' . $request->search . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('reference', 'like', $term)
+                  ->orWhereHas('lines.product', fn ($p) => $p->where('name', 'like', $term));
+            });
+        }
+
+        // Summary calculations
+        $totalOrdersCount = (clone $query)->count();
+        $totalSpent       = (clone $query)->sum('total');
+        $totalPaid        = (clone $query)->sum('paid_amount');
+        $totalOutstanding = $totalSpent - $totalPaid;
+        $completedCount   = (clone $query)->where('status', 'Completed')->count();
+
+        $orders = $query->paginate(15)->withQueryString();
+
+        return view('public.client.reports', compact(
+            'orders',
+            'totalOrdersCount',
+            'totalSpent',
+            'totalPaid',
+            'totalOutstanding',
+            'completedCount'
+        ));
+    }
+
+    /**
+     * Export Client personal order report to CSV
+     */
+    public function exportOrders(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $userId = Auth::id();
+        $user = Auth::user();
+
+        \App\Services\ActivityLogger::log(
+            module: 'Reports',
+            actionType: 'export',
+            description: "Client {$user->name} exported personal order report to CSV.",
+            properties: ['format' => 'CSV']
+        );
+
+        $query = Sale::where('client_id', $userId)
+            ->where('type', 'customer_order')
+            ->with(['lines.product'])
+            ->latest('id');
+
+        // Apply same filters
+        $period = $request->input('period');
+        if ($period === 'today') {
+            $query->whereDate('created_at', \Carbon\Carbon::today());
+        } elseif ($period === 'this_week') {
+            $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()]);
+        } elseif ($period === 'this_month') {
+            $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfMonth(), \Carbon\Carbon::now()->endOfMonth()]);
+        } elseif ($period === 'this_year') {
+            $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfYear(), \Carbon\Carbon::now()->endOfYear()]);
+        } elseif ($request->filled('from') || $request->filled('to')) {
+            if ($request->filled('from')) {
+                $query->where('created_at', '>=', \Carbon\Carbon::parse($request->from)->startOfDay());
+            }
+            if ($request->filled('to')) {
+                $query->where('created_at', '<=', \Carbon\Carbon::parse($request->to)->endOfDay());
+            }
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        $filename = 'my_orders_report_' . date('Y_m_d_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        return response()->stream(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            fputcsv($handle, [
+                'Order Reference',
+                'Order Date',
+                'Products & Quantities',
+                'Subtotal (ETB)',
+                'Discount (ETB)',
+                'Tax (ETB)',
+                'Total (ETB)',
+                'Amount Paid (ETB)',
+                'Outstanding Balance (ETB)',
+                'Payment Status',
+                'Order Status',
+            ]);
+
+            $query->chunk(100, function ($rows) use ($handle) {
+                foreach ($rows as $ord) {
+                    $itemsSummary = $ord->lines->map(fn ($l) => ($l->product?->name ?? 'Item') . ' (' . number_format($l->quantity, 2) . ' @ Br' . number_format($l->unit_price, 2) . ')')->implode('; ');
+
+                    fputcsv($handle, [
+                        $ord->reference,
+                        $ord->created_at ? $ord->created_at->format('Y-m-d H:i') : '',
+                        $itemsSummary,
+                        number_format($ord->subtotal, 2, '.', ''),
+                        number_format($ord->discount, 2, '.', ''),
+                        number_format($ord->tax, 2, '.', ''),
+                        number_format($ord->total, 2, '.', ''),
+                        number_format($ord->paid_amount, 2, '.', ''),
+                        number_format($ord->total - $ord->paid_amount, 2, '.', ''),
+                        ucfirst($ord->payment_status),
+                        ucfirst($ord->status),
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        }, 200, $headers);
+    }
 }

@@ -63,6 +63,8 @@ Route::middleware(['auth'])->prefix('client')->name('client.')->group(function (
     Route::get('/orders/{order}',                 [\App\Http\Controllers\ClientDashboardController::class, 'showOrder'])->name('orders.show');
     Route::post('/orders/{order}/rate/{product}', [\App\Http\Controllers\ClientDashboardController::class, 'submitRating'])->name('orders.rate');
     Route::get('/reviews',                        [\App\Http\Controllers\ClientDashboardController::class, 'reviews'])->name('reviews');
+    Route::get('/reports',                        [\App\Http\Controllers\ClientDashboardController::class, 'reports'])->name('reports');
+    Route::get('/reports/export',                 [\App\Http\Controllers\ClientDashboardController::class, 'exportOrders'])->name('reports.export');
     Route::get('/profile',                        [\App\Http\Controllers\ClientDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile',                        [\App\Http\Controllers\ClientDashboardController::class, 'updateProfile'])->name('profile.update');
 });
@@ -101,11 +103,21 @@ Route::middleware(['auth'])->group(function () {
     // Admin
     Route::resource('users', UserController::class);
 
-    // Reports & Audit
-    Route::get('/reports/inventory',  [\App\Http\Controllers\ReportController::class, 'inventory'])->name('reports.inventory');
-    Route::get('/reports/sales',      [\App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');
-    Route::get('/reports/production', [\App\Http\Controllers\ReportController::class, 'production'])->name('reports.production');
-    Route::get('/audit', [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit.index');
+    // Reports & Analytics Suite
+    Route::get('/reports',                     [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/sales',               [\App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('/reports/sales/export',        [\App\Http\Controllers\ReportController::class, 'exportSales'])->name('reports.sales.export');
+    Route::get('/reports/inventory',           [\App\Http\Controllers\ReportController::class, 'inventory'])->name('reports.inventory');
+    Route::get('/reports/inventory/export',    [\App\Http\Controllers\ReportController::class, 'exportInventory'])->name('reports.inventory.export');
+    Route::get('/reports/production',          [\App\Http\Controllers\ReportController::class, 'production'])->name('reports.production');
+    Route::get('/reports/production/export',   [\App\Http\Controllers\ReportController::class, 'exportProduction'])->name('reports.production.export');
+    Route::get('/reports/branches',            [\App\Http\Controllers\ReportController::class, 'branchPerformance'])->name('reports.branches');
+    Route::get('/reports/branches/export',     [\App\Http\Controllers\ReportController::class, 'exportBranchPerformance'])->name('reports.branches.export');
+    Route::get('/reports/transfers',           [\App\Http\Controllers\ReportController::class, 'transfers'])->name('reports.transfers');
+    Route::get('/reports/transfers/export',    [\App\Http\Controllers\ReportController::class, 'exportTransfers'])->name('reports.transfers.export');
+    Route::get('/reports/activity',            [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('reports.activity');
+    Route::get('/reports/activity/export',     [\App\Http\Controllers\AuditTrailController::class, 'export'])->name('reports.activity.export');
+    Route::get('/audit',                       [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit.index');
 
     Route::post('/logout', function () {
         auth()->logout();
