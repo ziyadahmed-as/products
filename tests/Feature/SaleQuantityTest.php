@@ -23,7 +23,9 @@ class SaleQuantityTest extends TestCase
     public function test_product_quantity_is_minimized_during_sale_confirmation()
     {
         // Setup initial data
+        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();
+        $user->assignRole('Super Admin');
         $this->actingAs($user);
 
         $branch = \App\Models\Branch::create([
@@ -31,6 +33,7 @@ class SaleQuantityTest extends TestCase
             'code' => 'B-01',
             'is_active' => true,
         ]);
+        $user->branches()->attach($branch->id);
 
         $location = StorageLocation::create([
             'name' => 'Main Warehouse',
