@@ -16,13 +16,13 @@ use App\Models\UnitOfMeasure;
 use App\Models\User;
 use App\Services\ManufacturingService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use RuntimeException;
 use Tests\TestCase;
 
 class ManufacturingOrderTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected User $adminUser;
     protected User $productionUser;
@@ -49,31 +49,34 @@ class ManufacturingOrderTest extends TestCase
 
         $this->service = app(ManufacturingService::class);
 
+        $uid = uniqid();
+
         $this->branch = Branch::create([
-            'name'      => 'Hawassa Factory',
-            'code'      => 'FAC-01',
+            'name'      => "Hawassa Factory $uid",
+            'code'      => "FAC-$uid",
             'is_active' => true,
         ]);
 
         $this->sellerUser->branches()->attach($this->branch->id);
+        $this->productionUser->branches()->attach($this->branch->id);
 
         $this->location = StorageLocation::create([
-            'name'      => 'Factory Central Store',
-            'code'      => 'LOC-01',
+            'name'      => "Factory Central Store $uid",
+            'code'      => "LOC-$uid",
             'branch_id' => $this->branch->id,
             'is_active' => true,
         ]);
 
-        $this->unitKg = UnitOfMeasure::create(['name' => 'Kilogram', 'code' => 'kg']);
-        $this->unitBottle = UnitOfMeasure::create(['name' => 'Bottle', 'code' => 'btl']);
+        $this->unitKg = UnitOfMeasure::firstOrCreate(['code' => 'kg'], ['name' => 'Kilogram']);
+        $this->unitBottle = UnitOfMeasure::firstOrCreate(['code' => 'btl'], ['name' => 'Bottle']);
 
-        $rawCategory = Category::create(['name' => 'Raw Materials', 'slug' => 'raw-materials', 'is_active' => true]);
-        $oilCategory = Category::create(['name' => 'Edible Oils', 'slug' => 'edible-oils', 'is_active' => true]);
+        $rawCategory = Category::firstOrCreate(['slug' => 'raw-materials'], ['name' => 'Raw Materials', 'is_active' => true]);
+        $oilCategory = Category::firstOrCreate(['slug' => 'edible-oils'], ['name' => 'Edible Oils', 'is_active' => true]);
 
         // Raw Material 1: Sunflower Seeds
         $this->rawSeed = Product::create([
             'name'                => 'Sunflower Seeds Grade A',
-            'sku'                 => 'RAW-SEED-01',
+            'sku'                 => "RAW-SEED-$uid",
             'type'                => 'raw_material',
             'category_id'         => $rawCategory->id,
             'unit_of_measure_id'  => $this->unitKg->id,
@@ -91,7 +94,7 @@ class ManufacturingOrderTest extends TestCase
         // Raw Material 2: 1L Plastic Bottles
         $this->rawBottle = Product::create([
             'name'                => 'Empty 1L PET Bottle',
-            'sku'                 => 'RAW-BTL-01',
+            'sku'                 => "RAW-BTL-$uid",
             'type'                => 'raw_material',
             'category_id'         => $rawCategory->id,
             'unit_of_measure_id'  => $this->unitBottle->id,
@@ -109,7 +112,7 @@ class ManufacturingOrderTest extends TestCase
         // Finished Product: Bottled Sunflower Oil 1L
         $this->finishedOil = Product::create([
             'name'                => 'Pure Sunflower Oil 1L',
-            'sku'                 => 'FIN-OIL-01',
+            'sku'                 => "FIN-OIL-$uid",
             'type'                => 'manufactured_product',
             'category_id'         => $oilCategory->id,
             'unit_of_measure_id'  => $this->unitBottle->id,
@@ -123,7 +126,7 @@ class ManufacturingOrderTest extends TestCase
         // Recipe: 1 bottle of oil requires 2.5 kg seeds + 1 empty bottle
         $this->recipe = Recipe::create([
             'product_id' => $this->finishedOil->id,
-            'name'       => 'Standard 1L Sunflower Oil Recipe',
+            'name'       => "Standard 1L Sunflower Oil Recipe $uid",
             'is_active'  => true,
         ]);
         RecipeMaterial::create([
@@ -585,11 +588,12 @@ class ManufacturingOrderTest extends TestCase
         $showResponse->assertStatus(200);
         $showResponse->assertSee($order->reference);
 
-        // 3. Approve via Web POST
-        $this->post(route('manufacturing-orders.approve', $order))->assertRedirect();
+        // 3. Approve via Web POST (requires Admin or Manager)
+        $this->actingAs($this->adminUser)->post(route('manufacturing-orders.approve', $order))->assertRedirect();
         $this->assertEquals('approved', $order->fresh()->status);
 
-        // 4. Issue materials via Web POST
+        // 4. Issue materials via Web POST (Production Officer)
+        $this->actingAs($this->productionUser);
         $this->post(route('manufacturing-orders.issue-materials', $order))->assertRedirect();
         $this->assertTrue($order->fresh()->is_materials_issued);
 

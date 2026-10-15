@@ -83,13 +83,13 @@ class DashboardController extends Controller
         $totalInventoryValuation = $rawMaterialsValuation + $finishedGoodsValuation;
 
         // Manufacturing Metrics
-        $completedProductionUnits = ManufacturingOrder::where('status', 'completed')
+        $completedProductionUnits = ManufacturingOrder::whereIn('status', ['completed', 'Completed'])
             ->when($branchIds !== null, fn ($q) => $q->whereHas('storageLocation', fn ($sl) => $sl->whereIn('branch_id', $branchIds)))
             ->sum('good_quantity');
 
-        $scrapUnits = ManufacturingOrder::where('status', 'completed')
+        $scrapUnits = ManufacturingOrder::whereIn('status', ['completed', 'Completed'])
             ->when($branchIds !== null, fn ($q) => $q->whereHas('storageLocation', fn ($sl) => $sl->whereIn('branch_id', $branchIds)))
-            ->sum('scrap_quantity');
+            ->sum('rejected_quantity');
 
         $totalMfgUnits = $completedProductionUnits + $scrapUnits;
         $scrapRate = $totalMfgUnits > 0 ? round(($scrapUnits / $totalMfgUnits) * 100, 1) : 0;
