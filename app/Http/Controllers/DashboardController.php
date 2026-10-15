@@ -20,7 +20,7 @@ class DashboardController extends Controller
             if ($user->hasRole('Client') || $user->roles()->count() === 0) {
                 return redirect()->route('client.dashboard');
             }
-            if ($user->hasRole('Production Officer')) {
+            if ($user->hasRole('Production Officer') || $user->hasRole('Product Manufacturer') || $user->hasRole('Production')) {
                 return redirect()->route('manufacturing.dashboard');
             }
             if ($user->hasRole('Auditor')) {

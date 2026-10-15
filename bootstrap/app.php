@@ -14,5 +14,17 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() === 419) {
+                if ($request->is('login') || $request->is('client/login') || $request->routeIs('login') || $request->routeIs('login.submit')) {
+                    return redirect()->route('login')
+                        ->withInput($request->only('email'))
+                        ->with('status', 'Your session expired. Please sign in again.');
+                }
+
+                return redirect()->back()
+                    ->withInput($request->except(['password', '_token']))
+                    ->with('status', 'Your session expired. Please try again.');
+            }
+        });
     })->create();

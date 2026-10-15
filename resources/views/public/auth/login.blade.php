@@ -28,7 +28,7 @@
         </div>
         @endif
 
-        <form action="{{ route('login.submit') }}" method="POST">
+        <form action="{{ route('login.submit', [], false) }}" method="POST">
             @csrf
 
             <div style="margin-bottom:1rem;">
@@ -39,7 +39,7 @@
             <div style="margin-bottom:.5rem;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
                     <label class="pub-form-label" style="margin:0;">Password</label>
-                    <a href="{{ route('client.password.request') }}" style="font-size:.78rem;color:var(--cyan);font-weight:600;">Forgot password?</a>
+                    <a href="{{ route('client.password.request', [], false) }}" style="font-size:.78rem;color:var(--cyan);font-weight:600;">Forgot password?</a>
                 </div>
                 <input type="password" id="password" name="password" required class="pub-input" style="width:100%;" placeholder="••••••••" autocomplete="current-password">
             </div>
@@ -56,7 +56,7 @@
 
         <div style="margin-top:1.5rem;text-align:center;font-size:.875rem;color:var(--text-2);">
             Don't have an account?
-            <a href="{{ route('client.register') }}" style="color:var(--cyan);font-weight:700;">Create one →</a>
+            <a href="{{ route('client.register', [], false) }}" style="color:var(--cyan);font-weight:700;">Create one →</a>
         </div>
     </div>
 </div>

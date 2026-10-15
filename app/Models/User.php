@@ -95,10 +95,10 @@ class User extends Authenticatable
         }
 
         if ($this->hasRole('Seller')) {
-            return route('sales.create');
+            return route('dashboard');
         }
 
-        if ($this->hasRole('Production Officer')) {
+        if ($this->hasRole('Production Officer') || $this->hasRole('Product Manufacturer') || $this->hasRole('Production')) {
             return route('manufacturing.dashboard');
         }
 

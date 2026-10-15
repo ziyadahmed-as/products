@@ -33,7 +33,12 @@ class ClientAuthController extends Controller
             // Claim any guest orders that match this email
             $this->claimOrders($user);
 
-            // Redirect based on role (Super Admin, Manager, Seller, Client)
+            // Direct staff roles (Super Admin, Manager, Seller, Production Officer, Auditor) directly to their dashboard
+            if ($user->hasAnyRole(['Super Admin', 'Manager', 'Seller', 'Production Officer', 'Product Manufacturer', 'Production', 'Auditor'])) {
+                $request->session()->forget('url.intended');
+                return redirect()->to($user->getDashboardUrl());
+            }
+
             return redirect()->intended($user->getDashboardUrl());
         }
 
