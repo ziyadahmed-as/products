@@ -1066,4 +1066,97 @@ class ReportController extends Controller
 
         return $query;
     }
+
+    /**
+     * Export User Performance Report to CSV.
+     */
+    public function exportUserPerformance(Request $request)
+    {
+        $user = auth()->user();
+        abort_unless($user && ($user->hasRole('Super Admin') || $user->hasRole('Manager') || $user->hasRole('Auditor')), 403);
+
+        ActivityLogger::log(
+            module: 'Reports',
+            actionType: 'export',
+            description: "User {$user->name} exported User Performance Report to CSV.",
+            properties: ['format' => 'CSV']
+        );
+
+        $branchIds = $this->getAuthorizedBranchIds($user);
+
+        // Fetch internal users
+        $usersQuery = User::whereHas('roles', function ($q) {
+            $q->whereIn('name', ['Super Admin', 'Manager', 'Seller', 'Production Officer', 'Auditor']);
+        })->with(['roles', 'branches']);
+
+        if ($branchIds !== null) {
+            $usersQuery->where(function ($uq) use ($branchIds) {
+                $uq->whereHas('branches', fn ($q) => $q->whereIn('branches.id', $branchIds))
+                   ->orWhereHas('roles', fn ($rq) => $rq->where('name', 'Super Admin'));
+            });
+        }
+
+        $users = $usersQuery->get();
+
+        $filename = 'user_performance_report_' . date('Y_m_d_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        return response()->stream(function () use ($users, $branchIds) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM for Excel
+
+            fputcsv($handle, [
+                'Staff Member',
+                'Email',
+                'Role',
+                'Branch Assignments',
+                'Sales Count',
+                'Sales Volume (ETB)',
+                'Mfg Orders Created',
+                'Completed Mfg Output (Units)',
+                'System Activities Logged',
+                'Account Status',
+            ]);
+
+            foreach ($users as $u) {
+                $salesQuery = Sale::where('user_id', $u->id);
+                $mfgQuery = ManufacturingOrder::where('user_id', $u->id);
+
+                if ($branchIds !== null) {
+                    $salesQuery->whereIn('branch_id', $branchIds);
+                }
+
+                $salesCount = (clone $salesQuery)->count();
+                $salesVol   = (clone $salesQuery)->sum('total');
+                $mfgCount   = (clone $mfgQuery)->count();
+                $mfgGoodQty = (clone $mfgQuery)->where('status', 'completed')->sum('good_quantity');
+                $actCount   = \Spatie\Activitylog\Models\Activity::where('causer_id', $u->id)->count();
+
+                $branchNames = $u->branches->pluck('name')->join(', ') ?: ($u->hasRole('Super Admin') ? 'All Branches (Global)' : 'None');
+
+                fputcsv($handle, [
+                    $u->name,
+                    $u->email,
+                    $u->roles->pluck('name')->join(', ') ?: 'Staff',
+                    $branchNames,
+                    $salesCount,
+                    number_format($salesVol, 2, '.', ''),
+                    $mfgCount,
+                    number_format($mfgGoodQty, 2, '.', ''),
+                    $actCount,
+                    $u->is_active ? 'Active' : 'Inactive',
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, $headers);
+    }
 }
+

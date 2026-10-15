@@ -117,6 +117,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/transfers/export',    [\App\Http\Controllers\ReportController::class, 'exportTransfers'])->name('reports.transfers.export');
     Route::get('/reports/activity',            [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('reports.activity');
     Route::get('/reports/activity/export',     [\App\Http\Controllers\AuditTrailController::class, 'export'])->name('reports.activity.export');
+    Route::get('/reports/user-performance/export', [\App\Http\Controllers\ReportController::class, 'exportUserPerformance'])->name('reports.users.export');
     Route::get('/audit',                       [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit.index');
 
     // ── POS API Helpers (AJAX) ─────────────────────────────────────────────
