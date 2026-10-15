@@ -6,6 +6,8 @@ use App\Models\InventoryBalance;
 use App\Models\ManufacturingOrder;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SaleLine;
+use App\Models\Payment;
 use App\Models\User;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
@@ -178,13 +180,86 @@ class DashboardController extends Controller
             ];
         })->sortByDesc('sales_volume')->values();
 
+        $isSeller = $user && $user->hasRole('Seller') && !$user->hasRole('Super Admin') && !$user->hasRole('Manager');
+        
+        $sellerData = null;
+        if ($isSeller) {
+            $mySalesBase = Sale::where('user_id', $user->id);
+            if ($branchIds !== null) {
+                $mySalesBase->whereIn('branch_id', $branchIds);
+            }
+
+            $myCompletedSales = (clone $mySalesBase)->whereIn('status', ['confirmed', 'processing', 'shipped', 'completed']);
+            $myTodaySales     = (float) (clone $myCompletedSales)->whereDate('created_at', today())->sum('total');
+            $myTodayCount     = (int) (clone $myCompletedSales)->whereDate('created_at', today())->count();
+            $myMonthSales     = (float) (clone $myCompletedSales)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
+            $myMonthCount     = (int) (clone $myCompletedSales)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count();
+            $myTotalRevenue   = (float) (clone $myCompletedSales)->sum('total');
+            $myTotalCount     = (int) (clone $myCompletedSales)->count();
+            $myTotalPaid      = (float) (clone $myCompletedSales)->sum('paid_amount');
+            $myTotalUnpaid    = max(0, $myTotalRevenue - $myTotalPaid);
+            $avgOrderValue    = $myTotalCount > 0 ? round($myTotalRevenue / $myTotalCount, 2) : 0;
+
+            // Seller recent sales with payment and lines details
+            $sellerRecentSales = (clone $mySalesBase)
+                ->with(['payments', 'lines.product.unit', 'branch'])
+                ->latest('id')
+                ->limit(8)
+                ->get();
+
+            // Sellable products catalog for rapid price & stock check
+            $sellableProductsQuery = Product::where('is_active', true)
+                ->where('type', '!=', 'raw_material')
+                ->with(['unit', 'category', 'inventoryBalances' => function ($q) use ($branchIds) {
+                    if ($branchIds !== null) {
+                        $q->whereHas('storageLocation', fn ($sl) => $sl->whereIn('branch_id', $branchIds));
+                    }
+                }]);
+
+            $sellableCatalog = $sellableProductsQuery->orderBy('name')->limit(12)->get();
+
+            // Payment methods breakdown for this seller
+            $sellerSaleIds = (clone $myCompletedSales)->pluck('id');
+            $paymentsByMethod = Payment::whereIn('sale_id', $sellerSaleIds)
+                ->selectRaw('method, sum(amount) as total_amount, count(*) as count')
+                ->groupBy('method')
+                ->get();
+
+            // Top sold products by this seller
+            $topProductsSold = SaleLine::whereIn('sale_id', $sellerSaleIds)
+                ->with('product.unit')
+                ->selectRaw('product_id, sum(quantity) as total_qty, sum(total) as total_revenue')
+                ->groupBy('product_id')
+                ->orderByDesc('total_qty')
+                ->limit(5)
+                ->get();
+
+            $sellerData = [
+                'today_sales'        => $myTodaySales,
+                'today_count'        => $myTodayCount,
+                'month_sales'        => $myMonthSales,
+                'month_count'        => $myMonthCount,
+                'total_revenue'      => $myTotalRevenue,
+                'total_count'        => $myTotalCount,
+                'total_paid'         => $myTotalPaid,
+                'total_unpaid'       => $myTotalUnpaid,
+                'avg_order_value'    => $avgOrderValue,
+                'recent_sales'       => $sellerRecentSales,
+                'sellable_catalog'   => $sellableCatalog,
+                'payments_breakdown' => $paymentsByMethod,
+                'top_products'       => $topProductsSold,
+            ];
+        }
+
         return view('dashboard', compact(
             'stats',
             'recentSales',
             'lowStockItems',
             'openOrders',
             'rawMaterialsList',
-            'userPerformances'
+            'userPerformances',
+            'isSeller',
+            'sellerData'
         ));
     }
 }

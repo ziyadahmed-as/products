@@ -4,110 +4,185 @@
 @section('content')
 <div class="space-y-6">
 
-    <!-- Header & Quick Actions -->
-    <div class="page-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <!-- Top Greeting & Quick Launch Bar -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-bold text-white tracking-tight">Manufacturing Operations Dashboard</h1>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-900/50 text-primary-300 border border-primary-700/50">
+            <div class="flex items-center gap-2.5">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                    Manufacturing Operations Dashboard
+                </h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30">
                     {{ auth()->user()->roles->first()->name ?? 'Production Staff' }}
                 </span>
             </div>
-            <p class="text-dark-400 text-sm mt-1">Real-time production orders, raw material stock deductions, and finished product registration.</p>
+            <p class="text-dark-400 text-sm mt-1">
+                Real-time production orders, raw material stock deductions, yield efficiency, and finished goods registration.
+            </p>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('manufacturing-orders.index') }}" class="btn-secondary text-sm">
-                <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                </svg>
-                All Orders
-            </a>
-            <a href="{{ route('manufacturing-orders.create') }}" class="btn-primary text-sm shadow-lg shadow-primary-600/20">
-                <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+        <!-- Quick Primary Actions -->
+        <div class="flex flex-wrap items-center gap-2.5">
+            <a href="{{ route('products.create', ['type' => 'raw_material']) }}" class="btn-secondary flex items-center gap-2 text-sm !bg-dark-900 border-dark-700 hover:border-amber-500/40">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                New Production Order
+                <span>Add Raw Material</span>
+            </a>
+            <a href="{{ route('stock-receipts.create') }}" class="btn-secondary flex items-center gap-2 text-sm !bg-dark-900 border-dark-700 hover:border-emerald-500/40">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>Receive Stock</span>
+            </a>
+            <a href="{{ route('manufacturing-orders.create') }}" class="btn-primary flex items-center gap-2 text-sm shadow-lg shadow-purple-600/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>New Production Order</span>
             </a>
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="p-4 rounded-xl bg-emerald-950/60 border border-emerald-800/50 text-emerald-300 flex items-center justify-between">
+    <!-- Production Reports & Export Toolbar -->
+    <div class="card bg-gradient-to-r from-dark-900 via-dark-900/95 to-dark-900 border border-dark-800 rounded-2xl p-4 sm:p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-dark-800/80">
             <div class="flex items-center gap-3">
-                <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                <span>{{ session('success') }}</span>
+                <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white tracking-wide uppercase">Production Intelligence & Export Hub</h3>
+                    <p class="text-xs text-dark-400">Download production batches, raw material logs, and batch yield reports</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('manufacturing-orders.index') }}" class="btn-secondary text-xs flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                    </svg>
+                    <span>All Orders ({{ $totalOrders }})</span>
+                </a>
             </div>
         </div>
-    @endif
 
-    @if(session('error'))
-        <div class="p-4 rounded-xl bg-rose-950/60 border border-rose-800/50 text-rose-300 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <svg class="w-5 h-5 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        <!-- Export Shortcuts Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3">
+            <a href="{{ route('reports.production.export') }}" class="p-2.5 rounded-xl bg-dark-950/70 border border-dark-800 hover:border-purple-500/40 hover:bg-dark-800/50 transition flex items-center justify-between group">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0"></span>
+                    <span class="text-xs font-medium text-dark-300 group-hover:text-white truncate">Production Output CSV</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-dark-500 group-hover:text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
-                <span>{{ session('error') }}</span>
-            </div>
-        </div>
-    @endif
+            </a>
 
-    <!-- KPI Metric Cards Row -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{{ route('reports.inventory.export') }}" class="p-2.5 rounded-xl bg-dark-950/70 border border-dark-800 hover:border-emerald-500/40 hover:bg-dark-800/50 transition flex items-center justify-between group">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
+                    <span class="text-xs font-medium text-dark-300 group-hover:text-white truncate">Materials Stock CSV</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-dark-500 group-hover:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+            </a>
+
+            <a href="{{ route('stock-receipts.index') }}" class="p-2.5 rounded-xl bg-dark-950/70 border border-dark-800 hover:border-blue-500/40 hover:bg-dark-800/50 transition flex items-center justify-between group">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></span>
+                    <span class="text-xs font-medium text-dark-300 group-hover:text-white truncate">Stock Receipts</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-dark-500 group-hover:text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </a>
+
+            <a href="{{ route('products.index', ['type' => 'raw_material']) }}" class="p-2.5 rounded-xl bg-dark-950/70 border border-dark-800 hover:border-amber-500/40 hover:bg-dark-800/50 transition flex items-center justify-between group">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"></span>
+                    <span class="text-xs font-medium text-dark-300 group-hover:text-white truncate">Raw Materials Catalog</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-dark-500 group-hover:text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Core KPI Stat Cards Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <!-- Active Orders -->
         <div class="stat-card">
-            <div class="stat-icon bg-amber-900/40 border border-amber-700/30">
-                <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="stat-icon bg-purple-900/40">
+                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
             </div>
             <div>
-                <p class="stat-value text-amber-300">{{ $inProgressOrders }}</p>
+                <p class="stat-value text-purple-400">{{ $inProgressOrders }} Active</p>
                 <p class="stat-label">In Production</p>
-                <span class="text-xs text-dark-400">{{ $pendingOrders }} pending/approved</span>
+                <p class="text-[11px] text-dark-400 mt-1">
+                    {{ $pendingOrders }} pending/approved • {{ $totalOrders }} total batches
+                </p>
             </div>
         </div>
 
         <!-- Finished Output Produced -->
         <div class="stat-card">
-            <div class="stat-icon bg-emerald-900/40 border border-emerald-700/30">
+            <div class="stat-icon bg-emerald-900/40">
                 <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
             <div>
-                <p class="stat-value text-emerald-300">{{ number_format($totalFinishedProduced, 0) }}</p>
-                <p class="stat-label">Accepted Finished Goods</p>
-                <span class="text-xs text-dark-400">{{ $completedOrders }} completed batches</span>
+                <p class="stat-value text-emerald-400">{{ number_format($totalFinishedProduced, 0) }}</p>
+                <p class="stat-label">Accepted Finished Units</p>
+                <p class="text-[11px] text-dark-400 mt-1">
+                    {{ $completedOrders }} completed batches registered to stock
+                </p>
             </div>
         </div>
 
         <!-- Low Stock Alert -->
         <div class="stat-card">
-            <div class="stat-icon bg-rose-900/40 border border-rose-700/30">
-                <svg class="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            <div class="stat-icon bg-amber-900/40">
+                <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
             </div>
             <div>
-                <p class="stat-value text-rose-400">{{ $lowStockMaterials->count() }}</p>
+                <div class="flex items-center gap-2">
+                    <p class="stat-value {{ $lowStockMaterials->count() > 0 ? 'text-rose-400' : 'text-amber-400' }}">
+                        {{ $lowStockMaterials->count() }}
+                    </p>
+                    @if($lowStockMaterials->count() > 0)
+                        <span class="badge-red text-[10px] px-1.5 py-0.5">Low Stock</span>
+                    @else
+                        <span class="badge-green text-[10px] px-1.5 py-0.5">Optimal</span>
+                    @endif
+                </div>
                 <p class="stat-label">Low Stock Raw Materials</p>
-                <span class="text-xs text-dark-400">of {{ $totalRawMaterialsCount }} raw materials</span>
+                <p class="text-[11px] text-dark-400 mt-1">
+                    of {{ $totalRawMaterialsCount }} raw materials in inventory
+                </p>
             </div>
         </div>
 
         <!-- Efficiency -->
         <div class="stat-card">
-            <div class="stat-icon bg-blue-900/40 border border-blue-700/30">
-                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="stat-icon bg-cyan-900/40">
+                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
             </div>
             <div>
-                <p class="stat-value text-blue-300">{{ $avgEfficiency }}%</p>
-                <p class="stat-label">Yield Efficiency</p>
-                <span class="text-xs text-dark-400">{{ number_format($totalRejected, 0) }} rejected units</span>
+                <p class="stat-value text-cyan-400">{{ $avgEfficiency }}%</p>
+                <p class="stat-label">Production Yield Efficiency</p>
+                <p class="text-[11px] text-dark-400 mt-1">
+                    {{ number_format($totalRejected, 0) }} total scrap / rejected units
+                </p>
             </div>
         </div>
     </div>

@@ -8,47 +8,59 @@
     ];
 @endphp
 
-<div style="width:240px;flex-shrink:0;">
-    <div style="background:var(--bg-card);border-radius:14px;border:1px solid var(--border);overflow:hidden;position:sticky;top:100px;">
+<aside style="width:260px;flex-shrink:0;">
+    <div style="background:var(--bg-card);border-radius:18px;border:1px solid var(--border);overflow:hidden;position:sticky;top:100px;box-shadow:0 10px 30px rgba(0,0,0,0.06);">
 
-        {{-- User info --}}
-        <div style="padding:1.5rem;border-bottom:1px solid var(--border);">
-            <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),#6366f1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem;margin-bottom:.75rem;">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+        {{-- User info header --}}
+        <div style="padding:1.5rem;border-bottom:1px solid var(--border);background:linear-gradient(180deg, var(--bg-card2), var(--bg-card));">
+            <div style="display:flex;align-items:center;gap:.9rem;margin-bottom:.85rem;">
+                <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),#6366f1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.2rem;box-shadow:0 4px 14px var(--cyan-glow);border:2px solid rgba(255,255,255,0.15);flex-shrink:0;">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <div style="min-width:0;flex:1;">
+                    <div style="font-weight:800;color:var(--text-1);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Outfit',sans-serif;">{{ auth()->user()->name }}</div>
+                    <span style="display:inline-block;padding:.15rem .55rem;background:rgba(8,145,178,.12);border:1px solid rgba(8,145,178,.3);border-radius:999px;font-size:.68rem;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.05em;margin-top:.2rem;">
+                        Verified Customer
+                    </span>
+                </div>
             </div>
-            <div style="font-weight:700;color:var(--text-1);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ auth()->user()->name }}</div>
-            <div style="font-size:.78rem;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.15rem;">{{ auth()->user()->email }}</div>
+            <div style="font-size:.78rem;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ auth()->user()->email }}</div>
             @if(auth()->user()->phone)
-            <div style="font-size:.78rem;color:var(--text-3);margin-top:.1rem;">{{ auth()->user()->phone }}</div>
+            <div style="font-size:.78rem;color:var(--text-3);margin-top:.2rem;display:flex;align-items:center;gap:.35rem;">
+                <svg style="width:13px;height:13px;color:var(--text-3);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                <span>{{ auth()->user()->phone }}</span>
+            </div>
             @endif
         </div>
 
         {{-- Nav links --}}
-        <div style="display:flex;flex-direction:column;padding:.4rem 0;">
+        <nav style="display:flex;flex-direction:column;padding:.6rem 0;" aria-label="Buyer Navigation">
             @foreach($sidebarLinks as $link)
             @php $isActive = isset($active) && $active === \Illuminate\Support\Str::after($link['route'], 'client.'); @endphp
             <a href="{{ route($link['route']) }}"
-               style="display:flex;align-items:center;gap:.65rem;padding:.7rem 1.25rem;font-size:.875rem;color:{{ $isActive ? 'var(--text-1)' : 'var(--text-2)' }};font-weight:{{ $isActive ? '700' : '500' }};border-left:3px solid {{ $isActive ? 'var(--cyan)' : 'transparent' }};background:{{ $isActive ? 'rgba(8,145,178,.06)' : 'transparent' }};transition:all .15s;text-decoration:none;">
-                <svg style="width:16px;height:16px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.4rem;font-size:.875rem;color:{{ $isActive ? 'var(--cyan)' : 'var(--text-2)' }};font-weight:{{ $isActive ? '700' : '500' }};border-left:3px solid {{ $isActive ? 'var(--cyan)' : 'transparent' }};background:{{ $isActive ? 'rgba(8,145,178,.08)' : 'transparent' }};transition:all .18s;text-decoration:none;">
+                <svg style="width:18px;height:18px;flex-shrink:0;color:{{ $isActive ? 'var(--cyan)' : 'inherit' }};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $link['icon'] }}"/>
                 </svg>
-                {{ $link['label'] }}
+                <span>{{ $link['label'] }}</span>
             </a>
             @endforeach
-        </div>
+        </nav>
 
         {{-- Logout --}}
-        <div style="padding:.4rem 0;border-top:1px solid var(--border);">
+        <div style="padding:.5rem 0;border-top:1px solid var(--border);">
             <form action="{{ route('client.logout') }}" method="POST" style="margin:0;">
                 @csrf
                 <button type="submit"
-                    style="width:100%;display:flex;align-items:center;gap:.65rem;padding:.7rem 1.25rem;font-size:.875rem;color:var(--text-2);background:none;border:none;cursor:pointer;text-align:left;font-weight:500;">
-                    <svg style="width:16px;height:16px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    style="width:100%;display:flex;align-items:center;gap:.75rem;padding:.75rem 1.4rem;font-size:.875rem;color:var(--text-2);background:none;border:none;cursor:pointer;text-align:left;font-weight:500;transition:all .18s;"
+                    onmouseover="this.style.color='#ef4444';this.style.background='rgba(239,68,68,0.06)'"
+                    onmouseout="this.style.color='var(--text-2)';this.style.background='transparent'">
+                    <svg style="width:18px;height:18px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
-                    Log Out
+                    <span>Log Out</span>
                 </button>
             </form>
         </div>
     </div>
-</div>
+</aside>

@@ -1,7 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Admin Dashboard & Reports')
+@section('title', !empty($isSeller) && $isSeller ? 'Seller Dashboard & POS' : 'Admin Dashboard & Reports')
 
 @section('content')
+@if(!empty($isSeller) && $isSeller)
+    @include('partials._seller_dashboard')
+@else
 <div class="space-y-6">
 
     <!-- Top Greeting & Quick Launch Bar -->
@@ -537,4 +540,5 @@
     </div>
 
 </div>
+@endif
 @endsection

@@ -33,12 +33,11 @@ class MasterDataSeeder extends Seeder
 
         // Categories
         $categories = [
-            ['name' => 'Raw Materials', 'description' => 'Unprocessed ingredients and chemical raw materials for manufacturing.'],
-            ['name' => 'Packaging Materials', 'description' => 'Bottles, caps, labels, cartons, and packaging supplies.'],
-            ['name' => 'Chemicals & Solvents', 'description' => 'Active chemicals, surfactants, and liquid solvents.'],
-            ['name' => 'Manufactured Detergents', 'description' => 'Finished cleaning and detergent products produced in-house.'],
-            ['name' => 'Resale Products', 'description' => 'Finished merchandise purchased for resale.'],
-            ['name' => 'Consumables', 'description' => 'Factory supplies and operational consumables.'],
+            ['name' => 'packing materials', 'description' => 'Packing materials for products.'],
+            ['name' => 'bottles', 'description' => 'bottles for oils.'],
+            ['name'=> 'resallable products', 'description' => 'products that are sold as they are.'],
+            ['name'=> 'seeds', 'description' => 'seeds.'],
+            
         ];
 
         foreach ($categories as $cat) {
