@@ -25,9 +25,6 @@ class DashboardController extends Controller
             if ($user->hasRole('Production Officer') || $user->hasRole('Product Manufacturer') || $user->hasRole('Production')) {
                 return redirect()->route('manufacturing.dashboard');
             }
-            if ($user->hasRole('Auditor')) {
-                return redirect()->route('reports.index');
-            }
         }
 
         $user = auth()->user();
@@ -104,15 +101,53 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
+        // Period metrics for KPI cards (matching business period trend)
+        $startDate = Carbon::now()->startOfMonth();
+        $endDate   = Carbon::now()->endOfMonth();
+        $diffDays  = $startDate->diffInDays($endDate) + 1;
+        $prevStartDate = (clone $startDate)->subDays($diffDays);
+        $prevEndDate   = (clone $endDate)->subDays($diffDays);
+
+        $salesThisPeriod = (clone $salesQuery)->whereIn('sales.status', ['confirmed', 'processing', 'shipped', 'completed'])
+            ->whereBetween('sales.created_at', [$startDate, $endDate])
+            ->sum('total');
+        $salesPrevPeriod = (clone $salesQuery)->whereIn('sales.status', ['confirmed', 'processing', 'shipped', 'completed'])
+            ->whereBetween('sales.created_at', [$prevStartDate, $prevEndDate])
+            ->sum('total');
+        $revenueGrowth = $salesPrevPeriod > 0
+            ? round((($salesThisPeriod - $salesPrevPeriod) / $salesPrevPeriod) * 100, 1)
+            : 100;
+
+        $ordersTodayCount = (clone $salesQuery)->whereDate('sales.created_at', today())->count();
+        $pendingSalesOrders = Sale::whereIn('status', ['pending'])->count();
+        $completedMfgThisPeriod = ManufacturingOrder::whereIn('status', ['completed', 'Completed'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->when($branchIds !== null, fn ($q) => $q->whereHas('storageLocation', fn ($sl) => $sl->whereIn('branch_id', $branchIds)))
+            ->count();
+
         // Consolidated Stats
+        $yesterdaySales = (clone $salesQuery)->whereDate('sales.created_at', Carbon::yesterday())->sum('total');
+
         $stats = [
             'total_products'           => Product::where('is_active', true)->count(),
             'total_revenue'            => $totalRevenue,
+            'selected_revenue'         => $salesThisPeriod,
             'today_sales'              => $todaySales,
+            'today_sales_count'        => $ordersTodayCount,
+            'orders_today'             => $ordersTodayCount,
+            'pending_sales_orders'     => $pendingSalesOrders,
             'month_sales'              => $monthSales,
+            'yesterday_sales'          => $yesterdaySales,
+            'revenue_growth'           => $revenueGrowth,
+            'revenue_trend'            => $revenueGrowth,
             'low_stock'                => (clone $lowStockQuery)->count(),
+            'low_stock_count'          => (clone $lowStockQuery)->count(),
             'active_orders'            => (clone $ordersQuery)->count(),
+            'active_production_orders' => (clone $ordersQuery)->count(),
+            'pending_orders'           => (clone $ordersQuery)->whereIn('status', ['draft', 'pending_approval', 'planned'])->count(),
+            'in_progress_orders'       => (clone $ordersQuery)->whereIn('status', ['approved', 'materials_issued', 'in_progress'])->count(),
             'completed_production'     => $completedProductionUnits,
+            'completed_production_period' => $completedMfgThisPeriod,
             'scrap_rate'               => $scrapRate,
             'raw_materials_count'      => Product::where('type', 'raw_material')->where('is_active', true)->count(),
             'raw_materials_stock'      => $rawMaterialsStockUnits,
@@ -123,19 +158,92 @@ class DashboardController extends Controller
             'today_activities_count'   => Activity::whereDate('created_at', today())->count(),
         ];
 
+        // Chart 1: 14-Day Revenue Trend (Real Data)
+        $daysCount = 14;
+        $dailySales = (clone $salesQuery)
+            ->where('sales.created_at', '>=', now()->subDays($daysCount - 1)->startOfDay())
+            ->selectRaw('DATE(sales.created_at) as sale_date, SUM(sales.total) as total')
+            ->groupBy('sale_date')
+            ->pluck('total', 'sale_date');
+
+        $revenueChartLabels = [];
+        $revenueChartData = [];
+        for ($i = $daysCount - 1; $i >= 0; $i--) {
+            $dt = now()->subDays($i);
+            $dStr = $dt->format('Y-m-d');
+            $revenueChartLabels[] = $dt->format('M d');
+            $revenueChartData[] = (float) ($dailySales[$dStr] ?? 0);
+        }
+        $revenueChart = [
+            'labels' => $revenueChartLabels,
+            'data'   => $revenueChartData,
+        ];
+
+        // Chart 2: Category / Distribution (Real Data)
+        $categorySales = SaleLine::whereHas('sale', function ($q) use ($branchIds) {
+            $q->whereIn('status', ['confirmed', 'processing', 'shipped', 'completed']);
+            if ($branchIds !== null) {
+                $q->whereIn('branch_id', $branchIds);
+            }
+        })
+        ->join('products', 'sale_lines.product_id', '=', 'products.id')
+        ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+        ->selectRaw('COALESCE(categories.name, "Unassigned") as cat_name, SUM(sale_lines.total) as total')
+        ->groupBy('cat_name')
+        ->orderByDesc('total')
+        ->limit(5)
+        ->pluck('total', 'cat_name');
+
+        if ($categorySales->isEmpty()) {
+            $categorySales = Product::where('products.is_active', true)
+                ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                ->selectRaw('COALESCE(categories.name, "General") as cat_name, COUNT(products.id) as total')
+                ->groupBy('cat_name')
+                ->limit(5)
+                ->pluck('total', 'cat_name');
+        }
+
+        $categoryChart = [
+            'labels' => $categorySales->keys()->toArray(),
+            'data'   => $categorySales->values()->map(fn($v) => (float)$v)->toArray(),
+        ];
+
+        $ordersByType = [
+            'online' => (clone $salesQuery)->where('type', 'online')->count(),
+            'pos'    => (clone $salesQuery)->where('type', 'pos')->count(),
+            'direct' => (clone $salesQuery)->where('type', 'direct')->count(),
+        ];
+
+        // If all are zero, provide default distribution for visual display
+        $ordersByTypeTotal = array_sum($ordersByType);
+        $ordersByTypeChart = [
+            'labels' => ['Online', 'POS', 'Direct'],
+            'data'   => [$ordersByType['online'], $ordersByType['pos'], $ordersByType['direct']],
+        ];
+
+        // Chart 3: Manufacturing Status Breakdown (Real Data)
+        $orderStatusBreakdown = ManufacturingOrder::when($branchIds !== null, fn ($q) => $q->whereHas('storageLocation', fn ($sl) => $sl->whereIn('branch_id', $branchIds)))
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        // Recent System Activity Logs
+        $recentActivities = Activity::with('causer')->latest('id')->limit(8)->get();
+
         // Recent Sales
-        $recentSales = (clone $salesQuery)->with(['user', 'branch'])->latest('id')->limit(6)->get();
+        $recentSales = (clone $salesQuery)->with(['user', 'branch'])->latest('id')->limit(8)->get();
 
         // Low stock items
         $lowStockItems = (clone $lowStockQuery)->with(['product', 'storageLocation'])
             ->select('inventory_balances.*')
-            ->limit(5)
+            ->limit(6)
             ->get();
 
         // Open Manufacturing Orders
         $openOrders = (clone $ordersQuery)->with(['product.unit', 'storageLocation.branch'])
             ->latest('id')
-            ->limit(5)
+            ->limit(6)
             ->get();
 
         // ── Staff & User Performance Report Data ──
@@ -253,6 +361,11 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'stats',
+            'revenueChart',
+            'ordersByTypeChart',
+            'categoryChart',
+            'orderStatusBreakdown',
+            'recentActivities',
             'recentSales',
             'lowStockItems',
             'openOrders',

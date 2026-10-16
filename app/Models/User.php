@@ -103,7 +103,7 @@ class User extends Authenticatable
         }
 
         if ($this->hasRole('Auditor')) {
-            return route('reports.index');
+            return route('dashboard');
         }
 
         if ($this->hasRole('Client')) {

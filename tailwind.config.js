@@ -8,54 +8,157 @@ export default {
         './app/Http/**/*.php',
     ],
     safelist: [
-        // Layout
+        // ── Layout helpers ────────────────────────────────
         'ml-64', 'pt-20', 'pt-16',
-        // Glassmorphism backgrounds
+
+        // ── Glassmorphism / Alpha backgrounds ────────────
         'bg-white/5', 'bg-white/10', 'bg-white/[0.02]', 'bg-white/[0.03]',
         'border-white/5', 'border-white/10', 'border-white/20',
-        // Dark backgrounds
+
+        // ── Hardcoded hex backgrounds ─────────────────────
         'bg-[#060913]', 'bg-[#0a0f1d]',
-        // Primary colors
-        'bg-primary-600', 'bg-primary-500', 'bg-primary-400',
-        'text-primary-400', 'text-primary-300', 'text-primary-200',
-        'border-primary-500', 'border-primary-400',
-        'bg-primary-600/10', 'bg-primary-600/20',
-        'shadow-primary-900',
-        // Gradients
-        'from-primary-400', 'to-primary-600', 'from-primary-600', 'to-primary-500',
-        'via-primary-300',
-        // Text colors used dynamically
-        'text-emerald-400', 'text-emerald-300', 'text-emerald-200',
-        'text-amber-400', 'text-amber-300', 'text-amber-200',
-        'text-red-400', 'text-red-300',
-        'text-yellow-400', 'text-purple-400',
-        'text-dark-200', 'text-dark-300', 'text-dark-400', 'text-dark-500',
-        // Badges & dynamic badge colors
-        'bg-emerald-500/10', 'bg-emerald-500/20', 'border-emerald-500/20', 'border-emerald-500/30',
-        'bg-amber-500/10', 'bg-amber-500/20', 'border-amber-500/20', 'border-amber-500/30',
-        'bg-red-500/10', 'bg-red-500/20', 'border-red-500/20', 'border-red-500/30',
-        'bg-yellow-500/10', 'border-yellow-500/20',
-        'bg-purple-500/10', 'border-purple-500/20',
-        // Blur
+
+        // ── All dark-* utility variants (used extensively in admin/seller/mfg dashboards) ──
+        {
+            pattern: /bg-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /text-dark-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+        {
+            pattern: /border-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /from-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /via-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /to-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /ring-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /shadow-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /divide-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:bg-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:border-dark-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:text-dark-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+
+        // ── All primary-* utility variants ────────────────
+        {
+            pattern: /bg-primary-(50|100|200|300|400|500|600|700|800|900)(\/\d+)?/,
+        },
+        {
+            pattern: /text-primary-(50|100|200|300|400|500|600|700|800|900)/,
+        },
+        {
+            pattern: /border-primary-(50|100|200|300|400|500|600|700|800|900)(\/\d+)?/,
+        },
+        {
+            pattern: /from-primary-(50|100|200|300|400|500|600|700|800|900)/,
+        },
+        {
+            pattern: /to-primary-(50|100|200|300|400|500|600|700|800|900)/,
+        },
+        {
+            pattern: /via-primary-(50|100|200|300|400|500|600|700|800|900)/,
+        },
+        {
+            pattern: /shadow-primary-(50|100|200|300|400|500|600|700|800|900)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:bg-primary-(50|100|200|300|400|500|600|700|800|900)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:border-primary-(50|100|200|300|400|500|600|700|800|900)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:text-primary-(50|100|200|300|400|500|600|700|800|900)/,
+        },
+
+        // ── Color utility variants (emerald, amber, purple, cyan, rose, blue, indigo) ──
+        {
+            pattern: /bg-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /text-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+        {
+            pattern: /border-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /from-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+        {
+            pattern: /to-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+        {
+            pattern: /via-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+        {
+            pattern: /shadow-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /ring-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:bg-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:border-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)(\/\d+)?/,
+        },
+        {
+            pattern: /hover:text-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+        {
+            pattern: /group-hover:text-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)/,
+        },
+
+        // ── Opacity variants for backgrounds ─────────────
+        {
+            pattern: /bg-(emerald|amber|purple|cyan|rose|blue|indigo|teal|violet|slate|green|red|yellow|orange|pink|fuchsia|lime|sky)-(50|100|200|300|400|500|600|700|800|900|950)\/(10|15|20|25|30|40|50|60|70|80|90)/,
+        },
+        {
+            pattern: /bg-dark-(50|100|200|300|400|500|600|700|800|900|950)\/(10|15|20|25|30|40|50|60|70|80|90)/,
+        },
+        {
+            pattern: /bg-primary-(50|100|200|300|400|500|600|700|800|900)\/(10|15|20|25|30|40|50|60|70|80|90)/,
+        },
+
+        // ── Blur ─────────────────────────────────────────
         'backdrop-blur-xl', 'backdrop-blur-2xl', 'backdrop-blur-3xl',
-        // Animations
-        'animate-fade-in-up', 'animate-float', 'animate-pulse-glow',
-        // Hover effects
-        'hover:border-primary-500/30', 'hover:border-amber-500/30',
-        'hover:-translate-y-1',
-        // Grid dynamic
+
+        // ── Animations ───────────────────────────────────
+        'animate-fade-in-up', 'animate-float', 'animate-pulse-glow', 'animate-pulse',
+
+        // ── Grid col spans ──────────────────────────────
         'lg:col-span-1', 'lg:col-span-2', 'lg:col-span-3', 'lg:col-span-4', 'lg:col-span-6',
+        'xl:col-span-2', 'xl:col-span-3',
         'col-span-1', 'col-span-2', 'col-span-3',
-        // Aspect ratios
-        'aspect-square', 'aspect-[16/9]', 'aspect-[4/5]',
-        // Sizing
+
+        // ── Sizing ───────────────────────────────────────
         'w-[50%]', 'h-[50%]',
         'top-[-20%]', 'left-[-10%]', 'bottom-[-20%]', 'right-[-10%]',
-        // Active star state (used in loops)
-        'text-amber-400', 'text-dark-700',
-        // Blur backgrounds
+
+        // ── Misc needed utilities ─────────────────────────
         'blur-[120px]',
-        'bg-blue-900/20', 'bg-primary-600/10',
+        'aspect-square', 'aspect-[16/9]', 'aspect-[4/5]',
+        'hover:-translate-y-1',
+        'font-mono',
+        'truncate', 'line-clamp-1', 'line-clamp-2',
+        'space-y-4', 'space-y-6',
     ],
     theme: {
         extend: {
