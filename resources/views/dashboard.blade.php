@@ -63,117 +63,121 @@
         </div>
     </div>
 
-    <!-- Core KPI Summary Cards Row (6 Cards Grid) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <!-- Core KPI Summary Cards Row (6 Cards — 2 rows × 3 cols, Screenshot Match) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-        <!-- 1. Total Revenue -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
-                <span class="stat-label">Total Revenue</span>
+        <!-- 1. Revenue (Selected Period) — green bottom accent matching screenshot -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs" style="border-bottom: 3px solid #10b981;">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Revenue (Selected Period)</span>
                 <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
             </div>
-            <div class="stat-value text-slate-900">Br {{ number_format($stats['total_revenue'], 2) }}</div>
-            <div class="flex items-center gap-1.5 mt-2 text-xs">
-                <span class="font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Br {{ number_format($stats['today_sales'], 2) }}</span>
-                <span class="text-slate-600">today</span>
+            <div class="text-2xl font-bold text-slate-900 mb-2">Br {{ number_format($stats['selected_revenue'] ?? $stats['month_sales'], 2) }}</div>
+            <div class="flex items-center gap-1.5 text-xs">
+                @php $trend = $stats['revenue_trend'] ?? 0; @endphp
+                @if($trend >= 0)
+                    <span class="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        {{ $trend }}% vs previous period
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                        {{ abs($trend) }}% vs previous period
+                    </span>
+                @endif
             </div>
         </div>
 
-        <!-- 2. Active Mfg Orders -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
-                <span class="stat-label">Active Mfg Orders</span>
-                <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+        <!-- 2. Orders Today -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Orders Today</span>
+                <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                 </div>
             </div>
-            <div class="stat-value text-slate-900">{{ $stats['active_orders'] }}</div>
-            <div class="flex items-center gap-1.5 mt-2 text-xs">
-                <span class="font-medium text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">{{ $stats['in_progress_orders'] }} in progress</span>
-                <span class="text-slate-600">{{ $stats['pending_orders'] }} pending</span>
+            <div class="text-2xl font-bold text-slate-900 mb-2">{{ $stats['orders_today'] ?? $stats['today_sales_count'] }}</div>
+            <div class="flex items-center gap-1.5 text-xs">
+                <span class="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {{ $stats['pending_sales_orders'] ?? 0 }} pending approval
+                </span>
             </div>
         </div>
 
-        <!-- 3. Low Stock Alerts -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
-                <span class="stat-label">Low Stock Alerts</span>
-                <div class="w-9 h-9 rounded-xl {{ $stats['low_stock'] > 0 ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600' }} flex items-center justify-center">
+        <!-- 3. Pending Orders -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Pending Orders</span>
+                <div class="w-9 h-9 rounded-xl {{ ($stats['pending_sales_orders'] ?? 0) > 0 ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500' }} flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="text-2xl font-bold {{ ($stats['pending_sales_orders'] ?? 0) > 0 ? 'text-amber-600' : 'text-slate-900' }} mb-2">{{ $stats['pending_sales_orders'] ?? 0 }}</div>
+            <div class="text-xs text-slate-500">Awaiting processing across all time ≡</div>
+        </div>
+
+        <!-- 4. Low Stock Alerts -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Low Stock Alerts</span>
+                <div class="w-9 h-9 rounded-xl {{ $stats['low_stock'] > 0 ? 'bg-amber-50 text-amber-500' : 'bg-emerald-50 text-emerald-500' }} flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                 </div>
             </div>
-            <div class="stat-value {{ $stats['low_stock'] > 0 ? 'text-amber-600' : 'text-slate-900' }}">{{ $stats['low_stock'] }}</div>
-            <div class="flex items-center gap-1.5 mt-2 text-xs">
+            <div class="text-2xl font-bold {{ $stats['low_stock'] > 0 ? 'text-amber-600' : 'text-slate-900' }} mb-2">{{ $stats['low_stock'] }}</div>
+            <div class="text-xs text-slate-500">
                 @if($stats['low_stock'] > 0)
-                    <span class="font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">Action required</span>
-                    <span class="text-slate-600">{{ $stats['low_stock_raw_materials'] }} raw mats</span>
+                    <span class="text-amber-600 font-medium">Action required</span> · {{ $stats['low_stock_raw_materials'] }} raw materials
                 @else
-                    <span class="font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">All stock healthy</span>
+                    All stock levels healthy ✔
                 @endif
             </div>
         </div>
 
-        <!-- 4. Inventory Valuation -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
-                <span class="stat-label">Inventory Valuation</span>
-                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-value text-slate-900">Br {{ number_format($stats['total_inventory_valuation'], 0) }}</div>
-            <div class="flex items-center gap-1.5 mt-2 text-xs">
-                <span class="font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">Raw Br {{ number_format($stats['raw_materials_valuation'], 0) }}</span>
-            </div>
-        </div>
-
-        <!-- 5. Production Yield & Scrap -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
-                <span class="stat-label">Mfg Completed</span>
-                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-value text-slate-900">{{ number_format($stats['completed_production']) }}</div>
-            <div class="flex items-center gap-1.5 mt-2 text-xs">
-                <span class="font-medium {{ $stats['scrap_rate'] > 5 ? 'text-rose-700 bg-rose-50' : 'text-slate-700 bg-slate-100' }} px-1.5 py-0.5 rounded">Scrap {{ $stats['scrap_rate'] }}%</span>
-                <span class="text-slate-600">units</span>
-            </div>
-        </div>
-
-        <!-- 6. Active Products -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
-                <span class="stat-label">Active Catalog</span>
+        <!-- 5. Active Products -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Active Products</span>
                 <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                     </svg>
                 </div>
             </div>
-            <div class="stat-value text-slate-900">{{ $stats['total_products'] }}</div>
-            <div class="flex items-center gap-1.5 mt-2 text-xs">
-                <span class="font-medium text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{{ $stats['raw_materials_count'] }} raw mats</span>
-                <span class="text-slate-600">items</span>
+            <div class="text-2xl font-bold text-slate-900 mb-2">{{ $stats['total_products'] }}</div>
+            <div class="text-xs text-slate-500">Listed in storefront 📦</div>
+        </div>
+
+        <!-- 6. Production Orders -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Production Orders</span>
+                <div class="w-9 h-9 rounded-xl {{ $stats['active_production_orders'] > 0 ? 'bg-purple-50 text-purple-600' : 'bg-slate-100 text-slate-500' }} flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
             </div>
+            <div class="text-2xl font-bold text-slate-900 mb-2">{{ $stats['active_production_orders'] }}</div>
+            <div class="text-xs text-slate-500">{{ $stats['completed_production_period'] ?? 0 }} completed in selected period ⚙️</div>
         </div>
 
     </div>
 
-    <!-- Interactive Charts Row (2 Charts: Revenue Trend & Category Distribution) -->
+    <!-- Interactive Charts Row (Revenue Trend + Orders by Type) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Revenue Trend Line Chart (2 cols) -->
@@ -192,26 +196,36 @@
                     </span>
                 </div>
             </div>
-
-            <!-- Chart Canvas -->
             <div class="relative w-full h-72">
                 <canvas id="revenueTrendChart"></canvas>
             </div>
         </div>
 
-        <!-- Category / Order Breakdown Donut Chart (1 col) -->
+        <!-- Orders by Type Doughnut Chart (1 col) -->
         <div class="card">
             <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900">Sales &amp; Product Share</h2>
-                    <p class="text-xs text-slate-600">Revenue contribution by category</p>
+                    <h2 class="text-base font-bold text-slate-900">Orders by Type</h2>
+                    <p class="text-xs text-slate-600">Online, POS &amp; Direct breakdown</p>
                 </div>
                 <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">Distribution</span>
             </div>
-
-            <!-- Donut Chart Canvas -->
-            <div class="relative w-full h-72 flex items-center justify-center">
-                <canvas id="categoryDistributionChart"></canvas>
+            <div class="relative w-full h-52 flex items-center justify-center">
+                <canvas id="ordersByTypeChart"></canvas>
+            </div>
+            <div class="mt-4 grid grid-cols-3 divide-x divide-slate-100 text-center">
+                <div class="px-2">
+                    <div class="text-[11px] text-slate-500 font-medium mb-0.5">Online</div>
+                    <div class="text-base font-bold text-sky-600">{{ $ordersByTypeChart['data'][0] ?? 0 }}</div>
+                </div>
+                <div class="px-2">
+                    <div class="text-[11px] text-slate-500 font-medium mb-0.5">POS</div>
+                    <div class="text-base font-bold text-emerald-600">{{ $ordersByTypeChart['data'][1] ?? 0 }}</div>
+                </div>
+                <div class="px-2">
+                    <div class="text-[11px] text-slate-500 font-medium mb-0.5">Direct</div>
+                    <div class="text-base font-bold text-amber-600">{{ $ordersByTypeChart['data'][2] ?? 0 }}</div>
+                </div>
             </div>
         </div>
 
@@ -704,47 +718,31 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 2. Category Share Chart (Donut)
-    const catCtx = document.getElementById('categoryDistributionChart');
-    if (catCtx) {
-        const catLabels = @json($categoryChart['labels'] ?? []);
-        const catData   = @json($categoryChart['data'] ?? []);
+    // 2. Orders by Type Doughnut Chart
+    const ordersByTypeCtx = document.getElementById('ordersByTypeChart');
+    if (ordersByTypeCtx) {
+        const ordersLabels = @json($ordersByTypeChart['labels'] ?? ['Online', 'POS', 'Direct']);
+        const ordersData   = @json($ordersByTypeChart['data'] ?? [0, 0, 0]);
 
-        new Chart(catCtx, {
+        new Chart(ordersByTypeCtx, {
             type: 'doughnut',
             data: {
-                labels: catLabels,
+                labels: ordersLabels,
                 datasets: [{
-                    data: catData,
-                    backgroundColor: [
-                        '#0284c7',
-                        '#10b981',
-                        '#8b5cf6',
-                        '#f59e0b',
-                        '#06b6d4',
-                        '#ec4899',
-                        '#64748b'
-                    ],
-                    borderWidth: 2,
+                    data: ordersData,
+                    backgroundColor: ['#0ea5e9', '#10b981', '#f59e0b'],
+                    borderWidth: 3,
                     borderColor: '#ffffff',
-                    hoverOffset: 4
+                    hoverOffset: 6
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '68%',
+                cutout: '70%',
                 plugins: {
                     legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#475569',
-                            font: { size: 11, family: 'Inter' },
-                            padding: 12,
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            usePointStyle: true
-                        }
+                        display: false
                     },
                     tooltip: {
                         backgroundColor: '#0f172a',
@@ -752,7 +750,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         cornerRadius: 8,
                         callbacks: {
                             label: function(context) {
-                                return ' ' + context.label + ': Br ' + Number(context.raw).toLocaleString('en-US');
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? Math.round((context.raw / total) * 100) : 0;
+                                return ' ' + context.label + ': ' + context.raw + ' orders (' + pct + '%)';
                             }
                         }
                     }

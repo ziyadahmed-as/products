@@ -36,19 +36,21 @@ class AdminDashboardRedesignTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Welcome back, Admin Test!');
-        $response->assertSee('Total Revenue');
-        $response->assertSee('Active Mfg Orders');
+        $response->assertSee('Revenue (Selected Period)');
+        $response->assertSee('Orders Today');
+        $response->assertSee('Pending Orders');
         $response->assertSee('Low Stock Alerts');
-        $response->assertSee('Inventory Valuation');
+        $response->assertSee('Active Products');
+        $response->assertSee('Production Orders');
         $response->assertSee('Revenue Trend (14 Days)');
-        $response->assertSee('Sales & Product Share');
-        $response->assertSee('Staff & Operational Team Performance');
-        $response->assertSee('Quick Reports & Data Exports');
+        $response->assertSee('Orders by Type');
+        $response->assertSee('Staff &amp; Operational Team Performance', false);
+        $response->assertSee('Quick Reports &amp; Data Exports', false);
         $response->assertSee('revenueTrendChart');
-        $response->assertSee('categoryDistributionChart');
+        $response->assertSee('ordersByTypeChart');
         // Check sidebar items for Super Admin
         $response->assertSee('Administration');
-        $response->assertSee('Users & Roles');
+        $response->assertSee('Users & Roles', false);
         $response->assertSee('Branches');
         $response->assertSee('Storage Locations');
     }
@@ -65,8 +67,8 @@ class AdminDashboardRedesignTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Welcome back, Manager Test!');
-        $response->assertSee('Total Revenue');
-        $response->assertSee('Products & Materials');
+        $response->assertSee('Revenue (Selected Period)');
+        $response->assertSee('Products & Materials', false);
         $response->assertSee('Production Floor');
     }
 
@@ -83,9 +85,9 @@ class AdminDashboardRedesignTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Sales Command Center');
         $response->assertSee('New Quick Sale (POS)');
-        $response->assertSee("Today's Sales");
-        $response->assertSee("This Month's Sales");
-        $response->assertSee('Sellable Products & Stock Lookup');
+        $response->assertSee("Today's Sales", false);
+        $response->assertSee("This Month's Sales", false);
+        $response->assertSee('Sellable Products & Stock Lookup', false);
         // Seller should not see Super Admin only modules
         $response->assertDontSee('Users & Roles');
     }
@@ -104,7 +106,7 @@ class AdminDashboardRedesignTest extends TestCase
         $response->assertSee('Manufacturing Operations Floor');
         $response->assertSee('New Production Order');
         $response->assertSee('Raw Material Stock');
-        $response->assertSee('Production Intelligence & Export Center');
+        $response->assertSee('Production Intelligence & Export Center', false);
     }
 
     public function test_auditor_can_view_dashboard_with_audit_trail_and_reports(): void

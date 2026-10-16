@@ -220,8 +220,8 @@ class ReportingSystemTest extends TestCase
         $uid = uniqid();
         $branch = Branch::create(['name' => "Main Test Branch $uid", 'code' => "BR-$uid", 'is_active' => true]);
 
-        // Super Admin, Manager, Seller load main dashboard view
-        foreach (['Super Admin', 'Manager', 'Seller'] as $roleName) {
+        // Super Admin, Manager, Seller, Auditor load main dashboard view
+        foreach (['Super Admin', 'Manager', 'Seller', 'Auditor'] as $roleName) {
             $user = User::factory()->create();
             $user->assignRole($roleName);
             $user->branches()->attach($branch->id);
@@ -236,11 +236,5 @@ class ReportingSystemTest extends TestCase
         $prodUser->assignRole('Production Officer');
         $this->actingAs($prodUser)->get(route('dashboard'))
             ->assertRedirect(route('manufacturing.dashboard'));
-
-        // Auditor redirects to reports hub
-        $auditorUser = User::factory()->create();
-        $auditorUser->assignRole('Auditor');
-        $this->actingAs($auditorUser)->get(route('dashboard'))
-            ->assertRedirect(route('reports.index'));
     }
 }
