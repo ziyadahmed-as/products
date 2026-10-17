@@ -31,14 +31,11 @@
     <div class="pub-nav-inner">
 
         <!-- Logo -->
-        <a href="{{ route('public.home') }}" class="pub-logo">
-            <div class="pub-logo-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
+        <a href="{{ route('public.home') }}" class="pub-logo" style="display:flex;align-items:center;gap:.6rem;text-decoration:none;">
+            <div style="background:#ffffff;padding:2px 6px;border-radius:8px;border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;">
+                <img src="{{ \App\Models\Setting::getLogoUrl() }}" alt="{{ \App\Models\Setting::getSiteName() }}" style="height:32px;width:auto;max-width:110px;object-fit:contain;display:block;">
             </div>
-            <span class="pub-logo-text">Al<span>bareck</span></span>
+            <span class="pub-logo-text">{{ \App\Models\Setting::getSiteName() }}</span>
         </a>
 
         <!-- Nav links -->
@@ -110,13 +107,11 @@
     <div class="pub-footer-inner">
         <div class="pub-footer-grid">
             <div class="pub-footer-about">
-                <a href="{{ route('public.home') }}" class="pub-logo" style="margin-bottom:1rem;">
-                    <div class="pub-logo-icon" style="width:32px;height:32px;">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
+                <a href="{{ route('public.home') }}" class="pub-logo" style="margin-bottom:1rem;display:inline-flex;align-items:center;gap:.6rem;text-decoration:none;">
+                    <div style="background:#ffffff;padding:2px 6px;border-radius:8px;border:1px solid rgba(0,0,0,.1);display:inline-flex;align-items:center;justify-content:center;">
+                        <img src="{{ \App\Models\Setting::getLogoUrl() }}" alt="{{ \App\Models\Setting::getSiteName() }}" style="height:28px;width:auto;max-width:95px;object-fit:contain;display:block;">
                     </div>
-                    <span class="pub-logo-text" style="font-size:1.1rem;">Al<span>bareck</span></span>
+                    <span class="pub-logo-text" style="font-size:1.1rem;">{{ \App\Models\Setting::getSiteName() }}</span>
                 </a>
                 <p>Premium professional products manufactured and sourced with excellence. Order online with our streamlined, secure checkout.</p>
             </div>

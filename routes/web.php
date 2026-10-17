@@ -103,6 +103,11 @@ Route::middleware(['auth'])->group(function () {
     // Admin
     Route::resource('users', UserController::class);
 
+    // System Settings & Branding (Super Admin & Admin)
+    Route::get('/settings',             [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings',            [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update');
+    Route::post('/settings/reset-logo', [\App\Http\Controllers\SettingController::class, 'resetLogo'])->name('settings.reset-logo');
+
     // Reports & Analytics Suite
     Route::get('/reports',                     [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/sales',               [\App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');

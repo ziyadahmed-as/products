@@ -50,11 +50,24 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar scrollbar-thin shadow-xs" :class="{ 'open': mobileSidebarOpen }" id="sidebar">
         <!-- Brand Logo Header -->
-        <div class="sidebar-logo flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-dark-800">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 group text-decoration-none">
-                <span class="font-extrabold text-slate-900 dark:text-white text-xl tracking-tight font-sans">Albareck</span>
+        <div class="sidebar-logo flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-dark-800">
+            @php
+                $dashRoute = (auth()->check() && auth()->user()->hasRole('Production Officer') && !auth()->user()->hasAnyRole(['Super Admin', 'Manager']))
+                    ? route('manufacturing.dashboard')
+                    : route('dashboard');
+                $logoUrl = \App\Models\Setting::getLogoUrl();
+                $siteName = \App\Models\Setting::getSiteName();
+            @endphp
+            <a href="{{ $dashRoute }}" class="flex items-center gap-2.5 group text-decoration-none min-w-0">
+                <div class="h-10 px-2 py-0.5 bg-white rounded-lg border border-slate-200/90 dark:border-dark-700 flex items-center justify-center shadow-xs shrink-0 overflow-hidden">
+                    <img src="{{ $logoUrl }}" alt="{{ $siteName }}" class="h-8 w-auto max-w-[125px] object-contain" />
+                </div>
+                <div class="flex flex-col min-w-0">
+                    <span class="font-extrabold text-slate-900 dark:text-white text-base tracking-tight leading-tight truncate font-sans">{{ $siteName }}</span>
+                    <span class="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold tracking-wider uppercase leading-tight">IMS Portal</span>
+                </div>
             </a>
-            <button @click="mobileSidebarOpen = false" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-lg">
+            <button @click="mobileSidebarOpen = false" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-lg shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>

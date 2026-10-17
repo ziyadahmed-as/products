@@ -291,7 +291,7 @@
 
     {{-- ── 8. SETTINGS (Collapsible Group) ── --}}
     @php
-        $settingsActive = request()->is('admin') || request()->routeIs('client.profile');
+        $settingsActive = request()->is('admin') || request()->routeIs('client.profile') || request()->routeIs('settings.*');
     @endphp
     <div x-data="{ open: {{ $settingsActive ? 'true' : 'false' }} }" class="sidebar-group">
         <button type="button" @click="open = !open"
@@ -313,6 +313,10 @@
 
         <div x-show="open" style="display: {{ $settingsActive ? 'block' : 'none' }};" class="space-y-1 pl-1 pt-1">
             @hasanyrole('Super Admin|Admin')
+            <a href="{{ route('settings.index') }}" class="sidebar-subitem {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('settings.*') ? 'bg-cyan-500' : 'bg-slate-400' }}"></span>
+                <span>System & Logo Settings</span>
+            </a>
             <a href="/admin" class="sidebar-subitem">
                 <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
                 <span>Filament Admin Panel</span>

@@ -7,13 +7,11 @@
 
         {{-- Header --}}
         <div style="text-align:center;margin-bottom:2rem;">
-            <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(8,145,178,.15),rgba(99,102,241,.1));border:1px solid rgba(8,145,178,.3);display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;">
-                <svg style="width:26px;height:26px;color:var(--cyan);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
+            <div style="display:inline-flex;padding:6px 14px;background:#ffffff;border-radius:16px;border:1px solid rgba(0,0,0,.08);box-shadow:0 4px 12px rgba(0,0,0,.06);margin-bottom:1rem;">
+                <img src="{{ \App\Models\Setting::getLogoUrl() }}" alt="{{ \App\Models\Setting::getSiteName() }}" style="height:48px;width:auto;max-width:160px;object-fit:contain;">
             </div>
             <h1 style="font-size:1.75rem;font-weight:900;color:var(--text-1);margin:0 0 .25rem;">Welcome Back</h1>
-            <p style="color:var(--text-2);font-size:.875rem;margin:0;">Sign in to your account</p>
+            <p style="color:var(--text-2);font-size:.875rem;margin:0;">Sign in to your {{ \App\Models\Setting::getSiteName() }} account</p>
         </div>
 
         @if(session('status'))

@@ -29,7 +29,9 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->homeUrl('/admin')
             ->login()
-            ->brandName('Albareck')
+            ->brandName(fn () => \App\Models\Setting::getSiteName())
+            ->brandLogo(fn () => \App\Models\Setting::getLogoUrl())
+            ->brandLogoHeight('2.5rem')
             ->colors([
                 'primary' => Color::Sky,
             ])
