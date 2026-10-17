@@ -33,7 +33,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 font-sans antialiased selection:bg-sky-100 selection:text-sky-800" x-data="{ mobileSidebarOpen: false }">
+<body class="bg-slate-50 dark:bg-[#0b0f19] text-black dark:text-white font-sans antialiased selection:bg-sky-100 selection:text-sky-800" x-data="{ mobileSidebarOpen: false }">
 
     <!-- Mobile Sidebar Backdrop Overlay -->
     <div x-show="mobileSidebarOpen"
@@ -50,18 +50,9 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar scrollbar-thin shadow-xs" :class="{ 'open': mobileSidebarOpen }" id="sidebar">
         <!-- Brand Logo Header -->
-        <div class="sidebar-logo flex items-center justify-between">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group text-decoration-none">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-500 flex items-center justify-center shadow-sm shadow-sky-500/25 group-hover:scale-105 transition-transform">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
-                </div>
-                <div class="flex flex-col">
-                    <span class="font-bold text-slate-900 dark:text-white text-base leading-tight tracking-tight">Albareck IMS</span>
-                    <span class="text-[10px] text-slate-600 dark:text-dark-400 font-medium tracking-wide uppercase">Stock & Operations</span>
-                </div>
+        <div class="sidebar-logo flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-dark-800">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 group text-decoration-none">
+                <span class="font-extrabold text-slate-900 dark:text-white text-xl tracking-tight font-sans">Albareck</span>
             </a>
             <button @click="mobileSidebarOpen = false" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-lg">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,8 +86,8 @@
         <!-- Sidebar User Footer -->
         <div class="p-3.5 border-t border-slate-100 dark:border-dark-800 bg-slate-50/70 dark:bg-dark-900/60">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-600 flex items-center justify-center text-sm font-bold text-white shadow-xs flex-shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                <div class="w-9 h-9 rounded-full bg-slate-900 dark:bg-dark-700 flex items-center justify-center text-xs font-bold text-white shadow-xs flex-shrink-0">
+                    {{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold text-slate-800 dark:text-white truncate leading-tight">{{ auth()->user()->name ?? 'User' }}</p>
@@ -125,13 +116,16 @@
                 </svg>
             </button>
 
-            <!-- Page Title & Breadcrumb -->
-            <div>
-                <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">@yield('title', 'Dashboard')</h1>
+            <!-- Global Search Bar (Dashboard 1 & 2 integration) -->
+            <div class="relative w-48 sm:w-64">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" placeholder="Search..." class="form-input text-xs pl-8 pr-3 py-1.5 w-full bg-slate-50 dark:bg-dark-900 border-slate-200 dark:border-dark-700 rounded-lg">
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
             <!-- Date indicator pill -->
             <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/80 dark:bg-dark-800 border border-slate-200/60 dark:border-dark-700 text-xs font-medium text-slate-600 dark:text-dark-300">
                 <svg class="w-3.5 h-3.5 text-slate-600 dark:text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,6 +168,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                 </svg>
             </button>
+
+            <!-- User Circular Avatar with Initials (Dashboard 1 style) -->
+            <div class="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs" title="{{ auth()->user()->name }}">
+                {{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}
+            </div>
         </div>
     </header>
 
@@ -212,6 +211,7 @@
             document.documentElement.classList.remove('light');
             localStorage.theme = 'dark';
         }
+        window.dispatchEvent(new CustomEvent('themechanged'));
     }
     </script>
     @stack('scripts')

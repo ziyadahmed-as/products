@@ -859,7 +859,7 @@
 
     .dark .form-select option {
         background: #131c2e;
-        color: #f8fafc;
+        color: #ffffff;
     }
 
     .dark .table-wrapper {
@@ -873,7 +873,7 @@
     }
 
     .dark .table th {
-        color: #94a3b8;
+        color: #ffffff !important;
     }
 
     .dark .table tbody tr {
@@ -885,12 +885,13 @@
     }
 
     .dark .table td {
-        color: #cbd5e1;
+        color: #ffffff !important;
     }
 
     .dark .modal-box {
         background: #0f172a;
         border-color: #1e293b;
+        color: #ffffff;
     }
 
     .dark .modal-header,
@@ -900,6 +901,290 @@
 
     .dark .divider {
         border-color: #1e293b;
+    }
+
+    /* ── Universal Theme Contrast Directives (Light: White bg / Black text | Dark: Dark bg / White text) ── */
+    html.light body,
+    body:not(.dark) {
+        background-color: #f8fafc;
+        color: #000000;
+    }
+
+    html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
+    body:not(.dark) h1, body:not(.dark) h2, body:not(.dark) h3, body:not(.dark) h4, body:not(.dark) h5, body:not(.dark) h6 {
+        color: #000000;
+    }
+
+    body:not(.dark) .sidebar {
+        background: #ffffff;
+        border-color: #e2e8f0;
+    }
+
+    body:not(.dark) .sidebar-item {
+        color: #000000 !important;
+        font-weight: 600;
+    }
+
+    body:not(.dark) .sidebar-group-toggle {
+        color: #000000 !important;
+        font-weight: 600;
+    }
+
+    body:not(.dark) .sidebar-subitem {
+        color: #000000 !important;
+        font-weight: 500;
+    }
+
+    body:not(.dark) .topbar {
+        background: rgba(255, 255, 255, 0.98);
+        border-color: #e2e8f0;
+    }
+
+    body:not(.dark) .stat-value {
+        color: #000000 !important;
+    }
+
+    body:not(.dark) .stat-label {
+        color: #000000 !important;
+        font-weight: 600;
+    }
+
+    body:not(.dark) .card,
+    body:not(.dark) .stat-card,
+    body:not(.dark) .card-sm,
+    body:not(.dark) .card-hover {
+        background-color: #ffffff;
+        border-color: #e2e8f0;
+        color: #000000;
+    }
+
+    body:not(.dark) .table th {
+        color: #000000 !important;
+        font-weight: 700;
+    }
+
+    body:not(.dark) .table td {
+        color: #000000 !important;
+    }
+
+    /* ── Night Mode: Complete Dark Background & White Text Enforcement ── */
+    html.dark body,
+    .dark body {
+        background-color: #0b0f19 !important;
+        color: #ffffff !important;
+    }
+
+    html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6,
+    .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+        color: #ffffff !important;
+    }
+
+    .dark .sidebar {
+        background: #0d1322 !important;
+        border-color: #1e293b !important;
+    }
+
+    .dark .sidebar-item {
+        color: #ffffff !important;
+    }
+
+    .dark .sidebar-group-toggle {
+        color: #ffffff !important;
+    }
+
+    .dark .sidebar-subitem {
+        color: #ffffff !important;
+    }
+
+    .dark .sidebar-section {
+        color: #e2e8f0 !important;
+    }
+
+    .dark .topbar {
+        background: rgba(13, 19, 34, 0.98) !important;
+        border-color: #1e293b !important;
+    }
+
+    .dark .card,
+    .dark .stat-card,
+    .dark .card-sm,
+    .dark .card-hover {
+        background-color: #0f172a !important;
+        border-color: #1e293b !important;
+        color: #ffffff !important;
+    }
+
+    .dark .stat-value {
+        color: #ffffff !important;
+    }
+
+    .dark .stat-label {
+        color: #ffffff !important;
+    }
+
+    .dark .form-input,
+    .dark .form-select,
+    .dark .form-textarea {
+        background-color: #131c2e !important;
+        border-color: #27354f !important;
+        color: #ffffff !important;
+    }
+
+    .dark .text-slate-900,
+    .dark .text-slate-800,
+    .dark .text-slate-700,
+    .dark .text-slate-600,
+    .dark .text-slate-500,
+    .dark .text-gray-900,
+    .dark .text-gray-800,
+    .dark .text-gray-700,
+    .dark .text-gray-600,
+    .dark .text-gray-500,
+    .dark .text-gray-400,
+    .dark .text-dark-900,
+    .dark .text-dark-800,
+    .dark .text-dark-700,
+    .dark .text-dark-600,
+    .dark .text-dark-500,
+    .dark .text-dark-400,
+    .dark .text-dark-300,
+    .dark .text-dark-200,
+    .dark .text-dark-100 {
+        color: #ffffff !important;
+    }
+
+    .dark .bg-white,
+    .dark .bg-slate-50,
+    .dark .bg-slate-100,
+    .dark .bg-gray-50,
+    .dark .bg-gray-100 {
+        background-color: #0f172a !important;
+        border-color: #1e293b !important;
+        color: #ffffff !important;
+    }
+
+    .dark .border-gray-200,
+    .dark .border-gray-100 {
+        border-color: #1e293b !important;
+    }
+
+    .dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]),
+    .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+        border-color: #1e293b !important;
+    }
+
+    .dark .hover\:bg-gray-50:hover,
+    .dark .hover\:bg-gray-200:hover {
+        background-color: #172033 !important;
+    }
+
+    /* ── Dark mode badge adjustments ── */
+    .dark .badge-blue {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.35);
+        color: #93c5fd;
+    }
+
+    .dark .badge-green {
+        background: rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.35);
+        color: #86efac;
+    }
+
+    .dark .badge-yellow {
+        background: rgba(234, 179, 8, 0.15);
+        border-color: rgba(234, 179, 8, 0.35);
+        color: #fde047;
+    }
+
+    .dark .badge-red {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.35);
+        color: #fca5a5;
+    }
+
+    .dark .badge-purple {
+        background: rgba(168, 85, 247, 0.15);
+        border-color: rgba(168, 85, 247, 0.35);
+        color: #d8b4fe;
+    }
+
+    .dark .badge-gray {
+        background: rgba(148, 163, 184, 0.15);
+        border-color: rgba(148, 163, 184, 0.35);
+        color: #e2e8f0;
+    }
+
+    /* ── Dark mode alert adjustments ── */
+    .dark .alert-info {
+        background: rgba(59, 130, 246, 0.12);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #93c5fd;
+    }
+
+    .dark .alert-success {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: rgba(34, 197, 94, 0.3);
+        color: #86efac;
+    }
+
+    .dark .alert-warning {
+        background: rgba(234, 179, 8, 0.12);
+        border-color: rgba(234, 179, 8, 0.3);
+        color: #fde047;
+    }
+
+    .dark .alert-danger {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+    }
+
+    /* ── Dark mode btn-danger / btn-success adjustments ── */
+    .dark .btn-danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .dark .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.25);
+        border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    .dark .btn-success {
+        background: rgba(34, 197, 94, 0.15);
+        color: #86efac;
+        border-color: rgba(34, 197, 94, 0.35);
+    }
+
+    .dark .btn-success:hover {
+        background: rgba(34, 197, 94, 0.25);
+        border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    /* ── Dark mode progress bar ── */
+    .dark .progress-bar {
+        background: #1e293b;
+    }
+
+    /* ── Dark mode scrollbar ── */
+    .dark .scrollbar-thin {
+        scrollbar-color: #334155 transparent;
+    }
+
+    .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #334155;
+    }
+
+    .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+    }
+
+    /* ── Dark mode selection ── */
+    .dark ::selection {
+        background: rgba(14, 165, 233, 0.3);
+        color: #ffffff;
     }
 }
 
