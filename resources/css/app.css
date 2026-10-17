@@ -700,6 +700,207 @@
         border-top: 1px solid #e2e8f0;
         margin: 1rem 0;
     }
+
+    /* ─── Dark Mode Component Tokens ─── */
+    .dark body {
+        background-color: #0b0f19;
+        color: #cbd5e1;
+    }
+
+    .dark h1,
+    .dark h2,
+    .dark h3,
+    .dark h4,
+    .dark h5,
+    .dark h6 {
+        color: #f8fafc;
+    }
+
+    .dark .sidebar {
+        background: #0d1322;
+        border-color: #1e293b;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .dark .sidebar-logo {
+        border-color: #1e293b;
+    }
+
+    .dark .sidebar-logo span {
+        color: #f8fafc;
+    }
+
+    .dark .sidebar-item {
+        color: #94a3b8;
+    }
+
+    .dark .sidebar-item:hover {
+        background: #172033;
+        color: #f8fafc;
+        border-color: #27354f;
+    }
+
+    .dark .sidebar-item.active {
+        background: rgba(13, 148, 136, 0.18);
+        color: #2dd4bf;
+        border-color: rgba(13, 148, 136, 0.45);
+        box-shadow: 0 1px 2px 0 rgba(13, 148, 136, 0.15);
+    }
+
+    .dark .sidebar-group-toggle {
+        color: #94a3b8;
+    }
+
+    .dark .sidebar-group-toggle:hover {
+        color: #f8fafc;
+        background: #172033;
+    }
+
+    .dark .sidebar-subitem {
+        color: #94a3b8;
+    }
+
+    .dark .sidebar-subitem:hover {
+        color: #f8fafc;
+        background: #172033;
+    }
+
+    .dark .sidebar-subitem.active {
+        color: #2dd4bf;
+        background: rgba(13, 148, 136, 0.18);
+    }
+
+    .dark .sidebar-section {
+        color: #64748b;
+    }
+
+    .dark .topbar {
+        background: rgba(13, 19, 34, 0.95);
+        border-color: #1e293b;
+    }
+
+    .dark .page-content {
+        background-color: #0b0f19;
+    }
+
+    .dark .card,
+    .dark .card-sm,
+    .dark .card-hover,
+    .dark .stat-card {
+        background: #0f172a;
+        border-color: #1e293b;
+        box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.25);
+    }
+
+    .dark .card-hover:hover {
+        border-color: #334155;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .dark .stat-card:hover {
+        border-color: #334155;
+    }
+
+    .dark .stat-value {
+        color: #f8fafc;
+    }
+
+    .dark .stat-label {
+        color: #94a3b8;
+    }
+
+    .dark .btn-secondary {
+        background: #172033;
+        color: #e2e8f0;
+        border-color: #27354f;
+    }
+
+    .dark .btn-secondary:hover {
+        background: #27354f;
+        color: #ffffff;
+        border-color: #3b4d6e;
+    }
+
+    .dark .btn-icon {
+        background: #172033;
+        color: #94a3b8;
+        border-color: #27354f;
+    }
+
+    .dark .btn-icon:hover {
+        background: #27354f;
+        color: #f8fafc;
+        border-color: #3b4d6e;
+    }
+
+    .dark .form-label {
+        color: #cbd5e1;
+    }
+
+    .dark .form-input,
+    .dark .form-select,
+    .dark .form-textarea {
+        background: #131c2e;
+        border-color: #27354f;
+        color: #f8fafc;
+    }
+
+    .dark .form-input::placeholder,
+    .dark .form-textarea::placeholder {
+        color: #64748b;
+    }
+
+    .dark .form-input:focus,
+    .dark .form-select:focus,
+    .dark .form-textarea:focus {
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+    }
+
+    .dark .form-select option {
+        background: #131c2e;
+        color: #f8fafc;
+    }
+
+    .dark .table-wrapper {
+        background: #0f172a;
+        border-color: #1e293b;
+    }
+
+    .dark .table thead {
+        background: #131c2e;
+        border-color: #1e293b;
+    }
+
+    .dark .table th {
+        color: #94a3b8;
+    }
+
+    .dark .table tbody tr {
+        border-color: #1e293b;
+    }
+
+    .dark .table tbody tr:hover {
+        background: #172033;
+    }
+
+    .dark .table td {
+        color: #cbd5e1;
+    }
+
+    .dark .modal-box {
+        background: #0f172a;
+        border-color: #1e293b;
+    }
+
+    .dark .modal-header,
+    .dark .modal-footer {
+        border-color: #1e293b;
+    }
+
+    .dark .divider {
+        border-color: #1e293b;
+    }
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────── */
