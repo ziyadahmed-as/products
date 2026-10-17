@@ -7,8 +7,8 @@
     <!-- Header & Action Buttons -->
     <div class="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-white tracking-tight">Stock Transfers & Logistics Reports</h1>
-            <p class="text-dark-400 text-sm mt-1">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Stock Transfers & Logistics Reports</h1>
+            <p class="text-gray-500 dark:text-dark-400 text-sm mt-1">
                 Audit tracking of inter-branch inventory transfers, transit movements, and receiving status.
             </p>
         </div>
@@ -29,25 +29,25 @@
     </div>
 
     <!-- Quick Date Filter Toolbar -->
-    <div class="card p-4 bg-dark-900 border border-dark-800 rounded-2xl print:hidden">
+    <div class="card p-4 print:hidden">
         <form method="GET" action="{{ route('reports.transfers') }}" class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-2 text-sm">
-                <span class="text-dark-400 text-xs font-semibold uppercase tracking-wider mr-2">Period:</span>
+                <span class="text-gray-500 dark:text-dark-400 text-xs font-semibold uppercase tracking-wider mr-2">Period:</span>
                 @php $curP = request('period'); @endphp
                 <a href="{{ route('reports.transfers', ['period' => 'today']) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'today' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'today' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    Today
                 </a>
                 <a href="{{ route('reports.transfers', ['period' => 'this_week']) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_week' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_week' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    This Week
                 </a>
                 <a href="{{ route('reports.transfers', ['period' => 'this_month']) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_month' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_month' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    This Month
                 </a>
                 <a href="{{ route('reports.transfers', ['period' => 'this_year']) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_year' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_year' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    This Year
                 </a>
             </div>
@@ -61,22 +61,22 @@
                     <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
                 <input type="date" name="from" value="{{ request('from') }}" class="form-input text-xs py-1.5" title="From Date">
-                <span class="text-dark-500 text-xs">to</span>
+                <span class="text-gray-400 dark:text-dark-500 text-xs">to</span>
                 <input type="date" name="to" value="{{ request('to') }}" class="form-input text-xs py-1.5" title="To Date">
                 <button type="submit" class="btn-primary text-xs px-3 py-1.5">Apply</button>
                 @if($curP || request('from') || request('to') || request('status'))
-                    <a href="{{ route('reports.transfers') }}" class="text-xs text-rose-400 hover:underline">Reset</a>
+                    <a href="{{ route('reports.transfers') }}" class="text-xs text-rose-500 hover:underline">Reset</a>
                 @endif
             </div>
         </form>
     </div>
 
     <!-- Transfers Table -->
-    <div class="card p-0 bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+    <div class="card p-0 overflow-hidden shadow-sm">
         <div class="table-wrapper">
             <table class="table">
                 <thead>
-                    <tr class="text-left text-xs uppercase tracking-wider text-dark-400 bg-dark-950/60 border-b border-dark-800">
+                    <tr class="text-left text-xs uppercase tracking-wider text-gray-500 dark:text-dark-400 bg-gray-50/75 dark:bg-dark-950/60 border-b border-gray-200 dark:border-dark-800">
                         <th class="py-3 px-4">Transfer Ref</th>
                         <th class="py-3 px-4">Dispatch Date</th>
                         <th class="py-3 px-4">Source Location</th>
@@ -87,32 +87,32 @@
                         <th class="py-3 px-4">Notes</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-dark-800 text-sm">
+                <tbody class="divide-y divide-gray-200 dark:divide-dark-800 text-sm">
                     @forelse($transfers as $tr)
-                    <tr class="hover:bg-dark-800/40 transition">
-                        <td class="py-3 px-4 font-mono text-xs font-bold text-primary-400 whitespace-nowrap">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-dark-800/40 transition">
+                        <td class="py-3 px-4 font-mono text-xs font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
                             {{ $tr->reference }}
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-300 whitespace-nowrap">
+                        <td class="py-3 px-4 text-xs text-gray-500 dark:text-dark-300 whitespace-nowrap">
                             {{ $tr->dispatch_date ? $tr->dispatch_date : '—' }}
                         </td>
                         <td class="py-3 px-4 text-xs whitespace-nowrap">
-                            <div class="font-medium text-white">{{ $tr->fromLocation->name ?? '—' }}</div>
-                            <div class="text-xs text-dark-500">{{ $tr->fromLocation->branch->name ?? '' }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{ $tr->fromLocation->name ?? '—' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-dark-500">{{ $tr->fromLocation->branch->name ?? '' }}</div>
                         </td>
                         <td class="py-3 px-4 text-xs whitespace-nowrap">
-                            <div class="font-medium text-white">{{ $tr->toLocation->name ?? '—' }}</div>
-                            <div class="text-xs text-dark-500">{{ $tr->toLocation->branch->name ?? '' }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{ $tr->toLocation->name ?? '—' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-dark-500">{{ $tr->toLocation->branch->name ?? '' }}</div>
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-300 max-w-xs">
+                        <td class="py-3 px-4 text-xs text-gray-600 dark:text-dark-300 max-w-xs">
                             @foreach($tr->items as $item)
                                 <div class="truncate">
-                                    <span class="font-semibold text-white">{{ number_format($item->quantity, 2) }}×</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($item->quantity, 2) }}×</span>
                                     {{ $item->product->name ?? 'Product' }}
                                 </div>
                             @endforeach
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-300 whitespace-nowrap">
+                        <td class="py-3 px-4 text-xs text-gray-600 dark:text-dark-300 whitespace-nowrap">
                             {{ $tr->user->name ?? '—' }}
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
@@ -126,13 +126,13 @@
                                 <span class="badge-blue text-xs">{{ ucfirst($tr->status) }}</span>
                             @endif
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-400 max-w-xs truncate" title="{{ $tr->notes }}">
+                        <td class="py-3 px-4 text-xs text-gray-500 dark:text-dark-400 max-w-xs truncate" title="{{ $tr->notes }}">
                             {{ $tr->notes ?? '—' }}
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-16 text-dark-500">
+                        <td colspan="8" class="text-center py-16 text-gray-500 dark:text-dark-500">
                             No stock transfer records found.
                         </td>
                     </tr>
@@ -142,7 +142,7 @@
         </div>
 
         @if($transfers->hasPages())
-        <div class="px-6 py-4 border-t border-dark-800 bg-dark-900/60">
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-dark-800 bg-gray-50/50 dark:bg-dark-900/60">
             {{ $transfers->links() }}
         </div>
         @endif

@@ -7,8 +7,8 @@
     <!-- Header & Action Buttons -->
     <div class="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-white tracking-tight">Manufacturing & Raw Material Reports</h1>
-            <p class="text-dark-400 text-sm mt-1">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Manufacturing & Raw Material Reports</h1>
+            <p class="text-gray-500 dark:text-dark-400 text-sm mt-1">
                 Production order history, finished goods yields, scrap/rejection rates, and raw material consumption analysis.
             </p>
         </div>
@@ -30,63 +30,63 @@
 
     <!-- Summary KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl">
-            <span class="text-xs font-semibold uppercase tracking-wider text-dark-400">Total MOs</span>
-            <div class="text-2xl font-bold text-white mt-2">{{ number_format($totalOrders) }}</div>
-            <div class="text-xs text-dark-400 mt-1">{{ number_format($completedOrdersCount) }} completed</div>
+        <div class="card p-5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-400">Total MOs</span>
+            <div class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($totalOrders) }}</div>
+            <div class="text-xs text-gray-500 dark:text-dark-400 mt-1">{{ number_format($completedOrdersCount) }} completed</div>
         </div>
 
-        <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl">
-            <span class="text-xs font-semibold uppercase tracking-wider text-dark-400">Good Yield Produced</span>
-            <div class="text-2xl font-bold text-emerald-400 mt-2">{{ number_format($totalGoodProduced, 2) }}</div>
-            <div class="text-xs text-dark-400 mt-1">Planned: {{ number_format($totalPlannedQuantity, 2) }}</div>
+        <div class="card p-5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-400">Good Yield Produced</span>
+            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ number_format($totalGoodProduced, 2) }}</div>
+            <div class="text-xs text-gray-500 dark:text-dark-400 mt-1">Planned: {{ number_format($totalPlannedQuantity, 2) }}</div>
         </div>
 
-        <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl">
-            <span class="text-xs font-semibold uppercase tracking-wider text-dark-400">Rejected / Scrap</span>
-            <div class="text-2xl font-bold text-rose-400 mt-2">{{ number_format($totalRejected, 2) }}</div>
-            <div class="text-xs text-dark-400 mt-1">Finished units rejected</div>
+        <div class="card p-5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-400">Rejected / Scrap</span>
+            <div class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-2">{{ number_format($totalRejected, 2) }}</div>
+            <div class="text-xs text-gray-500 dark:text-dark-400 mt-1">Finished units rejected</div>
         </div>
 
-        <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl">
-            <span class="text-xs font-semibold uppercase tracking-wider text-dark-400">Material Waste</span>
-            <div class="text-2xl font-bold text-amber-400 mt-2">{{ number_format($totalWastedMaterials, 2) }}</div>
-            <div class="text-xs text-dark-400 mt-1">Raw material scrap</div>
+        <div class="card p-5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-400">Material Waste</span>
+            <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">{{ number_format($totalWastedMaterials, 2) }}</div>
+            <div class="text-xs text-gray-500 dark:text-dark-400 mt-1">Raw material scrap</div>
         </div>
 
-        <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl">
-            <span class="text-xs font-semibold uppercase tracking-wider text-dark-400">Avg. Efficiency</span>
-            <div class="text-2xl font-bold text-cyan-400 mt-2">{{ number_format($avgEfficiency, 1) }}%</div>
-            <div class="text-xs text-dark-400 mt-1">Target completion rate</div>
+        <div class="card p-5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-400">Avg. Efficiency</span>
+            <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-2">{{ number_format($avgEfficiency, 1) }}%</div>
+            <div class="text-xs text-gray-500 dark:text-dark-400 mt-1">Target completion rate</div>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl print:hidden">
+    <div class="card p-5 print:hidden">
         <form method="GET" action="{{ route('reports.production') }}" class="space-y-4">
             
             {{-- Quick Presets --}}
-            <div class="flex flex-wrap items-center gap-2 pb-3 border-b border-dark-800 text-sm">
-                <span class="text-dark-400 text-xs font-semibold uppercase tracking-wider mr-2">Period:</span>
+            <div class="flex flex-wrap items-center gap-2 pb-3 border-b border-gray-100 dark:border-dark-800 text-sm">
+                <span class="text-gray-500 dark:text-dark-400 text-xs font-semibold uppercase tracking-wider mr-2">Period:</span>
                 @php $curP = request('period'); @endphp
                 <a href="{{ route('reports.production', array_merge(request()->except(['period', 'from', 'to', 'page']), ['period' => 'today'])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'today' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'today' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    Today
                 </a>
                 <a href="{{ route('reports.production', array_merge(request()->except(['period', 'from', 'to', 'page']), ['period' => 'this_week'])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_week' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_week' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    This Week
                 </a>
                 <a href="{{ route('reports.production', array_merge(request()->except(['period', 'from', 'to', 'page']), ['period' => 'this_month'])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_month' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_month' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    This Month
                 </a>
                 <a href="{{ route('reports.production', array_merge(request()->except(['period', 'from', 'to', 'page']), ['period' => 'this_year'])) }}"
-                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_year' ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-300 hover:bg-dark-700' }}">
+                   class="px-3 py-1 rounded-lg text-xs font-medium transition {{ $curP === 'this_year' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700' }}">
                    This Year
                 </a>
                 @if($curP || request('from') || request('to'))
-                    <a href="{{ route('reports.production', request()->except(['period', 'from', 'to', 'page'])) }}" class="text-xs text-rose-400 hover:underline ml-2">
+                    <a href="{{ route('reports.production', request()->except(['period', 'from', 'to', 'page'])) }}" class="text-xs text-rose-500 hover:underline ml-2">
                         Clear Date
                     </a>
                 @endif
@@ -127,7 +127,7 @@
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-dark-800">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-gray-100 dark:border-dark-800">
                 <div class="form-group flex-1 w-full">
                     <input type="text" name="search" value="{{ request('search') }}"
                            placeholder="Search by order reference or notes..."
@@ -142,11 +142,11 @@
     </div>
 
     <!-- Manufacturing Orders Table -->
-    <div class="card p-0 bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+    <div class="card p-0 overflow-hidden shadow-sm">
         <div class="table-wrapper">
             <table class="table">
                 <thead>
-                    <tr class="text-left text-xs uppercase tracking-wider text-dark-400 bg-dark-950/60 border-b border-dark-800">
+                    <tr class="text-left text-xs uppercase tracking-wider text-gray-500 dark:text-dark-400 bg-gray-50/75 dark:bg-dark-950/60 border-b border-gray-200 dark:border-dark-800">
                         <th class="py-3 px-4">Order Ref</th>
                         <th class="py-3 px-4">Planned Date</th>
                         <th class="py-3 px-4">Finished Product</th>
@@ -160,44 +160,44 @@
                         <th class="py-3 px-4">Assigned Staff</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-dark-800 text-sm">
+                <tbody class="divide-y divide-gray-200 dark:divide-dark-800 text-sm">
                     @forelse($orders as $mo)
                     @php
                         $eff = $mo->calculateEfficiency();
                     @endphp
-                    <tr class="hover:bg-dark-800/40 transition">
-                        <td class="py-3 px-4 font-mono text-xs font-bold text-primary-400 whitespace-nowrap">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-dark-800/40 transition">
+                        <td class="py-3 px-4 font-mono text-xs font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
                             {{ $mo->reference }}
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-300 whitespace-nowrap">
+                        <td class="py-3 px-4 text-xs text-gray-500 dark:text-dark-300 whitespace-nowrap">
                             {{ $mo->planned_date ? $mo->planned_date->format('Y-m-d') : '—' }}
                         </td>
-                        <td class="py-3 px-4 font-medium text-white whitespace-nowrap">
+                        <td class="py-3 px-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                             {{ $mo->product->name ?? '—' }}
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-300 whitespace-nowrap">
+                        <td class="py-3 px-4 text-xs text-gray-600 dark:text-dark-300 whitespace-nowrap">
                             {{ $mo->recipe->name ?? 'Standard' }}
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-300 whitespace-nowrap">
+                        <td class="py-3 px-4 text-xs text-gray-600 dark:text-dark-300 whitespace-nowrap">
                             {{ $mo->storageLocation->name ?? '—' }}
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs text-white whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs text-gray-900 dark:text-white whitespace-nowrap">
                             {{ number_format($mo->planned_quantity, 2) }}
-                            <span class="text-dark-500">{{ $mo->product->unit->code ?? 'units' }}</span>
+                            <span class="text-gray-400 dark:text-dark-500">{{ $mo->product->unit->code ?? 'units' }}</span>
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs font-bold text-emerald-400 whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {{ number_format($mo->good_quantity ?? 0, 2) }}
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs font-medium text-rose-400 whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs font-medium text-rose-600 dark:text-rose-400 whitespace-nowrap">
                             {{ number_format($mo->rejected_quantity ?? 0, 2) }}
                         </td>
                         <td class="py-3 px-4 text-center whitespace-nowrap font-mono text-xs">
                             @if($mo->status === 'completed')
-                                <span class="{{ $eff >= 95 ? 'text-emerald-400' : ($eff >= 80 ? 'text-cyan-400' : 'text-amber-400') }} font-bold">
+                                <span class="{{ $eff >= 95 ? 'text-emerald-600 dark:text-emerald-400' : ($eff >= 80 ? 'text-cyan-600 dark:text-cyan-400' : 'text-amber-600 dark:text-amber-400') }} font-bold">
                                     {{ number_format($eff, 1) }}%
                                 </span>
                             @else
-                                <span class="text-dark-500">—</span>
+                                <span class="text-gray-400 dark:text-dark-500">—</span>
                             @endif
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
@@ -211,13 +211,13 @@
                                 <span class="badge-blue text-xs">{{ ucwords(str_replace('_', ' ', $mo->status)) }}</span>
                             @endif
                         </td>
-                        <td class="py-3 px-4 text-xs text-dark-300 whitespace-nowrap">
+                        <td class="py-3 px-4 text-xs text-gray-500 dark:text-dark-300 whitespace-nowrap">
                             {{ $mo->assignedUser->name ?? 'Unassigned' }}
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="11" class="text-center py-16 text-dark-500">
+                        <td colspan="11" class="text-center py-16 text-gray-500 dark:text-dark-500">
                             No manufacturing orders match the selected criteria.
                         </td>
                     </tr>
@@ -227,7 +227,7 @@
         </div>
 
         @if($orders->hasPages())
-        <div class="px-6 py-4 border-t border-dark-800 bg-dark-900/60">
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-dark-800 bg-gray-50/50 dark:bg-dark-900/60">
             {{ $orders->links() }}
         </div>
         @endif
@@ -235,15 +235,15 @@
 
     <!-- Raw Material Consumption Breakdown Section -->
     @if($materialIssues->isNotEmpty())
-    <div class="card p-0 bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl print:hidden">
-        <div class="p-5 border-b border-dark-800">
-            <h2 class="text-base font-bold text-white">Raw Material Consumption & Scrap Breakdown</h2>
-            <p class="text-xs text-dark-400 mt-0.5">Tracked material quantities issued, consumed, returned, and wasted per production batch.</p>
+    <div class="card p-0 overflow-hidden shadow-sm print:hidden">
+        <div class="p-5 border-b border-gray-200 dark:border-dark-800">
+            <h2 class="text-base font-bold text-gray-900 dark:text-white">Raw Material Consumption & Scrap Breakdown</h2>
+            <p class="text-xs text-gray-500 dark:text-dark-400 mt-0.5">Tracked material quantities issued, consumed, returned, and wasted per production batch.</p>
         </div>
         <div class="table-wrapper">
             <table class="table">
                 <thead>
-                    <tr class="text-left text-xs uppercase tracking-wider text-dark-400 bg-dark-950/60 border-b border-dark-800">
+                    <tr class="text-left text-xs uppercase tracking-wider text-gray-500 dark:text-dark-400 bg-gray-50/75 dark:bg-dark-950/60 border-b border-gray-200 dark:border-dark-800">
                         <th class="py-3 px-4">MO Ref</th>
                         <th class="py-3 px-4">Raw Material Product</th>
                         <th class="py-3 px-4 text-right">Planned Qty</th>
@@ -253,29 +253,29 @@
                         <th class="py-3 px-4 text-right">Wasted Qty</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-dark-800 text-sm">
+                <tbody class="divide-y divide-gray-200 dark:divide-dark-800 text-sm">
                     @foreach($materialIssues as $issue)
-                    <tr class="hover:bg-dark-800/40 transition">
-                        <td class="py-3 px-4 font-mono text-xs text-primary-400 whitespace-nowrap">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-dark-800/40 transition">
+                        <td class="py-3 px-4 font-mono text-xs text-primary-600 dark:text-primary-400 whitespace-nowrap">
                             {{ $issue->manufacturingOrder->reference ?? '—' }}
                         </td>
-                        <td class="py-3 px-4 font-medium text-white whitespace-nowrap">
+                        <td class="py-3 px-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                             {{ $issue->product->name ?? '—' }}
-                            <span class="text-xs text-dark-500 font-mono">({{ $issue->product->sku ?? '' }})</span>
+                            <span class="text-xs text-gray-400 dark:text-dark-500 font-mono">({{ $issue->product->sku ?? '' }})</span>
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs text-dark-300 whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs text-gray-600 dark:text-dark-300 whitespace-nowrap">
                             {{ number_format($issue->quantity_planned, 2) }}
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs text-white whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs text-gray-900 dark:text-white whitespace-nowrap">
                             {{ number_format($issue->quantity_issued, 2) }}
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs font-bold text-emerald-400 whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {{ number_format($issue->quantity_used, 2) }}
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs text-cyan-400 whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
                             {{ number_format($issue->quantity_returned, 2) }}
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-xs font-bold text-rose-400 whitespace-nowrap">
+                        <td class="py-3 px-4 text-right font-mono text-xs font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                             {{ number_format($issue->quantity_wasted, 2) }}
                         </td>
                     </tr>

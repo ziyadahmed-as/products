@@ -33,7 +33,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-sky-100 selection:text-sky-800" x-data="{ mobileSidebarOpen: false }">
+<body class="bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-dark-100 font-sans antialiased selection:bg-sky-100 selection:text-sky-800" x-data="{ mobileSidebarOpen: false }">
 
     <!-- Mobile Sidebar Backdrop Overlay -->
     <div x-show="mobileSidebarOpen"
@@ -44,7 +44,7 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          @click="mobileSidebarOpen = false"
-         class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 lg:hidden"
+         class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-xs z-30 lg:hidden"
          style="display: none;"></div>
 
     <!-- Sidebar Navigation -->
@@ -59,11 +59,11 @@
                     </svg>
                 </div>
                 <div class="flex flex-col">
-                    <span class="font-bold text-slate-900 text-base leading-tight tracking-tight">Albareck IMS</span>
-                    <span class="text-[10px] text-slate-600 font-medium tracking-wide uppercase">Stock & Operations</span>
+                    <span class="font-bold text-slate-900 dark:text-white text-base leading-tight tracking-tight">Albareck IMS</span>
+                    <span class="text-[10px] text-slate-600 dark:text-dark-400 font-medium tracking-wide uppercase">Stock & Operations</span>
                 </div>
             </a>
-            <button @click="mobileSidebarOpen = false" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+            <button @click="mobileSidebarOpen = false" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-dark-200 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-lg">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -71,19 +71,19 @@
         </div>
 
         <!-- Role & Workspace Chip -->
-        <div class="px-3 py-2 mx-3 my-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+        <div class="px-3 py-2 mx-3 my-2.5 rounded-xl bg-slate-50 dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 flex items-center justify-between">
             <div class="flex items-center gap-2 min-w-0">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
-                <span class="text-xs font-semibold text-slate-700 truncate">
+                <span class="text-xs font-semibold text-slate-700 dark:text-dark-200 truncate">
                     {{ auth()->user()->roles->first()?->name ?? 'Staff' }}
                 </span>
             </div>
             @if(auth()->user()->branches->isNotEmpty())
-                <span class="text-[11px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 truncate max-w-[90px]" title="{{ auth()->user()->branches->pluck('name')->join(', ') }}">
+                <span class="text-[11px] font-medium text-slate-500 dark:text-dark-300 bg-white dark:bg-dark-800 px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 truncate max-w-[90px]" title="{{ auth()->user()->branches->pluck('name')->join(', ') }}">
                     {{ auth()->user()->branches->first()->name }}
                 </span>
             @else
-                <span class="text-[11px] font-medium text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                <span class="text-[11px] font-medium text-slate-600 dark:text-dark-300 bg-white dark:bg-dark-800 px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700">
                     Global
                 </span>
             @endif
@@ -93,18 +93,18 @@
         @include('layouts._sidebar_nav')
 
         <!-- Sidebar User Footer -->
-        <div class="p-3.5 border-t border-slate-100 bg-slate-50/70">
+        <div class="p-3.5 border-t border-slate-100 dark:border-dark-800 bg-slate-50/70 dark:bg-dark-900/60">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-600 flex items-center justify-center text-sm font-bold text-white shadow-xs flex-shrink-0">
                     {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-slate-800 truncate leading-tight">{{ auth()->user()->name ?? 'User' }}</p>
-                    <p class="text-xs text-slate-600 truncate leading-normal">{{ auth()->user()->email ?? '' }}</p>
+                    <p class="text-sm font-semibold text-slate-800 dark:text-white truncate leading-tight">{{ auth()->user()->name ?? 'User' }}</p>
+                    <p class="text-xs text-slate-600 dark:text-dark-400 truncate leading-normal">{{ auth()->user()->email ?? '' }}</p>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="btn-icon hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200" title="Sign Out">
+                    <button type="submit" class="btn-icon hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-950/50 dark:hover:border-rose-900" title="Sign Out">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -119,7 +119,7 @@
     <header class="topbar">
         <div class="flex items-center gap-3">
             <!-- Mobile Menu Toggle Button -->
-            <button @click="mobileSidebarOpen = !mobileSidebarOpen" class="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition" aria-label="Toggle navigation">
+            <button @click="mobileSidebarOpen = !mobileSidebarOpen" class="lg:hidden p-2 text-slate-600 dark:text-dark-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800 rounded-lg transition" aria-label="Toggle navigation">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
@@ -127,14 +127,14 @@
 
             <!-- Page Title & Breadcrumb -->
             <div>
-                <h1 class="text-lg font-bold text-slate-900 leading-tight">@yield('title', 'Dashboard')</h1>
+                <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">@yield('title', 'Dashboard')</h1>
             </div>
         </div>
 
         <div class="flex items-center gap-3">
             <!-- Date indicator pill -->
-            <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/80 border border-slate-200/60 text-xs font-medium text-slate-600">
-                <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/80 dark:bg-dark-800 border border-slate-200/60 dark:border-dark-700 text-xs font-medium text-slate-600 dark:text-dark-300">
+                <svg class="w-3.5 h-3.5 text-slate-600 dark:text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>

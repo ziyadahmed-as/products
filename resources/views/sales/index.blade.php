@@ -21,8 +21,8 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <div class="stat-card">
-            <div class="stat-icon bg-emerald-900/40">
-                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="stat-icon bg-emerald-100 dark:bg-emerald-900/40">
+                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
@@ -32,8 +32,8 @@
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-primary-900/40">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="stat-icon bg-primary-100 dark:bg-primary-900/40">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
             </div>
@@ -43,19 +43,19 @@
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-yellow-900/40">
-                <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="stat-icon bg-yellow-100 dark:bg-yellow-900/40">
+                <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
             <div>
-                <p class="stat-value text-yellow-400">Br{{ number_format($summary['unpaid'] ?? 0, 2) }}</p>
+                <p class="stat-value text-amber-600 dark:text-yellow-400">Br{{ number_format($summary['unpaid'] ?? 0, 2) }}</p>
                 <p class="stat-label">Outstanding</p>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-emerald-900/40">
-                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="stat-icon bg-emerald-100 dark:bg-emerald-900/40">
+                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
             </div>
@@ -119,7 +119,7 @@
                 <tbody>
                     @forelse($sales as $sale)
                     <tr>
-                        <td class="font-mono text-primary-400">{{ $sale->reference }}</td>
+                        <td class="font-mono font-semibold text-primary-600 dark:text-primary-400">{{ $sale->reference }}</td>
                         <td>
                             @if($sale->type === 'quick_sale')
                                 <span class="badge-blue">Quick Sale</span>
@@ -128,10 +128,10 @@
                             @endif
                         </td>
                         <td>{{ $sale->customer_name ?? 'Walk-in' }}</td>
-                        <td class="text-dark-300">{{ $sale->user->name ?? '—' }}</td>
-                        <td class="text-dark-300">{{ $sale->lines_count ?? $sale->lines->count() }}</td>
-                        <td class="font-bold text-white">Br{{ number_format($sale->total, 2) }}</td>
-                        <td class="text-dark-300">Br{{ number_format($sale->paid_amount, 2) }}</td>
+                        <td class="text-gray-600 dark:text-dark-300">{{ $sale->user->name ?? '—' }}</td>
+                        <td class="text-gray-600 dark:text-dark-300">{{ $sale->lines_count ?? $sale->lines->count() }}</td>
+                        <td class="font-bold text-gray-900 dark:text-white">Br{{ number_format($sale->total, 2) }}</td>
+                        <td class="text-gray-600 dark:text-dark-300">Br{{ number_format($sale->paid_amount, 2) }}</td>
                         <td>
                             @if($sale->payment_status === 'Paid')
                                 <span class="badge-green">Paid</span>
@@ -141,7 +141,7 @@
                                 <span class="badge-red">Unpaid</span>
                             @endif
                         </td>
-                        <td class="text-dark-400 text-xs">{{ $sale->created_at->format('d M Y, H:i') }}</td>
+                        <td class="text-gray-500 dark:text-dark-400 text-xs">{{ $sale->created_at->format('d M Y, H:i') }}</td>
                         <td class="text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <a href="{{ route('sales.show', $sale) }}" class="btn-icon" title="View Receipt">
@@ -156,12 +156,12 @@
                     @empty
                     <tr>
                         <td colspan="10" class="text-center py-12">
-                            <div class="w-14 h-14 rounded-2xl bg-dark-800 flex items-center justify-center mx-auto mb-3">
-                                <svg class="w-7 h-7 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-dark-800 flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-7 h-7 text-gray-400 dark:text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
                             </div>
-                            <p class="text-dark-500 font-medium">No sales found</p>
+                            <p class="text-gray-500 dark:text-dark-500 font-medium">No sales found</p>
                         </td>
                     </tr>
                     @endforelse
@@ -169,7 +169,7 @@
             </table>
         </div>
         @if($sales->hasPages())
-        <div class="px-6 py-4 border-t border-dark-800">
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-dark-800">
             {{ $sales->withQueryString()->links() }}
         </div>
         @endif

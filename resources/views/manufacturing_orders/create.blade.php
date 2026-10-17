@@ -8,19 +8,19 @@
     <div class="flex items-center justify-between">
         <div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('manufacturing-orders.index') }}" class="text-dark-400 hover:text-white transition">
+                <a href="{{ route('manufacturing-orders.index') }}" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
                 </a>
-                <h1 class="text-2xl font-bold text-white tracking-tight">Create Manufacturing Order</h1>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Create Manufacturing Order</h1>
             </div>
-            <p class="text-dark-400 text-sm mt-1">Plan a production batch, configure raw material requirements, and schedule manufacturing.</p>
+            <p class="text-gray-500 dark:text-dark-400 text-sm mt-1">Plan a production batch, configure raw material requirements, and schedule manufacturing.</p>
         </div>
     </div>
 
     @if($errors->any())
-        <div class="p-4 rounded-xl bg-rose-950/60 border border-rose-800/50 text-rose-300">
+        <div class="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/50 text-rose-800 dark:text-rose-300">
             <p class="font-semibold text-sm mb-1">Please correct the following errors:</p>
             <ul class="list-disc list-inside text-xs space-y-0.5">
                 @foreach($errors->all() as $error)
@@ -35,18 +35,18 @@
 
         <!-- Section 1: Order Details -->
         <div class="card space-y-5 mb-6">
-            <h2 class="text-base font-semibold text-white border-b border-dark-800 pb-3 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-primary-600/30 text-primary-400 flex items-center justify-center text-xs font-bold">1</span>
+            <h2 class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-dark-800 pb-3 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-primary-600/10 dark:bg-primary-600/30 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs font-bold">1</span>
                 Production Order Identification & Output Product
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Manufactured Product -->
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
-                        Finished Product to Manufacture <span class="text-rose-400">*</span>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
+                        Finished Product to Manufacture <span class="text-rose-500">*</span>
                     </label>
-                    <select name="product_id" id="product_id" required class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                    <select name="product_id" id="product_id" required class="form-input text-sm">
                         <option value="">-- Select Product --</option>
                         @foreach($products as $prod)
                             <option value="{{ $prod->id }}"
@@ -57,15 +57,15 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="text-[11px] text-dark-500 mt-1 block">Select the target product for which inventory will be increased upon completion.</span>
+                    <span class="text-[11px] text-gray-500 dark:text-dark-500 mt-1 block">Select the target product for which inventory will be increased upon completion.</span>
                 </div>
 
                 <!-- Recipe / BOM -->
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
                         Recipe / Bill of Materials (BOM)
                     </label>
-                    <select name="recipe_id" id="recipe_id" class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                    <select name="recipe_id" id="recipe_id" class="form-input text-sm">
                         <option value="">-- None / Custom Recipe --</option>
                         @foreach($recipes as $rec)
                             <option value="{{ $rec->id }}"
@@ -90,20 +90,20 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Planned Quantity -->
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
-                        Planned Production Quantity <span class="text-rose-400">*</span>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
+                        Planned Production Quantity <span class="text-rose-500">*</span>
                     </label>
                     <input type="number" step="any" min="0.01" name="planned_quantity" id="planned_quantity"
                            value="{{ old('planned_quantity', 100) }}" required
-                           class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none font-mono">
+                           class="form-input text-sm font-mono">
                 </div>
 
                 <!-- Unit of Measure -->
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
                         Unit of Measurement
                     </label>
-                    <select name="unit_of_measure_id" id="unit_of_measure_id" class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                    <select name="unit_of_measure_id" id="unit_of_measure_id" class="form-input text-sm">
                         <option value="">-- Default Product Unit --</option>
                         @foreach($units as $unit)
                             <option value="{{ $unit->id }}" {{ old('unit_of_measure_id') == $unit->id ? 'selected' : '' }}>
@@ -115,10 +115,10 @@
 
                 <!-- Output Storage Location -->
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
-                        Target Storage Location / Warehouse <span class="text-rose-400">*</span>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
+                        Target Storage Location / Warehouse <span class="text-rose-500">*</span>
                     </label>
-                    <select name="storage_location_id" required class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                    <select name="storage_location_id" required class="form-input text-sm">
                         @foreach($storageLocations as $loc)
                             <option value="{{ $loc->id }}" {{ old('storage_location_id') == $loc->id ? 'selected' : '' }}>
                                 {{ $loc->name }} ({{ $loc->branch->name ?? 'Main' }})
@@ -131,41 +131,41 @@
 
         <!-- Section 2: Scheduling & Assignment -->
         <div class="card space-y-5 mb-6">
-            <h2 class="text-base font-semibold text-white border-b border-dark-800 pb-3 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-primary-600/30 text-primary-400 flex items-center justify-center text-xs font-bold">2</span>
+            <h2 class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-dark-800 pb-3 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-primary-600/10 dark:bg-primary-600/30 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs font-bold">2</span>
                 Production Scheduling & Assignment
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
-                        Planned Order Date <span class="text-rose-400">*</span>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
+                        Planned Order Date <span class="text-rose-500">*</span>
                     </label>
                     <input type="date" name="planned_date" value="{{ old('planned_date', date('Y-m-d')) }}" required
-                           class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                           class="form-input text-sm">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
                         Production Start Date
                     </label>
                     <input type="date" name="start_date" value="{{ old('start_date', date('Y-m-d')) }}"
-                           class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                           class="form-input text-sm">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
                         Expected Completion Date
                     </label>
                     <input type="date" name="expected_completion_date" value="{{ old('expected_completion_date', date('Y-m-d', strtotime('+3 days'))) }}"
-                           class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                           class="form-input text-sm">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-dark-300 mb-1.5">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
                         Assigned Production Staff
                     </label>
-                    <select name="assigned_user_id" class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">
+                    <select name="assigned_user_id" class="form-input text-sm">
                         <option value="">-- Unassigned --</option>
                         @foreach($staffMembers as $staff)
                             <option value="{{ $staff->id }}" {{ old('assigned_user_id', auth()->id()) == $staff->id ? 'selected' : '' }}>
@@ -177,27 +177,27 @@
             </div>
 
             <div>
-                <label class="block text-xs font-medium text-dark-300 mb-1.5">
+                <label class="block text-xs font-medium text-gray-700 dark:text-dark-300 mb-1.5">
                     Production Notes & Instructions
                 </label>
                 <textarea name="production_notes" rows="2" placeholder="Special manufacturing instructions, batch parameters, quality guidelines..."
-                          class="w-full px-3 py-2 rounded-lg bg-dark-900 border border-dark-800 text-white text-sm focus:border-primary-500 focus:outline-none">{{ old('production_notes') }}</textarea>
+                          class="form-input text-sm">{{ old('production_notes') }}</textarea>
             </div>
         </div>
 
         <!-- Section 3: Raw Material Requirements & Stock Validation -->
         <div class="card space-y-4 mb-6">
-            <div class="flex items-center justify-between border-b border-dark-800 pb-3">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-dark-800 pb-3">
                 <div class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-full bg-primary-600/30 text-primary-400 flex items-center justify-center text-xs font-bold">3</span>
-                    <h2 class="text-base font-semibold text-white">Required Raw Materials & Consumption Plan</h2>
+                    <span class="w-6 h-6 rounded-full bg-primary-600/10 dark:bg-primary-600/30 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs font-bold">3</span>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">Required Raw Materials & Consumption Plan</h2>
                 </div>
                 <button type="button" id="add-material-btn" class="btn-secondary text-xs px-2.5 py-1">
                     + Add Custom Material
                 </button>
             </div>
 
-            <p class="text-xs text-dark-400">
+            <p class="text-xs text-gray-500 dark:text-dark-400">
                 The system checks current raw material stock balances. When the order is approved and materials are issued, these quantities will be atomically deducted from inventory.
             </p>
 
@@ -217,7 +217,7 @@
                 </table>
             </div>
 
-            <div id="no-materials-notice" class="p-4 rounded-lg bg-dark-900/60 border border-dark-800 text-center text-xs text-dark-400">
+            <div id="no-materials-notice" class="p-4 rounded-lg bg-gray-50 dark:bg-dark-900/60 border border-gray-200 dark:border-dark-800 text-center text-xs text-gray-500 dark:text-dark-400">
                 Select a Recipe above to automatically compute material requirements, or click "+ Add Custom Material" to specify raw materials manually.
             </div>
         </div>
@@ -227,7 +227,7 @@
             <a href="{{ route('manufacturing-orders.index') }}" class="btn-secondary text-sm">
                 Cancel
             </a>
-            <button type="submit" class="btn-primary text-sm px-6 py-2.5 shadow-lg shadow-primary-600/30">
+            <button type="submit" class="btn-primary text-sm px-6 py-2.5 shadow-sm">
                 Create Production Order
             </button>
         </div>
@@ -238,7 +238,7 @@
 <template id="material-row-template">
     <tr class="material-row">
         <td>
-            <select name="materials[INDEX][product_id]" required class="mat-select w-full px-2.5 py-1.5 rounded bg-dark-900 border border-dark-800 text-white text-xs focus:border-primary-500 focus:outline-none">
+            <select name="materials[INDEX][product_id]" required class="mat-select form-input text-xs py-1.5">
                 <option value="">-- Choose Raw Material --</option>
                 @foreach($rawMaterials as $mat)
                     <option value="{{ $mat->id }}"
@@ -252,19 +252,19 @@
         <td>
             <div class="flex items-center gap-1.5">
                 <input type="number" step="any" min="0.001" name="materials[INDEX][quantity]" required
-                       class="mat-qty w-full px-2.5 py-1.5 rounded bg-dark-900 border border-dark-800 text-white text-xs focus:border-primary-500 focus:outline-none font-mono"
+                       class="mat-qty form-input text-xs py-1.5 font-mono"
                        placeholder="Qty">
-                <span class="mat-unit-label text-xs text-dark-400 min-w-8">units</span>
+                <span class="mat-unit-label text-xs text-gray-500 dark:text-dark-400 min-w-8">units</span>
             </div>
         </td>
         <td>
-            <div class="mat-stock-badge flex items-center gap-1.5 text-xs text-dark-400">
-                <span class="mat-avail-val font-mono font-medium">-</span>
+            <div class="mat-stock-badge flex items-center gap-1.5 text-xs text-gray-500 dark:text-dark-400">
+                <span class="mat-avail-val font-mono font-medium text-gray-900 dark:text-white">-</span>
                 <span class="mat-avail-status text-[11px]"></span>
             </div>
         </td>
         <td class="text-right">
-            <button type="button" class="remove-mat-btn text-rose-400 hover:text-rose-300 text-xs px-2 py-1">
+            <button type="button" class="remove-mat-btn text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs px-2 py-1">
                 ✕
             </button>
         </td>
@@ -306,10 +306,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (needed > 0) {
             if (avail >= needed) {
                 availStatus.textContent = '(Sufficient)';
-                availStatus.className = 'mat-avail-status text-[11px] text-emerald-400 font-semibold';
+                availStatus.className = 'mat-avail-status text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold';
             } else {
                 availStatus.textContent = '(Insufficient Stock!)';
-                availStatus.className = 'mat-avail-status text-[11px] text-rose-400 font-bold';
+                availStatus.className = 'mat-avail-status text-[11px] text-rose-600 dark:text-rose-400 font-bold';
             }
         } else {
             availStatus.textContent = '';
