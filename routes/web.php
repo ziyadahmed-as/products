@@ -13,6 +13,7 @@ use App\Http\Controllers\UnitOfMeasureController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\StorageLocationController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\PublicController;
@@ -73,6 +74,7 @@ Route::middleware(['auth'])->prefix('client')->name('client.')->group(function (
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/admin', fn() => redirect()->route('dashboard'));
 
     // Inventory
     Route::resource('products',      ProductController::class);
@@ -99,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('units',      UnitOfMeasureController::class);
     Route::resource('branches',   BranchController::class);
+    Route::resource('storage-locations', StorageLocationController::class);
 
     // Admin
     Route::resource('users', UserController::class);
