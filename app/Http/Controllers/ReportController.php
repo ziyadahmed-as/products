@@ -383,10 +383,14 @@ class ReportController extends Controller
         $totalValuation = 0;
         $totalStockUnits = 0;
         $lowStockCount = 0;
+        $stockByUnit = [];
         foreach ($allMatching as $b) {
-            $totalValuation += ($b->quantity * ($b->product->purchase_cost ?? 0));
-            $totalStockUnits += $b->quantity;
-            if ($b->quantity <= ($b->product->minimum_stock_level ?? 0)) {
+            $qty = (float) $b->quantity;
+            $unitCode = $b->product?->unit?->code ?? $b->product?->unit?->name ?? 'units';
+            $totalValuation += ($qty * ($b->product->purchase_cost ?? 0));
+            $totalStockUnits += $qty;
+            $stockByUnit[$unitCode] = ($stockByUnit[$unitCode] ?? 0) + $qty;
+            if ($qty <= ($b->product->minimum_stock_level ?? 0)) {
                 $lowStockCount++;
             }
         }
@@ -417,6 +421,7 @@ class ReportController extends Controller
             'balances',
             'totalValuation',
             'totalStockUnits',
+            'stockByUnit',
             'lowStockCount',
             'recentMovements',
             'filterBranches',

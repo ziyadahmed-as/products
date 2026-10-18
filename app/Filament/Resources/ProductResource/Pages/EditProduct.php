@@ -39,56 +39,67 @@ class EditProduct extends EditRecord
             return; // No change — nothing to do
         }
 
-        // Get all active storage locations for the product's branches
-        $branchIds = $this->record->branches()->pluck('branches.id');
-        $locations = StorageLocation::whereIn('branch_id', $branchIds)
-            ->where('is_active', true)
-            ->get();
+        $user = auth()->user();
+        $authorizedBranchIds = ($user && !$user->hasRole('Super Admin')) ? $user->authorizedBranchIds() : null;
 
-        if ($locations->isEmpty()) {
+        // Locate existing inventory balance for this product in authorized branch or first balance
+        $balanceQuery = InventoryBalance::where('product_id', $this->record->id);
+        if ($authorizedBranchIds !== null) {
+            $balanceQuery->whereHas('storageLocation', fn ($q) => $q->whereIn('branch_id', $authorizedBranchIds));
+        }
+        $targetBalance = $balanceQuery->first();
+
+        if ($targetBalance) {
+            $locationId = $targetBalance->storage_location_id;
+        } else {
+            $locQuery = StorageLocation::where('is_active', true);
+            if ($authorizedBranchIds !== null) {
+                $locQuery->whereIn('branch_id', $authorizedBranchIds);
+            }
+            $locationId = $locQuery->first()?->id;
+        }
+
+        if (!$locationId) {
             return;
         }
 
-        foreach ($locations as $location) {
-            $balance = InventoryBalance::firstOrCreate(
-                [
-                    'product_id'          => $this->record->id,
-                    'storage_location_id' => $location->id,
-                ],
-                ['quantity' => 0]
-            );
+        $balance = InventoryBalance::firstOrCreate(
+            [
+                'product_id'          => $this->record->id,
+                'storage_location_id' => $locationId,
+            ],
+            ['quantity' => 0]
+        );
 
-            if ($diff > 0) {
-                // Admin increased quantity — add stock
-                $balance->increment('quantity', $diff);
+        if ($diff > 0) {
+            // Admin increased quantity — add stock to designated storage location
+            $balance->increment('quantity', $diff);
 
-                StockMovement::create([
-                    'product_id'          => $this->record->id,
-                    'storage_location_id' => $location->id,
-                    'type'                => 'in',
-                    'quantity'            => $diff,
-                    'unit_cost'           => $this->record->purchase_cost ?? 0,
-                    'user_id'             => auth()->id(),
-                    'reference_type'      => 'adjustment',
-                    'reference_id'        => $this->record->id,
-                ]);
-            } else {
-                // Admin decreased quantity — deduct stock (but not below zero)
-                $deduct  = abs($diff);
-                $deduct  = min($deduct, $balance->quantity);
-                $balance->decrement('quantity', $deduct);
+            StockMovement::create([
+                'product_id'          => $this->record->id,
+                'storage_location_id' => $locationId,
+                'type'                => 'in',
+                'quantity'            => $diff,
+                'unit_cost'           => $this->record->purchase_cost ?? 0,
+                'user_id'             => auth()->id(),
+                'reference_type'      => 'adjustment',
+                'reference_id'        => $this->record->id,
+            ]);
+        } else {
+            // Admin decreased quantity — deduct stock from designated storage location
+            $deduct = min(abs($diff), (float) $balance->quantity);
+            $balance->decrement('quantity', $deduct);
 
-                StockMovement::create([
-                    'product_id'          => $this->record->id,
-                    'storage_location_id' => $location->id,
-                    'type'                => 'out',
-                    'quantity'            => $deduct,
-                    'unit_cost'           => $this->record->purchase_cost ?? 0,
-                    'user_id'             => auth()->id(),
-                    'reference_type'      => 'adjustment',
-                    'reference_id'        => $this->record->id,
-                ]);
-            }
+            StockMovement::create([
+                'product_id'          => $this->record->id,
+                'storage_location_id' => $locationId,
+                'type'                => 'out',
+                'quantity'            => $deduct,
+                'unit_cost'           => $this->record->purchase_cost ?? 0,
+                'user_id'             => auth()->id(),
+                'reference_type'      => 'adjustment',
+                'reference_id'        => $this->record->id,
+            ]);
         }
 
         // Sync the products.quantity column from InventoryBalance totals
@@ -98,6 +109,7 @@ class EditProduct extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
         ];
     }

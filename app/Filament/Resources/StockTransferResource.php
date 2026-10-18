@@ -69,6 +69,34 @@ class StockTransferResource extends Resource
                         ->required(),
                 ])->columns(2),
 
+            Forms\Components\Section::make('Transfer Items')
+                ->description('Specify products and exact quantities to be transferred between branches.')
+                ->schema([
+                    Forms\Components\Repeater::make('items')
+                        ->relationship()
+                        ->schema([
+                            Forms\Components\Select::make('product_id')
+                                ->label('Product / Item')
+                                ->relationship('product', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->required(),
+                            Forms\Components\TextInput::make('dispatched_quantity')
+                                ->label('Quantity to Transfer')
+                                ->numeric()
+                                ->step('any')
+                                ->minValue(0.01)
+                                ->required(),
+                            Forms\Components\TextInput::make('received_quantity')
+                                ->label('Received Quantity')
+                                ->numeric()
+                                ->step('any')
+                                ->minValue(0),
+                        ])
+                        ->columns(3)
+                        ->defaultItems(1),
+                ]),
+
             Forms\Components\Section::make('Notes')
                 ->schema([
                     Forms\Components\Textarea::make('notes')

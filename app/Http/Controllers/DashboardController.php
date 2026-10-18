@@ -64,22 +64,47 @@ class DashboardController extends Controller
         $rawMaterialsStockUnits = 0;
         $lowStockRawCount = 0;
 
+        $stockByUnit = [];
+        $rawMaterialsStockByUnit = [];
+        $finishedGoodsStockByUnit = [];
+
         foreach ($allBalances as $bal) {
+            if (!$bal->product) continue;
             $cost = (float) ($bal->product->purchase_cost ?? 0);
             $qty  = (float) $bal->quantity;
             $lineValue = $qty * $cost;
+            $unitCode = $bal->product->unit?->code ?? $bal->product->unit?->name ?? 'units';
 
-            if ($bal->product && $bal->product->type === 'raw_material') {
+            $stockByUnit[$unitCode] = ($stockByUnit[$unitCode] ?? 0) + $qty;
+
+            if ($bal->product->type === 'raw_material') {
                 $rawMaterialsValuation += $lineValue;
                 $rawMaterialsStockUnits += $qty;
+                $rawMaterialsStockByUnit[$unitCode] = ($rawMaterialsStockByUnit[$unitCode] ?? 0) + $qty;
                 if ($qty <= (float) ($bal->product->minimum_stock_level ?? 0) && ($bal->product->minimum_stock_level ?? 0) > 0) {
                     $lowStockRawCount++;
                 }
             } else {
                 $finishedGoodsValuation += $lineValue;
+                $finishedGoodsStockByUnit[$unitCode] = ($finishedGoodsStockByUnit[$unitCode] ?? 0) + $qty;
             }
         }
         $totalInventoryValuation = $rawMaterialsValuation + $finishedGoodsValuation;
+
+        $stockByUnitFormatted = collect($stockByUnit)
+            ->map(fn ($q, $u) => number_format($q, 2) . ' ' . $u)
+            ->values()
+            ->join(' • ');
+
+        $rawMaterialsStockByUnitFormatted = collect($rawMaterialsStockByUnit)
+            ->map(fn ($q, $u) => number_format($q, 2) . ' ' . $u)
+            ->values()
+            ->join(' • ');
+
+        $finishedGoodsStockByUnitFormatted = collect($finishedGoodsStockByUnit)
+            ->map(fn ($q, $u) => number_format($q, 2) . ' ' . $u)
+            ->values()
+            ->join(' • ');
 
         // Manufacturing Metrics
         $completedProductionUnits = ManufacturingOrder::whereIn('status', ['completed', 'Completed'])
@@ -229,6 +254,12 @@ class DashboardController extends Controller
             'finished_goods_valuation'          => $finishedGoodsValuation,
             'total_inventory_valuation'         => $totalInventoryValuation,
             'low_stock_raw_materials'           => $lowStockRawCount,
+            'stock_by_unit'                     => $stockByUnit,
+            'stock_by_unit_formatted'           => $stockByUnitFormatted ?: '0.00 units',
+            'raw_materials_stock_by_unit'       => $rawMaterialsStockByUnit,
+            'raw_materials_stock_by_unit_formatted' => $rawMaterialsStockByUnitFormatted ?: '0.00 units',
+            'finished_goods_stock_by_unit'      => $finishedGoodsStockByUnit,
+            'finished_goods_stock_by_unit_formatted' => $finishedGoodsStockByUnitFormatted ?: '0.00 units',
             'today_activities_count'            => Activity::whereDate('created_at', today())->count(),
         ];
 
@@ -428,6 +459,13 @@ class DashboardController extends Controller
             ->limit(25)
             ->get();
 
+        // Active Products Overview for Dashboard Table
+        $productsListQuery = Product::with(['category', 'unit', 'branches']);
+        if ($branchIds !== null) {
+            $productsListQuery->whereHas('branches', fn ($q) => $q->whereIn('branches.id', $branchIds));
+        }
+        $productsList = $productsListQuery->latest('id')->limit(25)->get();
+
         // ── Staff & User Performance Report Data ──
         $internalUsers = User::whereHas('roles', function ($q) {
             $q->whereIn('name', ['Super Admin', 'Manager', 'Seller', 'Production Officer', 'Auditor']);
@@ -553,10 +591,14 @@ class DashboardController extends Controller
             'openOrders',
             'rawMaterialsList',
             'userPerformances',
+            'productsList',
             'isSeller',
             'sellerData',
             'periodReport',
-            'chartPagination'
+            'chartPagination',
+            'stockByUnit',
+            'rawMaterialsStockByUnit',
+            'finishedGoodsStockByUnit'
         ));
     }
 }

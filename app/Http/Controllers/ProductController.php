@@ -100,15 +100,20 @@ class ProductController extends Controller
         if ($user->hasRole('Super Admin')) {
             $branches = Branch::where('is_active', true)->orderBy('name')->get();
             $storageLocations = StorageLocation::where('is_active', true)->with('branch')->get();
+            $canChangeBranch = true;
+            $defaultBranchId = $branches->first()?->id;
         } else {
             $branchIds = $user->authorizedBranchIds();
             $branches = Branch::whereIn('id', $branchIds)->where('is_active', true)->orderBy('name')->get();
             $storageLocations = StorageLocation::whereIn('branch_id', $branchIds)->where('is_active', true)->with('branch')->get();
+            $canChangeBranch = $branches->count() > 1;
+            $defaultBranchId = $user->branches()->first()?->id ?? $branches->first()?->id;
         }
 
+        $defaultLocationId = StorageLocation::where('branch_id', $defaultBranchId)->where('is_active', true)->first()?->id;
         $defaultType = $request->query('type', 'raw_material');
 
-        return view('products.create', compact('categories', 'units', 'branches', 'storageLocations', 'defaultType'));
+        return view('products.create', compact('categories', 'units', 'branches', 'storageLocations', 'defaultType', 'defaultBranchId', 'defaultLocationId', 'canChangeBranch'));
     }
 
     /**
@@ -135,10 +140,15 @@ class ProductController extends Controller
             'purchase_cost'               => 'nullable|numeric|min:0',
             'selling_price'               => 'nullable|numeric|min:0',
             'is_active'                   => 'nullable|boolean',
+            'branch_id'                   => 'nullable|exists:branches,id',
             'branches'                    => 'nullable|array',
             'branches.*'                  => 'exists:branches,id',
             'initial_quantity'            => 'nullable|numeric|min:0',
             'initial_storage_location_id' => 'nullable|exists:storage_locations,id',
+            'branch_allocations'          => 'nullable|array',
+            'branch_allocations.*.branch_id'           => 'required_with:branch_allocations|exists:branches,id',
+            'branch_allocations.*.storage_location_id' => 'required_with:branch_allocations|exists:storage_locations,id',
+            'branch_allocations.*.quantity'            => 'required_with:branch_allocations|numeric|min:0.01',
         ]);
 
         // Selling price is required for resale and manufactured products
@@ -168,24 +178,69 @@ class ProductController extends Controller
         $product = DB::transaction(function () use ($validated, $user, $request) {
             $product = Product::create($validated);
 
-            // Sync branches
-            $branchIds = $validated['branches'] ?? [];
-            if ($user->hasRole('Manager') && !empty($branchIds)) {
-                // Ensure manager can only allocate to their permitted branches
-                $authorizedIds = $user->authorizedBranchIds()->toArray();
-                $branchIds = array_intersect($branchIds, $authorizedIds);
-            }
-            if (!empty($branchIds)) {
-                $product->branches()->sync($branchIds);
-            }
+            $authorizedBranchIds = $user->hasRole('Super Admin') ? null : $user->authorizedBranchIds()->toArray();
 
-            // Handle optional initial opening stock
-            $initialQty = (float) ($validated['initial_quantity'] ?? 0);
-            $locationId = $validated['initial_storage_location_id'] ?? null;
+            // 1. Multi-branch distribution mode if provided by authorized user
+            if (!empty($validated['branch_allocations'])) {
+                $allocatedBranchIds = [];
+                foreach ($validated['branch_allocations'] as $alloc) {
+                    $bId = (int) $alloc['branch_id'];
+                    $locId = (int) $alloc['storage_location_id'];
+                    $allocQty = (float) $alloc['quantity'];
 
-            if ($initialQty > 0 && $locationId) {
-                $storageLocation = StorageLocation::find($locationId);
-                if ($storageLocation) {
+                    if ($authorizedBranchIds !== null && !in_array($bId, $authorizedBranchIds)) {
+                        continue;
+                    }
+
+                    $allocatedBranchIds[] = $bId;
+
+                    $balance = InventoryBalance::firstOrCreate(
+                        [
+                            'product_id'          => $product->id,
+                            'storage_location_id' => $locId,
+                        ],
+                        ['quantity' => 0]
+                    );
+                    $balance->increment('quantity', $allocQty);
+
+                    StockMovement::create([
+                        'product_id'          => $product->id,
+                        'storage_location_id' => $locId,
+                        'type'                => 'in',
+                        'quantity'            => $allocQty,
+                        'unit_cost'           => $product->purchase_cost ?? 0,
+                        'user_id'             => $user->id,
+                        'reference_type'      => 'opening_stock',
+                        'reference_id'        => $product->id,
+                    ]);
+                }
+
+                if (!empty($allocatedBranchIds)) {
+                    $product->branches()->sync(array_values(array_unique($allocatedBranchIds)));
+                }
+                $product->syncQuantity();
+            } else {
+                // 2. Single-branch registration rule (Default)
+                $selectedBranchId = $validated['branch_id']
+                    ?? (!empty($validated['branches']) ? (int) $validated['branches'][0] : null)
+                    ?? $user->branches()->first()?->id
+                    ?? Branch::where('is_active', true)->first()?->id;
+
+                if ($authorizedBranchIds !== null && !in_array($selectedBranchId, $authorizedBranchIds)) {
+                    $selectedBranchId = $user->branches()->first()?->id ?? $authorizedBranchIds[0];
+                }
+
+                if ($selectedBranchId) {
+                    $product->branches()->sync([$selectedBranchId]);
+                }
+
+                $initialQty = (float) ($validated['initial_quantity'] ?? 0);
+                $locationId = $validated['initial_storage_location_id'] ?? null;
+                if (!$locationId && $selectedBranchId) {
+                    $locationId = StorageLocation::where('branch_id', $selectedBranchId)->where('is_active', true)->first()?->id;
+                }
+
+                if ($initialQty > 0 && $locationId) {
                     $balance = InventoryBalance::firstOrCreate(
                         [
                             'product_id'          => $product->id,

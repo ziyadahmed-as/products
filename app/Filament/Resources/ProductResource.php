@@ -96,7 +96,7 @@ class ProductResource extends Resource
                                 ->preload()
                                 ->createOptionForm([
                                     Forms\Components\TextInput::make('name')->required(),
-                                    Forms\Components\TextInput::make('abbreviation')->required(),
+                                    Forms\Components\TextInput::make('code')->label('Code (e.g. kg, L, pcs)')->required(),
                                 ]),
                             Forms\Components\TextInput::make('package_size')
                                 ->placeholder('e.g. 50kg bag, 1L bottle')
@@ -126,7 +126,7 @@ class ProductResource extends Resource
                                     'manufactured_product', 'resale_product',
                                 ])),
                             Forms\Components\TextInput::make('quantity')
-                                ->label('Quantity')
+                                ->label('Initial Stock Quantity')
                                 ->numeric()->step('any')
                                 ->required()
                                 ->default(0)
@@ -191,19 +191,115 @@ class ProductResource extends Resource
                                 ->required(),
                         ]),
 
-                    Forms\Components\Section::make('Branch Allocation')
+                    Forms\Components\Section::make('Branch & Location Assignment')
+                        ->description('Automatic branch resolution and storage location tracking.')
+                        ->icon('heroicon-o-building-storefront')
                         ->schema([
-                            Forms\Components\Select::make('branches')
-                                ->label('Assigned Branches')
-                                ->relationship('branches', 'name')
-                                ->multiple()
-                                ->preload()
-                                ->searchable()
-                                ->helperText('Branches where this product is managed / sold.'),
-                        ])
-                        ->visible(fn (Forms\Get $get) => in_array($get('type'), [
-                            'manufactured_product', 'resale_product',
-                        ])),
+                            Forms\Components\Select::make('branch_id')
+                                ->label('Registration Branch')
+                                ->options(function () {
+                                    $user = auth()->user();
+                                    if ($user && $user->hasRole('Super Admin')) {
+                                        return \App\Models\Branch::where('is_active', true)->pluck('name', 'id');
+                                    }
+                                    if ($user) {
+                                        return \App\Models\Branch::whereIn('id', $user->authorizedBranchIds())
+                                            ->where('is_active', true)
+                                            ->pluck('name', 'id');
+                                    }
+                                    return \App\Models\Branch::where('is_active', true)->pluck('name', 'id');
+                                })
+                                ->default(function () {
+                                    $user = auth()->user();
+                                    return $user?->branches()->first()?->id
+                                        ?? \App\Models\Branch::where('is_active', true)->first()?->id;
+                                })
+                                ->disabled(function () {
+                                    $user = auth()->user();
+                                    if (!$user || $user->hasRole('Super Admin')) {
+                                        return false;
+                                    }
+                                    return $user->authorizedBranchIds()->count() <= 1;
+                                })
+                                ->dehydrated()
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                    $firstLoc = \App\Models\StorageLocation::where('branch_id', $state)
+                                        ->where('is_active', true)
+                                        ->first();
+                                    $set('storage_location_id', $firstLoc?->id);
+                                })
+                                ->helperText('By default, stock entries are assigned to only one active branch.'),
+
+                            Forms\Components\Select::make('storage_location_id')
+                                ->label('Designated Storage Location')
+                                ->options(function (Forms\Get $get) {
+                                    $branchId = $get('branch_id');
+                                    if (!$branchId) {
+                                        $user = auth()->user();
+                                        $branchId = $user?->branches()->first()?->id
+                                            ?? \App\Models\Branch::where('is_active', true)->first()?->id;
+                                    }
+                                    return \App\Models\StorageLocation::where('branch_id', $branchId)
+                                        ->where('is_active', true)
+                                        ->pluck('name', 'id');
+                                })
+                                ->default(function (Forms\Get $get) {
+                                    $branchId = $get('branch_id');
+                                    if (!$branchId) {
+                                        $user = auth()->user();
+                                        $branchId = $user?->branches()->first()?->id
+                                            ?? \App\Models\Branch::where('is_active', true)->first()?->id;
+                                    }
+                                    return \App\Models\StorageLocation::where('branch_id', $branchId)
+                                        ->where('is_active', true)
+                                        ->first()?->id;
+                                })
+                                ->required()
+                                ->helperText('Stock is tracked separately by branch and storage location.'),
+
+                            Forms\Components\Toggle::make('distribute_to_multiple_branches')
+                                ->label('Distribute to Multiple Branches')
+                                ->default(false)
+                                ->live()
+                                ->visible(function () {
+                                    $user = auth()->user();
+                                    return $user && ($user->hasRole('Super Admin') || $user->authorizedBranchIds()->count() > 1);
+                                })
+                                ->helperText('Enable to allocate separate quantities to multiple branches.'),
+
+                            Forms\Components\Repeater::make('branch_allocations')
+                                ->label('Branch Allocations')
+                                ->visible(fn (Forms\Get $get) => (bool) $get('distribute_to_multiple_branches'))
+                                ->schema([
+                                    Forms\Components\Select::make('branch_id')
+                                        ->label('Branch')
+                                        ->options(function () {
+                                            $user = auth()->user();
+                                            if ($user && $user->hasRole('Super Admin')) {
+                                                return \App\Models\Branch::where('is_active', true)->pluck('name', 'id');
+                                            }
+                                            return \App\Models\Branch::whereIn('id', $user?->authorizedBranchIds() ?? [])
+                                                ->where('is_active', true)
+                                                ->pluck('name', 'id');
+                                        })
+                                        ->required()
+                                        ->live(),
+                                    Forms\Components\Select::make('storage_location_id')
+                                        ->label('Storage Location')
+                                        ->options(fn (Forms\Get $get) => \App\Models\StorageLocation::where('branch_id', $get('branch_id'))
+                                            ->where('is_active', true)
+                                            ->pluck('name', 'id'))
+                                        ->required(),
+                                    Forms\Components\TextInput::make('quantity')
+                                        ->numeric()->step('any')
+                                        ->minValue(0.01)
+                                        ->required(),
+                                ])
+                                ->columns(3)
+                                ->helperText('Each allocation creates an independent stock record without duplicating stock.'),
+                        ]),
 
                     Forms\Components\Section::make('Storefront Settings')
                         ->schema([
@@ -277,9 +373,9 @@ class ProductResource extends Resource
                             // Admins / Super Admins: total from products table (fast)
                             $qty = $record->quantity ?? 0;
                         }
-                        return number_format((float)$qty, 2);
+                        $unit = $record->unit?->code ?? $record->unit?->name ?? '';
+                        return number_format((float)$qty, 2) . ($unit ? " {$unit}" : '');
                     })
-                    ->numeric(2)
                     ->sortable()
                     ->badge()
                     ->color(fn (string $state): string => (float)$state > 0 ? 'success' : 'danger'),
@@ -351,6 +447,7 @@ class ProductResource extends Resource
         return [
             'index'  => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
+            'view'   => Pages\ViewProduct::route('/{record}'),
             'edit'   => Pages\EditProduct::route('/{record}/edit'),
         ];
     }
