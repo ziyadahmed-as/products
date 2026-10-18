@@ -45,7 +45,7 @@ class AdminDashboardRedesignTest extends TestCase
         $response->assertSee('Revenue Trend (14 Days)');
         $response->assertSee('Orders by Type');
         $response->assertSee('Staff &amp; Team Operational Performance', false);
-        $response->assertSee('Quick Reports &amp; Data Exports', false);
+        $response->assertSee('Important Metrics &amp; Marketing Reports', false);
         $response->assertSee('revenueTrendChart');
         $response->assertSee('ordersByTypeChart');
         // Check sidebar items for Super Admin

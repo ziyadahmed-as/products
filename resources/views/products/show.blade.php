@@ -49,13 +49,13 @@
 
             @if($product->type === 'manufactured_product' || $product->recipe)
             <a href="{{ route('manufacturing-orders.create', ['product_id' => $product->id]) }}"
-               class="btn-secondary text-xs px-4 py-2 flex items-center gap-1.5">
+               class="btn-secondary text-xs px-4 py-2 flex items-center gap-1.5 shadow-xs">
                 <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Create MO</span>
             </a>
             @endif
 
-            <a href="{{ route('products.edit', $product) }}" class="btn-secondary text-xs px-4 py-2 flex items-center gap-1.5">
+            <a href="{{ route('products.edit', $product) }}" class="btn-secondary text-xs px-4 py-2 flex items-center gap-1.5 shadow-xs">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 <span>Edit</span>
             </a>
@@ -65,48 +65,68 @@
 
     <!-- Quick Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="card p-5">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-dark-400">Total Stock Available</span>
-            <div class="text-2xl font-bold font-mono mt-2 {{ $product->quantity <= 0 ? 'text-rose-600 dark:text-rose-400' : ($product->minimum_stock_level > 0 && $product->quantity <= $product->minimum_stock_level ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400') }}">
-                {{ number_format($product->quantity, 2) }}
-                <span class="text-xs font-normal text-slate-500 dark:text-dark-400">{{ $product->unit?->code ?? 'units' }}</span>
+        <div class="stat-card flex items-center gap-4">
+            <div class="stat-icon bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
             </div>
-            <div class="text-xs text-slate-400 dark:text-dark-500 mt-1">Reorder threshold: {{ number_format($product->minimum_stock_level, 2) }}</div>
-        </div>
-
-        <div class="card p-5">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-dark-400">Inventory Valuation</span>
-            <div class="text-2xl font-bold text-slate-900 dark:text-white mt-2 font-mono">
-                Br {{ number_format($product->quantity * ($product->purchase_cost ?? 0), 2) }}
-            </div>
-            <div class="text-xs text-slate-400 dark:text-dark-500 mt-1">Cost @ Br {{ number_format($product->purchase_cost ?? 0, 2) }} / unit</div>
-        </div>
-
-        <div class="card p-5">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-dark-400">Selling Price</span>
-            <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-2 font-mono">
-                @if(in_array($product->type, ['resale_product', 'manufactured_product']))
-                    Br {{ number_format($product->selling_price ?? 0, 2) }}
-                @else
-                    <span class="text-slate-400 dark:text-dark-500 text-base">Not for direct sale</span>
-                @endif
-            </div>
-            <div class="text-xs text-slate-400 dark:text-dark-500 mt-1">
-                @if($product->purchase_cost > 0 && $product->selling_price > 0)
-                    Margin: {{ round((($product->selling_price - $product->purchase_cost) / $product->selling_price) * 100, 1) }}%
-                @else
-                    Standard material
-                @endif
+            <div class="min-w-0 flex-1">
+                <div class="stat-label">Total Stock Available</div>
+                <div class="stat-value font-mono {{ $product->quantity <= 0 ? 'text-rose-600 dark:text-rose-400' : ($product->minimum_stock_level > 0 && $product->quantity <= $product->minimum_stock_level ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400') }}">
+                    {{ number_format($product->quantity, 2) }}
+                    <span class="text-xs font-normal text-slate-500 dark:text-dark-400 font-sans">{{ $product->unit?->code ?? 'units' }}</span>
+                </div>
+                <div class="text-xs text-slate-400 dark:text-dark-500 mt-0.5">Reorder: {{ number_format($product->minimum_stock_level, 2) }}</div>
             </div>
         </div>
 
-        <div class="card p-5">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-dark-400">Category & Packaging</span>
-            <div class="text-base font-bold text-slate-900 dark:text-white mt-2 truncate">
-                {{ $product->category->name ?? 'Uncategorized' }}
+        <div class="stat-card flex items-center gap-4">
+            <div class="stat-icon bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            <div class="text-xs text-slate-500 dark:text-dark-400 mt-1 truncate">
-                {{ $product->package_size ?? 'Standard loose / bulk' }}
+            <div class="min-w-0 flex-1">
+                <div class="stat-label">Inventory Valuation</div>
+                <div class="stat-value text-slate-900 dark:text-white font-mono">
+                    Br {{ number_format($product->quantity * ($product->purchase_cost ?? 0), 2) }}
+                </div>
+                <div class="text-xs text-slate-400 dark:text-dark-500 mt-0.5">Cost @ Br {{ number_format($product->purchase_cost ?? 0, 2) }} / unit</div>
+            </div>
+        </div>
+
+        <div class="stat-card flex items-center gap-4">
+            <div class="stat-icon bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            </div>
+            <div class="min-w-0 flex-1">
+                <div class="stat-label">Selling Price</div>
+                <div class="stat-value text-sky-600 dark:text-sky-400 font-mono">
+                    @if(in_array($product->type, ['resale_product', 'manufactured_product']))
+                        Br {{ number_format($product->selling_price ?? 0, 2) }}
+                    @else
+                        <span class="text-slate-400 dark:text-dark-500 text-base font-sans">Not for sale</span>
+                    @endif
+                </div>
+                <div class="text-xs text-slate-400 dark:text-dark-500 mt-0.5">
+                    @if($product->purchase_cost > 0 && $product->selling_price > 0)
+                        Margin: {{ round((($product->selling_price - $product->purchase_cost) / $product->selling_price) * 100, 1) }}%
+                    @else
+                        Standard material
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card flex items-center gap-4">
+            <div class="stat-icon bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+            <div class="min-w-0 flex-1">
+                <div class="stat-label">Category & Packaging</div>
+                <div class="stat-value text-slate-900 dark:text-white text-base truncate">
+                    {{ $product->category->name ?? 'Uncategorized' }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-dark-400 mt-0.5 truncate">
+                    {{ $product->package_size ?? 'Standard loose / bulk' }}
+                </div>
             </div>
         </div>
     </div>
@@ -119,7 +139,7 @@
 
             <!-- Stock Per Location Table -->
             <div class="card p-0 overflow-hidden shadow-xs">
-                <div class="p-5 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between">
+                <div class="p-4 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Stock by Storage Location / Branch</h2>
                         <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Physical distribution of available quantities across branches.</p>
@@ -130,7 +150,7 @@
                     </a>
                     @endhasanyrole
                 </div>
-                <div class="table-wrapper">
+                <div class="overflow-x-auto">
                     <table class="table">
                         <thead>
                             <tr>
@@ -142,12 +162,12 @@
                         </thead>
                         <tbody>
                             @forelse($product->inventoryBalances as $balance)
-                            <tr>
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-850/50 transition-colors">
                                 <td class="font-semibold text-slate-900 dark:text-white">
                                     {{ $balance->storageLocation->name ?? 'Main Storage' }}
                                 </td>
                                 <td class="text-xs text-slate-600 dark:text-dark-300">
-                                    {{ $balance->storageLocation->branch->name ?? '—' }}
+                                    <span class="badge badge-purple">{{ $balance->storageLocation->branch->name ?? '—' }}</span>
                                 </td>
                                 <td class="text-right font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
                                     {{ number_format($balance->quantity, 2) }} {{ $product->unit?->code ?? '' }}
@@ -170,14 +190,14 @@
 
             <!-- Recent Movement History -->
             <div class="card p-0 overflow-hidden shadow-xs">
-                <div class="p-5 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between">
+                <div class="p-4 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Inventory Movement History</h2>
                         <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Chronological record of receipts, manufacturing deductions, and returns.</p>
                     </div>
                     <span class="text-xs text-slate-400 dark:text-dark-500 font-mono">Last 20 transactions</span>
                 </div>
-                <div class="table-wrapper">
+                <div class="overflow-x-auto">
                     <table class="table">
                         <thead>
                             <tr>
@@ -191,7 +211,7 @@
                         </thead>
                         <tbody>
                             @forelse($product->stockMovements as $mov)
-                            <tr>
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-850/50 transition-colors">
                                 <td class="font-mono text-xs text-slate-500 dark:text-dark-400 whitespace-nowrap">
                                     {{ $mov->created_at->format('Y-m-d H:i') }}
                                 </td>
@@ -240,7 +260,7 @@
         <!-- Column 3: Master Details & Specifications Sidebar -->
         <div class="space-y-6">
 
-            <div class="card p-5 space-y-4">
+            <div class="card p-5 space-y-4 shadow-xs">
                 <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-dark-800 pb-2">
                     Master Specifications
                 </h2>
@@ -281,7 +301,7 @@
             </div>
 
             <!-- Allocated Branches -->
-            <div class="card p-5 space-y-3">
+            <div class="card p-5 space-y-3 shadow-xs">
                 <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-dark-800 pb-2">
                     Authorized Branches
                 </h2>

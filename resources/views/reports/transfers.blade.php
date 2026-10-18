@@ -117,13 +117,13 @@
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
                             @if($tr->status === 'received' || $tr->status === 'completed')
-                                <span class="badge-green text-xs">Received</span>
+                                <span class="badge badge-green text-xs">Received</span>
                             @elseif($tr->status === 'cancelled')
-                                <span class="badge-red text-xs">Cancelled</span>
+                                <span class="badge badge-red text-xs">Cancelled</span>
                             @elseif($tr->status === 'dispatched' || $tr->status === 'in_transit')
-                                <span class="badge-yellow text-xs">In Transit</span>
+                                <span class="badge badge-yellow text-xs">In Transit</span>
                             @else
-                                <span class="badge-blue text-xs">{{ ucfirst($tr->status) }}</span>
+                                <span class="badge badge-blue text-xs">{{ ucfirst($tr->status) }}</span>
                             @endif
                         </td>
                         <td class="py-3 px-4 text-xs text-gray-500 dark:text-dark-400 max-w-xs truncate" title="{{ $tr->notes }}">

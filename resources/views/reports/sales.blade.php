@@ -251,15 +251,15 @@
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
                             @if($sale->payment_status === 'Paid')
-                                <span class="badge-green text-xs">Paid</span>
+                                <span class="badge badge-green text-xs">Paid</span>
                             @elseif($sale->payment_status === 'Partial')
-                                <span class="badge-yellow text-xs">Partial</span>
+                                <span class="badge badge-yellow text-xs">Partial</span>
                             @else
-                                <span class="badge-red text-xs">Unpaid</span>
+                                <span class="badge badge-red text-xs">Unpaid</span>
                             @endif
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="badge-blue text-xs">{{ ucfirst($sale->status) }}</span>
+                            <span class="badge badge-blue text-xs">{{ ucfirst($sale->status) }}</span>
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap text-xs">
                             @if($sale->is_stock_deducted)

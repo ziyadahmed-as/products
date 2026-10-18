@@ -461,8 +461,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Quick Reports &amp; Data Exports</h3>
-                    <p class="text-xs text-slate-500 dark:text-dark-400">Download formatted CSV ledgers or open executive audit analytics</p>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Important Metrics &amp; Marketing Reports</h3>
+                    <p class="text-xs text-slate-500 dark:text-dark-400">Key marketing performance indicators, CSV exports, and executive analytics</p>
                 </div>
             </div>
             @hasanyrole('Super Admin|Manager|Auditor')

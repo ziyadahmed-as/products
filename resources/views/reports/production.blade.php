@@ -202,13 +202,13 @@
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
                             @if($mo->status === 'completed')
-                                <span class="badge-green text-xs">Completed</span>
+                                <span class="badge badge-green text-xs">Completed</span>
                             @elseif($mo->status === 'cancelled')
-                                <span class="badge-red text-xs">Cancelled</span>
+                                <span class="badge badge-red text-xs">Cancelled</span>
                             @elseif($mo->status === 'in_progress' || $mo->status === 'materials_issued')
-                                <span class="badge-yellow text-xs">{{ ucwords(str_replace('_', ' ', $mo->status)) }}</span>
+                                <span class="badge badge-yellow text-xs">{{ ucwords(str_replace('_', ' ', $mo->status)) }}</span>
                             @else
-                                <span class="badge-blue text-xs">{{ ucwords(str_replace('_', ' ', $mo->status)) }}</span>
+                                <span class="badge badge-blue text-xs">{{ ucwords(str_replace('_', ' ', $mo->status)) }}</span>
                             @endif
                         </td>
                         <td class="py-3 px-4 text-xs text-gray-500 dark:text-dark-300 whitespace-nowrap">

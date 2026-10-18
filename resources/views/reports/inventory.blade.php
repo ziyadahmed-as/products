@@ -229,11 +229,11 @@
                         </td>
                         <td class="py-3 px-4 text-center whitespace-nowrap">
                             @if($isOut)
-                                <span class="badge-red text-xs">Out of Stock</span>
+                                <span class="badge badge-red text-xs">Out of Stock</span>
                             @elseif($isLow)
-                                <span class="badge-yellow text-xs">Low Stock</span>
+                                <span class="badge badge-yellow text-xs">Low Stock</span>
                             @else
-                                <span class="badge-green text-xs">In Stock</span>
+                                <span class="badge badge-green text-xs">In Stock</span>
                             @endif
                         </td>
                     </tr>
@@ -285,13 +285,13 @@
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
                             @if($mov->type === 'in')
-                                <span class="badge-green text-xs">Inflow (Stock In)</span>
+                                <span class="badge badge-green text-xs">Inflow (Stock In)</span>
                             @elseif($mov->type === 'out')
-                                <span class="badge-red text-xs">Outflow (Deduction)</span>
+                                <span class="badge badge-red text-xs">Outflow (Deduction)</span>
                             @elseif($mov->type === 'transfer')
-                                <span class="badge-blue text-xs">Transfer</span>
+                                <span class="badge badge-blue text-xs">Transfer</span>
                             @else
-                                <span class="badge-gray text-xs">{{ ucfirst($mov->type) }}</span>
+                                <span class="badge badge-gray text-xs">{{ ucfirst($mov->type) }}</span>
                             @endif
                         </td>
                         <td class="py-3 px-4 text-right font-mono font-bold {{ $mov->type === 'in' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }} whitespace-nowrap">

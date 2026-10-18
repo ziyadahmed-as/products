@@ -271,13 +271,13 @@
                         </td>
                         <td class="py-3 px-4 whitespace-nowrap">
                             @if(in_array($actionName, ['login', 'create', 'complete', 'approve', 'register']))
-                                <span class="badge-green text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
+                                <span class="badge badge-green text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
                             @elseif(in_array($actionName, ['failed_login', 'delete', 'cancel']))
-                                <span class="badge-red text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
+                                <span class="badge badge-red text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
                             @elseif(in_array($actionName, ['logout', 'update', 'payment_status', 'status_update']))
-                                <span class="badge-yellow text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
+                                <span class="badge badge-yellow text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
                             @else
-                                <span class="badge-gray text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
+                                <span class="badge badge-gray text-xs">{{ ucfirst(str_replace('_', ' ', $actionName)) }}</span>
                             @endif
                         </td>
                         <td class="py-3 px-4 text-gray-700 dark:text-dark-200 text-xs max-w-sm">
