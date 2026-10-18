@@ -44,7 +44,7 @@ class AdminDashboardRedesignTest extends TestCase
         $response->assertSee('Production Orders');
         $response->assertSee('Revenue Trend (14 Days)');
         $response->assertSee('Orders by Type');
-        $response->assertSee('Staff &amp; Operational Team Performance', false);
+        $response->assertSee('Staff &amp; Team Operational Performance', false);
         $response->assertSee('Quick Reports &amp; Data Exports', false);
         $response->assertSee('revenueTrendChart');
         $response->assertSee('ordersByTypeChart');
