@@ -76,15 +76,19 @@
                 </div>
             </div>
 
-            {{-- 4 Standardized Metric Cards Row --}}
+            {{-- 4 Standardized Metric Cards Row (Matches Admin Dashboard Accent Style) --}}
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1.25rem;margin-bottom:2rem;">
-                <!-- Total Orders -->
-                <div style="background:var(--bg-card);padding:1.4rem;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
+                <!-- Total Orders (Cyan Accent) -->
+                <div style="background:var(--bg-card);padding:1.4rem;border-radius:18px;border:1px solid var(--border);border-bottom:3px solid var(--cyan);position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                         <div>
                             <div style="font-size:.75rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem;">Total Orders</div>
-                            <div style="font-size:2rem;font-weight:900;color:var(--cyan);line-height:1;font-family:'Outfit',sans-serif;">{{ $totalOrders }}</div>
-                            <div style="font-size:.75rem;color:var(--text-3);margin-top:.45rem;">Lifetime purchase orders</div>
+                            <div style="font-size:2rem;font-weight:900;color:var(--text-1);line-height:1;font-family:'Outfit',sans-serif;">{{ $totalOrders }}</div>
+                            <div style="margin-top:.6rem;">
+                                <span style="display:inline-flex;align-items:center;padding:.18rem .6rem;background:rgba(8,145,178,.1);border-radius:999px;font-size:.72rem;font-weight:600;color:var(--cyan);">
+                                    Lifetime purchases
+                                </span>
+                            </div>
                         </div>
                         <div style="width:44px;height:44px;border-radius:12px;background:rgba(8,145,178,.1);border:1px solid rgba(8,145,178,.25);display:flex;align-items:center;justify-content:center;color:var(--cyan);flex-shrink:0;">
                             <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,13 +98,17 @@
                     </div>
                 </div>
 
-                <!-- Total Purchases -->
-                <div style="background:var(--bg-card);padding:1.4rem;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
+                <!-- Total Purchases (Emerald Accent) -->
+                <div style="background:var(--bg-card);padding:1.4rem;border-radius:18px;border:1px solid var(--border);border-bottom:3px solid #10b981;position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                         <div>
                             <div style="font-size:.75rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem;">Total Purchases</div>
-                            <div style="font-size:1.85rem;font-weight:900;color:#10b981;line-height:1;font-family:'Outfit',sans-serif;">Br{{ number_format($totalSpent, 0) }}</div>
-                            <div style="font-size:.75rem;color:var(--text-3);margin-top:.45rem;">Gross payment total</div>
+                            <div style="font-size:1.85rem;font-weight:900;color:var(--text-1);line-height:1;font-family:'Outfit',sans-serif;">Br{{ number_format($totalSpent, 0) }}</div>
+                            <div style="margin-top:.6rem;">
+                                <span style="display:inline-flex;align-items:center;padding:.18rem .6rem;background:rgba(16,185,129,.1);border-radius:999px;font-size:.72rem;font-weight:600;color:#10b981;">
+                                    Gross payment total
+                                </span>
+                            </div>
                         </div>
                         <div style="width:44px;height:44px;border-radius:12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);display:flex;align-items:center;justify-content:center;color:#10b981;flex-shrink:0;">
                             <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,13 +118,17 @@
                     </div>
                 </div>
 
-                <!-- In Progress / Pending -->
-                <div style="background:var(--bg-card);padding:1.4rem;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
+                <!-- In Progress / Pending (Amber Accent) -->
+                <div style="background:var(--bg-card);padding:1.4rem;border-radius:18px;border:1px solid var(--border);border-bottom:3px solid #f59e0b;position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                         <div>
                             <div style="font-size:.75rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem;">In Progress / Pending</div>
-                            <div style="font-size:2rem;font-weight:900;color:#f59e0b;line-height:1;font-family:'Outfit',sans-serif;">{{ $pendingOrders }}</div>
-                            <div style="font-size:.75rem;color:var(--text-3);margin-top:.45rem;">Awaiting delivery or prep</div>
+                            <div style="font-size:2rem;font-weight:900;color:{{ $pendingOrders > 0 ? '#f59e0b' : 'var(--text-1)' }};line-height:1;font-family:'Outfit',sans-serif;">{{ $pendingOrders }}</div>
+                            <div style="margin-top:.6rem;">
+                                <span style="display:inline-flex;align-items:center;padding:.18rem .6rem;background:rgba(245,158,11,.1);border-radius:999px;font-size:.72rem;font-weight:600;color:#f59e0b;">
+                                    {{ $pendingOrders > 0 ? 'Awaiting delivery or prep' : 'All orders processed ✔' }}
+                                </span>
+                            </div>
                         </div>
                         <div style="width:44px;height:44px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);display:flex;align-items:center;justify-content:center;color:#f59e0b;flex-shrink:0;">
                             <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,15 +138,19 @@
                     </div>
                 </div>
 
-                <!-- Reviews Submitted -->
-                <div style="background:var(--bg-card);padding:1.4rem;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
+                <!-- Reviews Submitted (Purple Accent) -->
+                <div style="background:var(--bg-card);padding:1.4rem;border-radius:18px;border:1px solid var(--border);border-bottom:3px solid #8b5cf6;position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                         <div>
                             <div style="font-size:.75rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem;">Reviews & Ratings</div>
-                            <div style="font-size:2rem;font-weight:900;color:#818cf8;line-height:1;font-family:'Outfit',sans-serif;">{{ $myReviews }}</div>
-                            <div style="font-size:.75rem;color:var(--text-3);margin-top:.45rem;">Verified customer reviews</div>
+                            <div style="font-size:2rem;font-weight:900;color:var(--text-1);line-height:1;font-family:'Outfit',sans-serif;">{{ $myReviews }}</div>
+                            <div style="margin-top:.6rem;">
+                                <span style="display:inline-flex;align-items:center;padding:.18rem .6rem;background:rgba(139,92,246,.1);border-radius:999px;font-size:.72rem;font-weight:600;color:#8b5cf6;">
+                                    Verified customer reviews
+                                </span>
+                            </div>
                         </div>
-                        <div style="width:44px;height:44px;border-radius:12px;background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.25);display:flex;align-items:center;justify-content:center;color:#818cf8;flex-shrink:0;">
+                        <div style="width:44px;height:44px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);display:flex;align-items:center;justify-content:center;color:#8b5cf6;flex-shrink:0;">
                             <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                             </svg>

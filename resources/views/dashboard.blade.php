@@ -14,174 +14,412 @@
             <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Welcome back, {{ auth()->user()->name }}! Real-time operations, inventory, and sales performance.</p>
         </div>
         <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-dark-400 font-medium">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700">
+            @if(auth()->user()->branches->isNotEmpty())
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 font-semibold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                    Branch: {{ auth()->user()->branches->pluck('name')->join(', ') }}
+                </span>
+            @endif
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 font-semibold">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 {{ auth()->user()->roles->first()?->name ?? 'Administrator' }}
             </span>
         </div>
     </div>
 
-    <!-- Core KPI Summary Cards Row (6 Cards — 2 rows × 3 cols, Screenshot Match) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Print-Only Corporate Report Header -->
+    <div class="hidden print:block pb-6 mb-6 border-b-2 border-slate-900">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="{{ \App\Models\Setting::getLogoUrl() }}" alt="{{ \App\Models\Setting::getSiteName() }}" class="h-12 w-auto object-contain" />
+                <div>
+                    <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight">{{ \App\Models\Setting::getSiteName() }}</h1>
+                    <p class="text-xs text-slate-600 font-semibold tracking-wider uppercase">Executive Business Operations &amp; Performance Report</p>
+                </div>
+            </div>
+            <div class="text-right text-xs text-slate-600">
+                <p><span class="font-bold text-slate-900">Date Generated:</span> {{ now()->format('d M Y, H:i') }}</p>
+                <p><span class="font-bold text-slate-900">Reporting Scope:</span> {{ auth()->user()->branches->isNotEmpty() ? auth()->user()->branches->pluck('name')->join(', ') : 'All Branches (Enterprise)' }}</p>
+                <p><span class="font-bold text-slate-900">Active Window:</span> {{ $periodReport['label'] ?? 'Current Period' }}</p>
+            </div>
+        </div>
+    </div>
 
-        <!-- 1. Revenue (Selected Period) — green bottom accent matching screenshot -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs" style="border-bottom: 3px solid #10b981;">
+    <!-- Integrated Executive Report & Period Filter Toolbar -->
+    <div class="card p-3 sm:p-4 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 print:hidden shadow-xs">
+        <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <div class="flex items-center gap-1.5 mr-2 text-slate-500 dark:text-dark-400 font-bold uppercase tracking-wider text-[11px]">
+                    <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Period:</span>
+                </div>
+                @php $curP = request('period', 'this_month'); @endphp
+                <a href="{{ route('dashboard', ['period' => 'today']) }}"
+                   class="px-3 py-1.5 rounded-lg text-xs font-semibold transition {{ $curP === 'today' && !request('from') ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200 hover:bg-slate-200 dark:hover:bg-dark-700' }}">
+                   Today
+                </a>
+                <a href="{{ route('dashboard', ['period' => 'this_week']) }}"
+                   class="px-3 py-1.5 rounded-lg text-xs font-semibold transition {{ $curP === 'this_week' && !request('from') ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200 hover:bg-slate-200 dark:hover:bg-dark-700' }}">
+                   This Week
+                </a>
+                <a href="{{ route('dashboard', ['period' => 'this_month']) }}"
+                   class="px-3 py-1.5 rounded-lg text-xs font-semibold transition {{ ($curP === 'this_month' || !$curP) && !request('from') ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200 hover:bg-slate-200 dark:hover:bg-dark-700' }}">
+                   This Month
+                </a>
+                <a href="{{ route('dashboard', ['period' => 'this_year']) }}"
+                   class="px-3 py-1.5 rounded-lg text-xs font-semibold transition {{ $curP === 'this_year' && !request('from') ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200 hover:bg-slate-200 dark:hover:bg-dark-700' }}">
+                   This Year
+                </a>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-dark-800 p-1 rounded-lg border border-slate-200 dark:border-dark-700">
+                    <input type="date" name="from" value="{{ request('from') }}" class="form-input text-xs py-1 px-2 border-0 bg-transparent text-slate-700 dark:text-dark-200 focus:ring-0" title="Start Date">
+                    <span class="text-slate-400 dark:text-dark-400 text-xs">to</span>
+                    <input type="date" name="to" value="{{ request('to') }}" class="form-input text-xs py-1 px-2 border-0 bg-transparent text-slate-700 dark:text-dark-200 focus:ring-0" title="End Date">
+                    <button type="submit" class="btn-primary text-xs px-2.5 py-1 rounded-md shadow-xs">Apply</button>
+                    @if(request('period') || request('from') || request('to'))
+                        <a href="{{ route('dashboard') }}" class="text-xs text-rose-500 hover:underline px-1">Reset</a>
+                    @endif
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="window.print()" class="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 rounded-lg hover:border-sky-300 dark:hover:border-sky-500">
+                        <svg class="w-3.5 h-3.5 text-slate-600 dark:text-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        <span>Print Report</span>
+                    </button>
+
+                    @hasanyrole('Super Admin|Manager|Auditor')
+                    <a href="{{ route('reports.index') }}" class="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 rounded-lg text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-dark-800" title="Consolidated Business Reports Suite">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Report Suite</span>
+                    </a>
+                    @endhasanyrole
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Executive Business Intelligence & Summary Banner -->
+    <div class="card p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl shadow-sm border border-slate-800">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-700/60">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-xs uppercase tracking-wider font-extrabold text-cyan-300">Executive Report Snapshot</span>
+                    <span class="px-2 py-0.5 rounded-full bg-white/10 text-white text-[11px] font-semibold">
+                        {{ $periodReport['label'] ?? 'Selected Period' }}
+                    </span>
+                </div>
+                <h2 class="text-lg font-bold text-white mt-1">Consolidated Operations &amp; Financial Highlights</h2>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+                <span class="text-slate-300">Total Asset Valuation:</span>
+                <span class="font-bold text-white font-mono bg-white/10 px-2.5 py-1 rounded-lg">Br {{ number_format($stats['total_inventory_valuation'] ?? 0, 2) }}</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 text-xs">
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-slate-400 font-medium mb-1">Period Invoices</div>
+                <div class="text-xl font-bold text-white">{{ number_format($periodReport['sales_count'] ?? 0) }}</div>
+                <div class="text-[11px] text-cyan-300 mt-1">Avg Ticket: Br {{ number_format($periodReport['avg_order_value'] ?? 0, 2) }}</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-slate-400 font-medium mb-1">Cash Realized vs Due</div>
+                <div class="text-xl font-bold text-emerald-400">Br {{ number_format($periodReport['paid_amount'] ?? 0, 2) }}</div>
+                <div class="text-[11px] text-rose-300 mt-1">Unpaid: Br {{ number_format($periodReport['unpaid_amount'] ?? 0, 2) }}</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-slate-400 font-medium mb-1">Manufacturing Output</div>
+                <div class="text-xl font-bold text-purple-300">{{ number_format($periodReport['completed_mfg_units'] ?? 0, 0) }} <span class="text-xs font-normal text-slate-300">units</span></div>
+                <div class="text-[11px] text-slate-300 mt-1">{{ $periodReport['completed_mfg_orders'] ?? 0 }} batches completed</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-slate-400 font-medium mb-1">Top Selling Item</div>
+                <div class="text-sm font-bold text-amber-300 truncate" title="{{ $periodReport['top_product'] ?? 'None' }}">{{ $periodReport['top_product'] ?? 'None recorded' }}</div>
+                <div class="text-[11px] text-slate-300 mt-1">Br {{ number_format($periodReport['top_product_revenue'] ?? 0, 2) }} volume</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core KPI Summary Cards Row (6 Cards — Professional Executive Design) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        <!-- 1. Revenue (Selected Period) -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Revenue (Selected Period)</span>
-                <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <span class="text-xs font-bold text-slate-500 dark:text-dark-400 uppercase tracking-wider">Revenue (Selected Period)</span>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 transition-transform duration-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">Br {{ number_format($stats['selected_revenue'] ?? $stats['month_sales'], 2) }}</div>
-            <div class="flex items-center gap-1.5 text-xs">
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+                Br {{ number_format($stats['selected_revenue'] ?? $stats['month_sales'], 2) }}
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
                 @php $trend = $stats['revenue_trend'] ?? 0; @endphp
                 @if($trend >= 0)
-                    <span class="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/70 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                        {{ $trend }}% vs previous period
+                    <span class="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/70 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        +{{ $trend }}% vs previous period
                     </span>
                 @else
-                    <span class="inline-flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 dark:bg-rose-950/70 dark:text-rose-400 px-2 py-0.5 rounded-full">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                    <span class="inline-flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 dark:bg-rose-950/70 dark:text-rose-400 px-2.5 py-0.5 rounded-full border border-rose-200/60 dark:border-rose-800/40">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
                         {{ abs($trend) }}% vs previous period
                     </span>
                 @endif
+                <span class="text-slate-400 dark:text-dark-400 font-medium">Month: Br {{ number_format($stats['month_sales'], 0) }}</span>
+            </div>
+            <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden mt-3">
+                <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" style="width: {{ min(100, max(15, (int)($trend >= 0 ? 50 + $trend : 50 + $trend))) }}%;"></div>
             </div>
         </div>
 
         <!-- 2. Orders Today -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Orders Today</span>
-                <div class="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                <span class="text-xs font-bold text-slate-500 dark:text-dark-400 uppercase tracking-wider">Orders Today</span>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/10 to-blue-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-500/20 group-hover:scale-105 transition-transform duration-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">{{ $stats['orders_today'] ?? $stats['today_sales_count'] }}</div>
-            <div class="flex items-center gap-1.5 text-xs">
-                <span class="inline-flex items-center gap-1 text-amber-700 bg-amber-50 dark:bg-amber-950/70 dark:text-amber-400 px-2 py-0.5 rounded-full font-medium">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+                {{ $stats['orders_today'] ?? $stats['today_sales_count'] }}
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+                <span class="inline-flex items-center gap-1 text-amber-700 bg-amber-50 dark:bg-amber-950/70 dark:text-amber-400 px-2.5 py-0.5 rounded-full font-medium border border-amber-200/60 dark:border-amber-800/40">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     {{ $stats['pending_sales_orders'] ?? 0 }} pending approval
                 </span>
+                <span class="text-slate-400 dark:text-dark-400 font-medium">Vol: Br {{ number_format($stats['today_sales'], 0) }}</span>
+            </div>
+            <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden mt-3">
+                <div class="h-full bg-gradient-to-r from-sky-500 to-blue-500 rounded-full" style="width: {{ min(100, max(20, ($stats['orders_today'] ?? 0) * 8)) }}%;"></div>
             </div>
         </div>
 
         <!-- 3. Pending Orders -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 to-orange-400"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Pending Orders</span>
-                <div class="w-9 h-9 rounded-xl {{ ($stats['pending_sales_orders'] ?? 0) > 0 ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-500' : 'bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-dark-400' }} flex items-center justify-center">
+                <span class="text-xs font-bold text-slate-500 dark:text-dark-400 uppercase tracking-wider">Pending Orders</span>
+                <div class="w-10 h-10 rounded-xl {{ ($stats['pending_sales_orders'] ?? 0) > 0 ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/20 text-amber-500 border border-amber-500/20' : 'bg-slate-100 dark:bg-dark-800 text-slate-400' }} flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold {{ ($stats['pending_sales_orders'] ?? 0) > 0 ? 'text-amber-500' : 'text-black dark:text-white' }} mb-2">{{ $stats['pending_sales_orders'] ?? 0 }}</div>
-            <div class="text-xs text-black dark:text-white">Awaiting processing across all time ≡</div>
+            <div class="text-3xl font-extrabold {{ ($stats['pending_sales_orders'] ?? 0) > 0 ? 'text-amber-500' : 'text-slate-900 dark:text-white' }} tracking-tight mb-2">
+                {{ $stats['pending_sales_orders'] ?? 0 }}
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+                <span class="text-slate-500 dark:text-dark-400">Awaiting processing across all time ≡</span>
+                <a href="{{ route('sales.index', ['status' => 'pending']) }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline">Review &rarr;</a>
+            </div>
+            <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden mt-3">
+                <div class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full" style="width: {{ min(100, max(10, ($stats['pending_sales_orders'] ?? 0) * 15)) }}%;"></div>
+            </div>
         </div>
 
         <!-- 4. Low Stock Alerts -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-rose-500 to-red-400"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Low Stock Alerts</span>
-                <div class="w-9 h-9 rounded-xl {{ $stats['low_stock'] > 0 ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-500' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-500' }} flex items-center justify-center">
+                <span class="text-xs font-bold text-slate-500 dark:text-dark-400 uppercase tracking-wider">Low Stock Alerts</span>
+                <div class="w-10 h-10 rounded-xl {{ $stats['low_stock'] > 0 ? 'bg-gradient-to-br from-rose-500/10 to-red-500/20 text-rose-500 border border-rose-500/20' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-500' }} flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold {{ $stats['low_stock'] > 0 ? 'text-amber-500' : 'text-black dark:text-white' }} mb-2">{{ $stats['low_stock'] }}</div>
-            <div class="text-xs text-black dark:text-white">
+            <div class="text-3xl font-extrabold {{ $stats['low_stock'] > 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white' }} tracking-tight mb-2">
+                {{ $stats['low_stock'] }}
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
                 @if($stats['low_stock'] > 0)
-                    <span class="text-amber-500 font-medium">Action required</span> · {{ $stats['low_stock_raw_materials'] }} raw materials
+                    <span class="inline-flex items-center gap-1 text-rose-700 bg-rose-50 dark:bg-rose-950/70 dark:text-rose-400 px-2 py-0.5 rounded-full font-medium border border-rose-200/60">
+                        Action required · {{ $stats['low_stock_raw_materials'] }} raw materials
+                    </span>
                 @else
-                    All stock levels healthy ✔
+                    <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/70 dark:text-emerald-400 px-2 py-0.5 rounded-full font-medium">
+                        All stock levels healthy ✔
+                    </span>
                 @endif
+                <a href="{{ route('inventory.index') }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline">Restock &rarr;</a>
+            </div>
+            <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden mt-3">
+                <div class="h-full bg-gradient-to-r from-rose-500 to-red-400 rounded-full" style="width: {{ min(100, max(5, ($stats['low_stock'] ?? 0) * 12)) }}%;"></div>
             </div>
         </div>
 
         <!-- 5. Active Products -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Active Products</span>
-                <div class="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                <span class="text-xs font-bold text-slate-500 dark:text-dark-400 uppercase tracking-wider">Active Products</span>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">{{ $stats['total_products'] }}</div>
-            <div class="text-xs text-black dark:text-white">Listed in storefront 📦</div>
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+                {{ $stats['total_products'] }}
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+                <span class="text-slate-500 dark:text-dark-400">Listed in storefront 📦</span>
+                <a href="{{ route('products.index') }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline">Catalog &rarr;</a>
+            </div>
+            <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden mt-3">
+                <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full" style="width: 85%;"></div>
+            </div>
         </div>
 
         <!-- 6. Production Orders -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Production Orders</span>
-                <div class="w-9 h-9 rounded-xl {{ $stats['active_production_orders'] > 0 ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400' : 'bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-dark-400' }} flex items-center justify-center">
+                <span class="text-xs font-bold text-slate-500 dark:text-dark-400 uppercase tracking-wider">Production Orders</span>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 group-hover:scale-105 transition-transform duration-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">{{ $stats['active_production_orders'] }}</div>
-            <div class="text-xs text-black dark:text-white">{{ $stats['completed_production_period'] ?? 0 }} completed in selected period ⚙️</div>
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+                {{ $stats['active_production_orders'] }}
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+                <span class="text-slate-500 dark:text-dark-400">{{ $stats['completed_production_period'] ?? 0 }} completed in selected period ⚙️</span>
+                <a href="{{ route('manufacturing-orders.index') }}" class="text-purple-600 dark:text-purple-400 font-semibold hover:underline">Floor &rarr;</a>
+            </div>
+            <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden mt-3">
+                <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style="width: {{ min(100, max(20, ($stats['active_production_orders'] ?? 0) * 18)) }}%;"></div>
+            </div>
         </div>
 
     </div>
 
-    <!-- Interactive Charts Row (Revenue Trend + Orders by Type) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Interactive Charts Row (Revenue Trend + Orders by Type) with Professional Pagination -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" x-data="chartPaginator()">
 
-        <!-- Revenue Trend Line Chart (2 cols) -->
-        <div class="card lg:col-span-2 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-100 dark:border-dark-800">
+        <!-- Revenue Trend Line Chart with Interactive Timeframe Pagination (2 cols) -->
+        <div class="card lg:col-span-2 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-dark-800">
                 <div>
-                    <h2 class="text-base font-bold text-black dark:text-white">Revenue Trend (14 Days)</h2>
-                    <p class="text-xs text-black dark:text-white">Daily confirmed sales volume across active branch registers</p>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Revenue Trend (14 Days)</h2>
+                        <span class="text-[10px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                            Dynamic Analytics
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Daily confirmed sales volume across active branch registers</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                        </svg>
-                        Month: Br {{ number_format($stats['month_sales'], 2) }}
-                    </span>
+
+                <!-- Professional Chart Pagination & Mode Toggle Controls -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Metric Mode Toggle -->
+                    <div class="inline-flex p-0.5 bg-slate-100 dark:bg-dark-800 rounded-lg border border-slate-200/80 dark:border-dark-700 text-xs">
+                        <button type="button" @click="setMetric('revenue')"
+                                :class="metricMode === 'revenue' ? 'bg-white dark:bg-dark-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 font-medium'"
+                                class="px-2.5 py-1 rounded-md transition-all">
+                            Revenue (Br)
+                        </button>
+                        <button type="button" @click="setMetric('orders')"
+                                :class="metricMode === 'orders' ? 'bg-white dark:bg-dark-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-600 dark:text-dark-300 hover:text-slate-900 font-medium'"
+                                class="px-2.5 py-1 rounded-md transition-all">
+                            Orders (#)
+                        </button>
+                    </div>
+
+                    <!-- Chart Timeframe Pagination Buttons -->
+                    <div class="inline-flex items-center gap-1 bg-slate-50 dark:bg-dark-800/80 p-1 rounded-lg border border-slate-200/80 dark:border-dark-700 text-xs">
+                        <button type="button" @click="prevPage()" :disabled="currentPage === 0"
+                                :class="currentPage === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200'"
+                                class="p-1 rounded transition" title="Previous Timeframe">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+
+                        <span class="px-2 text-[11px] font-semibold text-slate-700 dark:text-dark-200 select-none whitespace-nowrap" x-text="pages[currentPage].name">
+                            Recent 14 Days
+                        </span>
+
+                        <button type="button" @click="nextPage()" :disabled="currentPage === pages.length - 1"
+                                :class="currentPage === pages.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200'"
+                                class="p-1 rounded transition" title="Next Timeframe">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <!-- Chart Sub-summary Bar -->
+            <div class="flex items-center justify-between text-xs px-1 pb-3 text-slate-500 dark:text-dark-400">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full" :class="metricMode === 'revenue' ? 'bg-cyan-500' : 'bg-indigo-500'"></span>
+                    <span class="font-medium">Active Window Total:</span>
+                    <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="metricMode === 'revenue' ? 'Br ' + Number(pages[currentPage].total_rev).toLocaleString('en-US', {minimumFractionDigits: 2}) : pages[currentPage].total_count + ' orders'"></span>
+                </div>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                    <span class="text-slate-400">Pagination:</span>
+                    <template x-for="(pg, idx) in pages" :key="pg.id">
+                        <button type="button" @click="goToPage(idx)"
+                                :class="currentPage === idx ? 'bg-sky-600 text-white font-bold' : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 hover:bg-slate-200'"
+                                class="w-5 h-5 rounded text-[10px] flex items-center justify-center transition"
+                                x-text="idx + 1">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
             <div class="relative w-full h-72">
                 <canvas id="revenueTrendChart"></canvas>
             </div>
         </div>
 
         <!-- Orders by Type Doughnut Chart (1 col) -->
-        <div class="card bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
-            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-dark-800">
-                <div>
-                    <h2 class="text-base font-bold text-black dark:text-white">Orders by Type</h2>
-                    <p class="text-xs text-black dark:text-white">Online, POS &amp; Direct breakdown</p>
+        <div class="card bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-dark-800">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Orders by Type</h2>
+                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Online, POS &amp; Direct breakdown</p>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-600 dark:text-dark-300 bg-slate-100 dark:bg-dark-800 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-dark-700">Distribution</span>
                 </div>
-                <span class="text-xs font-semibold text-black dark:text-white bg-slate-100 dark:bg-dark-800 px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700">Distribution</span>
+                <div class="relative w-full h-52 flex items-center justify-center">
+                    <canvas id="ordersByTypeChart"></canvas>
+                </div>
             </div>
-            <div class="relative w-full h-52 flex items-center justify-center">
-                <canvas id="ordersByTypeChart"></canvas>
-            </div>
-            <div class="mt-4 grid grid-cols-3 divide-x divide-slate-100 dark:divide-dark-800 text-center">
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-dark-800 grid grid-cols-3 divide-x divide-slate-100 dark:divide-dark-800 text-center">
                 <div class="px-2">
-                    <div class="text-[11px] text-black dark:text-white font-medium mb-0.5">Online</div>
+                    <div class="text-[11px] text-slate-500 dark:text-dark-400 font-medium mb-0.5">Online</div>
                     <div class="text-base font-bold text-sky-600 dark:text-sky-400">{{ $ordersByTypeChart['data'][0] ?? 0 }}</div>
                 </div>
                 <div class="px-2">
-                    <div class="text-[11px] text-black dark:text-white font-medium mb-0.5">POS</div>
+                    <div class="text-[11px] text-slate-500 dark:text-dark-400 font-medium mb-0.5">POS</div>
                     <div class="text-base font-bold text-emerald-600 dark:text-emerald-400">{{ $ordersByTypeChart['data'][1] ?? 0 }}</div>
                 </div>
                 <div class="px-2">
-                    <div class="text-[11px] text-black dark:text-white font-medium mb-0.5">Direct</div>
+                    <div class="text-[11px] text-slate-500 dark:text-dark-400 font-medium mb-0.5">Direct</div>
                     <div class="text-base font-bold text-amber-600 dark:text-amber-400">{{ $ordersByTypeChart['data'][2] ?? 0 }}</div>
                 </div>
             </div>
@@ -199,8 +437,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-black dark:text-white uppercase tracking-wide">Quick Reports &amp; Data Exports</h3>
-                    <p class="text-xs text-black dark:text-white">Download formatted CSV ledgers or open executive audit analytics</p>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Quick Reports &amp; Data Exports</h3>
+                    <p class="text-xs text-slate-500 dark:text-dark-400">Download formatted CSV ledgers or open executive audit analytics</p>
                 </div>
             </div>
             @hasanyrole('Super Admin|Manager|Auditor')
@@ -218,9 +456,9 @@
             <a href="{{ route('reports.sales.export') }}" class="p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-sky-300 dark:hover:border-sky-500 hover:bg-sky-50/50 dark:hover:bg-dark-700 transition flex items-center justify-between group">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="w-2 h-2 rounded-full bg-sky-500 flex-shrink-0"></span>
-                    <span class="text-xs font-medium text-black dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 truncate">Sales CSV</span>
+                    <span class="text-xs font-medium text-slate-700 dark:text-dark-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 truncate">Sales CSV</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-black dark:text-white group-hover:text-sky-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
             </a>
@@ -228,9 +466,9 @@
             <a href="{{ route('reports.inventory.export') }}" class="p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-emerald-300 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-dark-700 transition flex items-center justify-between group">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
-                    <span class="text-xs font-medium text-black dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">Stock CSV</span>
+                    <span class="text-xs font-medium text-slate-700 dark:text-dark-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">Stock CSV</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-black dark:text-white group-hover:text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
             </a>
@@ -238,9 +476,9 @@
             <a href="{{ route('reports.production.export') }}" class="p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-dark-700 transition flex items-center justify-between group">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0"></span>
-                    <span class="text-xs font-medium text-black dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 truncate">Mfg CSV</span>
+                    <span class="text-xs font-medium text-slate-700 dark:text-dark-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 truncate">Mfg CSV</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-black dark:text-white group-hover:text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
             </a>
@@ -248,9 +486,9 @@
             <a href="{{ route('reports.branches.export') }}" class="p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-dark-700 transition flex items-center justify-between group">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></span>
-                    <span class="text-xs font-medium text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">Branches CSV</span>
+                    <span class="text-xs font-medium text-slate-700 dark:text-dark-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">Branches CSV</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-black dark:text-white group-hover:text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
             </a>
@@ -258,9 +496,9 @@
             <a href="{{ route('reports.users.export') }}" class="p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-dark-700 transition flex items-center justify-between group">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0"></span>
-                    <span class="text-xs font-medium text-black dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate">Staff Perf CSV</span>
+                    <span class="text-xs font-medium text-slate-700 dark:text-dark-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate">Staff Perf CSV</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-black dark:text-white group-hover:text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
             </a>
@@ -268,26 +506,34 @@
             <a href="{{ route('reports.activity.export') }}" class="p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-rose-300 dark:hover:border-rose-500 hover:bg-rose-50/50 dark:hover:bg-dark-700 transition flex items-center justify-between group">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0"></span>
-                    <span class="text-xs font-medium text-black dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 truncate">Audit Trail CSV</span>
+                    <span class="text-xs font-medium text-slate-700 dark:text-dark-200 group-hover:text-rose-600 dark:group-hover:text-rose-400 truncate">Audit Trail CSV</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-black dark:text-white group-hover:text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
             </a>
         </div>
     </div>
 
-    <!-- Staff & User Performance Table (Real Data) -->
+    <!-- Staff & User Performance Table with Professional Pagination -->
     @hasanyrole('Super Admin|Manager|Admin')
-    <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
-        <div class="p-5 border-b border-slate-100 dark:border-dark-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+    <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs"
+         x-data="{
+             page: 1,
+             perPage: 5,
+             total: {{ count($userPerformances) }},
+             get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); }
+         }">
+        <div class="p-5 border-b border-slate-100 dark:border-dark-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-                <h2 class="text-base font-bold text-black dark:text-white">Staff &amp; Operational Team Performance</h2>
-                <p class="text-xs text-black dark:text-white">Personnel production records, sales metrics, and activity tracking</p>
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">Staff &amp; Operational Team Performance</h2>
+                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Personnel production records, sales metrics, and activity tracking</p>
             </div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-dark-800 text-black dark:text-white">
-                {{ count($userPerformances) }} Staff Members
-            </span>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200">
+                    {{ count($userPerformances) }} Staff Members
+                </span>
+            </div>
         </div>
 
         <div class="table-wrapper border-0 rounded-none shadow-none">
@@ -305,16 +551,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($userPerformances as $perf)
-                    <tr>
+                    @forelse($userPerformances as $index => $perf)
+                    <tr x-show="{{ $index }} >= (page - 1) * perPage && {{ $index }} < page * perPage">
                         <td>
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-300 font-bold flex items-center justify-center text-xs flex-shrink-0">
                                     {{ strtoupper(substr($perf['user']->name ?? 'U', 0, 1)) }}
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="font-semibold text-black dark:text-white text-sm truncate">{{ $perf['user']->name }}</div>
-                                    <div class="text-xs text-black dark:text-white truncate">{{ $perf['user']->email }}</div>
+                                    <div class="font-semibold text-slate-900 dark:text-white text-sm truncate">{{ $perf['user']->name }}</div>
+                                    <div class="text-xs text-slate-500 dark:text-dark-400 truncate">{{ $perf['user']->email }}</div>
                                 </div>
                             </div>
                         </td>
@@ -324,21 +570,21 @@
                             </span>
                         </td>
                         <td>
-                            <span class="text-xs font-medium text-black dark:text-white">{{ $perf['branches'] }}</span>
+                            <span class="text-xs font-medium text-slate-700 dark:text-dark-300">{{ $perf['branches'] }}</span>
                         </td>
                         <td>
-                            <div class="font-semibold text-black dark:text-white text-sm">Br {{ number_format($perf['sales_volume'], 2) }}</div>
-                            <div class="text-xs text-black dark:text-white">{{ $perf['sales_count'] }} transactions</div>
+                            <div class="font-semibold text-slate-900 dark:text-white text-sm">Br {{ number_format($perf['sales_volume'], 2) }}</div>
+                            <div class="text-xs text-slate-500 dark:text-dark-400">{{ $perf['sales_count'] }} transactions</div>
                         </td>
                         <td>
-                            <div class="font-semibold text-black dark:text-white text-sm">{{ number_format($perf['mfg_output']) }} units</div>
-                            <div class="text-xs text-black dark:text-white">{{ $perf['mfg_count'] }} orders</div>
+                            <div class="font-semibold text-slate-900 dark:text-white text-sm">{{ number_format($perf['mfg_output']) }} units</div>
+                            <div class="text-xs text-slate-500 dark:text-dark-400">{{ $perf['mfg_count'] }} orders</div>
                         </td>
                         <td>
-                            <span class="font-mono text-xs font-semibold text-black dark:text-white bg-slate-100 dark:bg-dark-800 px-2 py-0.5 rounded">{{ $perf['activities'] }}</span>
+                            <span class="font-mono text-xs font-semibold text-slate-700 dark:text-dark-200 bg-slate-100 dark:bg-dark-800 px-2 py-0.5 rounded">{{ $perf['activities'] }}</span>
                         </td>
                         <td>
-                            <span class="text-xs text-black dark:text-white">
+                            <span class="text-xs text-slate-500 dark:text-dark-400">
                                 {{ $perf['last_action'] ? \Carbon\Carbon::parse($perf['last_action'])->diffForHumans() : 'No recent logs' }}
                             </span>
                         </td>
@@ -350,251 +596,394 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-6 text-black dark:text-white">No staff performance records available.</td>
+                        <td colspan="8" class="text-center py-6 text-slate-400 dark:text-dark-500">No staff performance records available.</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        <!-- Professional Table Pagination Footer -->
+        @if(count($userPerformances) > 5)
+        <div class="p-3.5 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-800/40 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
+            <div>
+                Showing <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="Math.min(total, ((page - 1) * perPage) + 1)"></span>
+                to <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="Math.min(total, page * perPage)"></span>
+                of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="total"></span> members
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button type="button" @click="page = Math.max(1, page - 1)" :disabled="page === 1"
+                        :class="page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                        class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-dark-700 transition">
+                    &larr; Prev
+                </button>
+                <span class="px-2 font-semibold text-slate-700 dark:text-dark-200">
+                    Page <span x-text="page"></span> of <span x-text="maxPage"></span>
+                </span>
+                <button type="button" @click="page = Math.min(maxPage, page + 1)" :disabled="page >= maxPage"
+                        :class="page >= maxPage ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                        class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-dark-700 transition">
+                    Next &rarr;
+                </button>
+            </div>
+        </div>
+        @endif
     </div>
     @endhasanyrole
 
-    <!-- Live Transactions & Open Manufacturing Orders (2-Column Grid) -->
+    <!-- Live Transactions & Open Manufacturing Orders (2-Column Grid with Pagination) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <!-- Recent Sales Transactions -->
-        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
-            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
-                <div>
-                    <h2 class="text-base font-bold text-black dark:text-white">Recent Sales Transactions</h2>
-                    <p class="text-xs text-black dark:text-white">Live transaction log across store registers</p>
+        <!-- Recent Sales Transactions with Pagination -->
+        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs flex flex-col justify-between"
+             x-data="{
+                 page: 1,
+                 perPage: 5,
+                 total: {{ count($recentSales) }},
+                 get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); }
+             }">
+            <div>
+                <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Recent Sales Transactions</h2>
+                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Live transaction log across store registers</p>
+                    </div>
+                    <a href="{{ route('sales.index') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
+                        View All Sales &rarr;
+                    </a>
                 </div>
-                <a href="{{ route('sales.index') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
-                    View All Sales
-                </a>
+
+                <div class="table-wrapper border-0 rounded-none shadow-none">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Cashier / User</th>
+                                <th>Branch</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentSales as $index => $sale)
+                            <tr x-show="{{ $index }} >= (page - 1) * perPage && {{ $index }} < page * perPage">
+                                <td>
+                                    <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">#{{ $sale->reference ?? $sale->id }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-xs font-medium text-slate-800 dark:text-dark-200">{{ $sale->user?->name ?? 'Guest Cashier' }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-xs text-slate-500 dark:text-dark-400">{{ $sale->branch?->name ?? 'Main Store' }}</span>
+                                </td>
+                                <td>
+                                    <span class="font-bold text-slate-900 dark:text-white text-xs">Br {{ number_format($sale->total, 2) }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-xs text-slate-500 dark:text-dark-400">{{ $sale->created_at->format('M d, H:i') }}</span>
+                                </td>
+                                <td class="text-right">
+                                    <a href="{{ route('invoice.show', $sale) }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
+                                        Invoice
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-6 text-slate-400 dark:text-dark-500">
+                                    No sales recorded yet.
+                                    @hasanyrole('Super Admin|Manager|Seller')
+                                    <a href="{{ route('sales.create') }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline block mt-1">Initiate a quick sale</a>
+                                    @endhasanyrole
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="table-wrapper border-0 rounded-none shadow-none">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Reference</th>
-                            <th>Cashier / User</th>
-                            <th>Branch</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th class="text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentSales as $sale)
-                        <tr>
-                            <td>
-                                <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">#{{ $sale->reference ?? $sale->id }}</span>
-                            </td>
-                            <td>
-                                <span class="text-xs font-medium text-black dark:text-white">{{ $sale->user?->name ?? 'Guest Cashier' }}</span>
-                            </td>
-                            <td>
-                                <span class="text-xs text-black dark:text-white">{{ $sale->branch?->name ?? 'Main Store' }}</span>
-                            </td>
-                            <td>
-                                <span class="font-bold text-black dark:text-white text-xs">Br {{ number_format($sale->total, 2) }}</span>
-                            </td>
-                            <td>
-                                <span class="text-xs text-black dark:text-white">{{ $sale->created_at->format('M d, H:i') }}</span>
-                            </td>
-                            <td class="text-right">
-                                <a href="{{ route('invoice.show', $sale) }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
-                                    Invoice
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-6 text-black dark:text-white">
-                                No sales recorded yet.
-                                @hasanyrole('Super Admin|Manager|Seller')
-                                <a href="{{ route('sales.create') }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline block mt-1">Initiate a quick sale</a>
-                                @endhasanyrole
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <!-- Table Pagination Controls -->
+            @if(count($recentSales) > 5)
+            <div class="p-3 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-800/40 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
+                <div>
+                    Page <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="page"></span> of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="maxPage"></span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" @click="page = Math.max(1, page - 1)" :disabled="page === 1"
+                            :class="page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        &larr; Prev
+                    </button>
+                    <button type="button" @click="page = Math.min(maxPage, page + 1)" :disabled="page >= maxPage"
+                            :class="page >= maxPage ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        Next &rarr;
+                    </button>
+                </div>
             </div>
+            @endif
         </div>
 
-        <!-- Open Manufacturing Orders -->
-        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
-            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
-                <div>
-                    <h2 class="text-base font-bold text-black dark:text-white">Active Production Batches</h2>
-                    <p class="text-xs text-black dark:text-white">Orders currently on the manufacturing floor</p>
+        <!-- Open Manufacturing Orders with Pagination -->
+        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs flex flex-col justify-between"
+             x-data="{
+                 page: 1,
+                 perPage: 5,
+                 total: {{ count($openOrders) }},
+                 get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); }
+             }">
+            <div>
+                <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Active Production Batches</h2>
+                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Orders currently on the manufacturing floor</p>
+                    </div>
+                    <a href="{{ route('manufacturing-orders.index') }}" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 hover:underline">
+                        View All Orders &rarr;
+                    </a>
                 </div>
-                <a href="{{ route('manufacturing-orders.index') }}" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 hover:underline">
-                    View All Orders
-                </a>
+
+                <div class="table-wrapper border-0 rounded-none shadow-none">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($openOrders as $index => $order)
+                            <tr x-show="{{ $index }} >= (page - 1) * perPage && {{ $index }} < page * perPage">
+                                <td>
+                                    <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">#{{ $order->order_number ?? $order->id }}</span>
+                                </td>
+                                <td>
+                                    <div class="font-medium text-slate-900 dark:text-white text-xs truncate max-w-[150px]">{{ $order->product?->name ?? 'Product' }}</div>
+                                    <div class="text-[11px] text-slate-400">{{ $order->storageLocation?->name ?? 'Floor' }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-xs font-semibold text-slate-800 dark:text-dark-200">{{ number_format($order->planned_quantity) }}</span>
+                                    <span class="text-[11px] text-slate-400">{{ $order->product?->unit?->code ?? 'units' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $order->status === 'in_progress' ? 'badge-blue' : ($order->status === 'approved' ? 'badge-green' : 'badge-yellow') }}">
+                                        {{ str_replace('_', ' ', $order->status) }}
+                                    </span>
+                                </td>
+                                <td class="text-right">
+                                    <a href="{{ route('manufacturing-orders.show', $order) }}" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 hover:underline">
+                                        Manage
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-6 text-slate-400 dark:text-dark-500">
+                                    No active production orders in progress.
+                                    @hasanyrole('Super Admin|Manager|Production Officer')
+                                    <a href="{{ route('manufacturing-orders.create') }}" class="text-purple-600 dark:text-purple-400 font-semibold hover:underline block mt-1">Create production batch</a>
+                                    @endhasanyrole
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="table-wrapper border-0 rounded-none shadow-none">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Status</th>
-                            <th class="text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($openOrders as $order)
-                        <tr>
-                            <td>
-                                <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">#{{ $order->order_number ?? $order->id }}</span>
-                            </td>
-                            <td>
-                                <div class="font-medium text-black dark:text-white text-xs truncate max-w-[150px]">{{ $order->product?->name ?? 'Product' }}</div>
-                                <div class="text-[11px] text-black dark:text-white">{{ $order->storageLocation?->name ?? 'Floor' }}</div>
-                            </td>
-                            <td>
-                                <span class="text-xs font-semibold text-black dark:text-white">{{ number_format($order->planned_quantity) }}</span>
-                                <span class="text-[11px] text-black dark:text-white">{{ $order->product?->unit?->code ?? 'units' }}</span>
-                            </td>
-                            <td>
-                                <span class="badge {{ $order->status === 'in_progress' ? 'badge-blue' : ($order->status === 'approved' ? 'badge-green' : 'badge-yellow') }}">
-                                    {{ str_replace('_', ' ', $order->status) }}
-                                </span>
-                            </td>
-                            <td class="text-right">
-                                <a href="{{ route('manufacturing-orders.show', $order) }}" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 hover:underline">
-                                    Manage
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-6 text-black dark:text-white">
-                                No active production orders in progress.
-                                @hasanyrole('Super Admin|Manager|Production Officer')
-                                <a href="{{ route('manufacturing-orders.create') }}" class="text-purple-600 dark:text-purple-400 font-semibold hover:underline block mt-1">Create production batch</a>
-                                @endhasanyrole
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <!-- Table Pagination Controls -->
+            @if(count($openOrders) > 5)
+            <div class="p-3 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-800/40 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
+                <div>
+                    Page <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="page"></span> of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="maxPage"></span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" @click="page = Math.max(1, page - 1)" :disabled="page === 1"
+                            :class="page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        &larr; Prev
+                    </button>
+                    <button type="button" @click="page = Math.min(maxPage, page + 1)" :disabled="page >= maxPage"
+                            :class="page >= maxPage ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        Next &rarr;
+                    </button>
+                </div>
             </div>
+            @endif
         </div>
 
     </div>
 
-    <!-- Low Stock Inventory Alerts & Live Audit Logs (2-Column Grid) -->
+    <!-- Low Stock Inventory Alerts & Live Audit Logs (2-Column Grid with Pagination) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <!-- Low Stock Items Warning -->
-        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
-            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
-                <div>
-                    <h2 class="text-base font-bold text-black dark:text-white">Low Stock Reorder Alerts</h2>
-                    <p class="text-xs text-black dark:text-white">Items reaching or falling below safety stock threshold</p>
+        <!-- Low Stock Items Warning with Pagination -->
+        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs flex flex-col justify-between"
+             x-data="{
+                 page: 1,
+                 perPage: 5,
+                 total: {{ count($lowStockItems) }},
+                 get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); }
+             }">
+            <div>
+                <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Low Stock Reorder Alerts</h2>
+                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Items reaching or falling below safety stock threshold</p>
+                    </div>
+                    <a href="{{ route('inventory.index') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
+                        Stock Balances &rarr;
+                    </a>
                 </div>
-                <a href="{{ route('inventory.index') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
-                    Stock Balances
-                </a>
+
+                <div class="table-wrapper border-0 rounded-none shadow-none">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Location</th>
+                                <th>Current Qty</th>
+                                <th>Safety Min</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($lowStockItems as $index => $item)
+                            <tr x-show="{{ $index }} >= (page - 1) * perPage && {{ $index }} < page * perPage">
+                                <td>
+                                    <div class="font-semibold text-slate-900 dark:text-white text-xs">{{ $item->product?->name ?? 'Item' }}</div>
+                                    <div class="text-[11px] text-slate-400 font-mono">{{ $item->product?->sku ?? '' }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-xs text-slate-600 dark:text-dark-300">{{ $item->storageLocation?->name ?? 'Default' }}</span>
+                                </td>
+                                <td>
+                                    <span class="font-bold text-rose-600 dark:text-rose-400 text-xs">{{ number_format($item->quantity, 2) }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-xs text-slate-500 dark:text-dark-400">{{ number_format($item->product?->minimum_stock_level ?? 0, 2) }}</span>
+                                </td>
+                                <td class="text-right">
+                                    <a href="{{ route('stock-receipts.create') }}" class="btn-secondary text-[11px] py-1 px-2.5">
+                                        Restock
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-6 text-slate-400 dark:text-dark-500">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold">All inventory levels are healthy!</span>
+                                    <p class="text-xs text-slate-400 mt-0.5">No products currently below minimum stock threshold.</p>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="table-wrapper border-0 rounded-none shadow-none">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Item Name</th>
-                            <th>Location</th>
-                            <th>Current Qty</th>
-                            <th>Safety Min</th>
-                            <th class="text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($lowStockItems as $item)
-                        <tr>
-                            <td>
-                                <div class="font-semibold text-black dark:text-white text-xs">{{ $item->product?->name ?? 'Item' }}</div>
-                                <div class="text-[11px] text-black dark:text-white font-mono">{{ $item->product?->sku ?? '' }}</div>
-                            </td>
-                            <td>
-                                <span class="text-xs text-black dark:text-white">{{ $item->storageLocation?->name ?? 'Default' }}</span>
-                            </td>
-                            <td>
-                                <span class="font-bold text-rose-600 dark:text-rose-400 text-xs">{{ number_format($item->quantity, 2) }}</span>
-                            </td>
-                            <td>
-                                <span class="text-xs text-black dark:text-white">{{ number_format($item->product?->minimum_stock_level ?? 0, 2) }}</span>
-                            </td>
-                            <td class="text-right">
-                                <a href="{{ route('stock-receipts.create') }}" class="btn-secondary text-[11px] py-1 px-2.5">
-                                    Restock
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-6 text-black dark:text-white">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-semibold">All inventory levels are healthy!</span>
-                                <p class="text-xs text-black dark:text-white mt-0.5">No products currently below minimum stock threshold.</p>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <!-- Table Pagination Controls -->
+            @if(count($lowStockItems) > 5)
+            <div class="p-3 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-800/40 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
+                <div>
+                    Page <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="page"></span> of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="maxPage"></span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" @click="page = Math.max(1, page - 1)" :disabled="page === 1"
+                            :class="page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        &larr; Prev
+                    </button>
+                    <button type="button" @click="page = Math.min(maxPage, page + 1)" :disabled="page >= maxPage"
+                            :class="page >= maxPage ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        Next &rarr;
+                    </button>
+                </div>
             </div>
+            @endif
         </div>
 
-        <!-- Recent Audit Activities Log Feed -->
-        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
-            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
-                <div>
-                    <h2 class="text-base font-bold text-black dark:text-white">Recent System Activities &amp; Audit</h2>
-                    <p class="text-xs text-black dark:text-white">Real-time log of administrative and operational actions</p>
+        <!-- Recent Audit Activities Log Feed with Pagination -->
+        <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs flex flex-col justify-between"
+             x-data="{
+                 page: 1,
+                 perPage: 5,
+                 total: {{ count($recentActivities) }},
+                 get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); }
+             }">
+            <div>
+                <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Recent System Activities &amp; Audit</h2>
+                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Real-time log of administrative and operational actions</p>
+                    </div>
+                    @hasanyrole('Super Admin|Auditor')
+                    <a href="{{ route('reports.activity') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
+                        Full Audit Trail &rarr;
+                    </a>
+                    @endhasanyrole
                 </div>
-                @hasanyrole('Super Admin|Auditor')
-                <a href="{{ route('reports.activity') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
-                    Full Audit Trail
-                </a>
-                @endhasanyrole
+
+                <div class="divide-y divide-slate-100 dark:divide-dark-800">
+                    @forelse($recentActivities as $index => $act)
+                    <div x-show="{{ $index }} >= (page - 1) * perPage && {{ $index }} < page * perPage"
+                         class="p-3.5 sm:px-5 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-dark-800 transition">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                {{ strtoupper(substr($act->causer?->name ?? 'S', 0, 1)) }}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-slate-800 dark:text-dark-200 truncate">
+                                    {{ $act->causer?->name ?? 'System Event' }}
+                                    <span class="font-normal text-slate-500 dark:text-dark-400">— {{ $act->description }}</span>
+                                </p>
+                                <p class="text-[11px] text-slate-400 truncate">
+                                    Log: {{ $act->log_name ?? 'default' }}
+                                    @if($act->subject_type)
+                                        · {{ class_basename($act->subject_type) }} #{{ $act->subject_id }}
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                        <span class="text-[11px] text-slate-400 flex-shrink-0 whitespace-nowrap">
+                            {{ $act->created_at->diffForHumans() }}
+                        </span>
+                    </div>
+                    @empty
+                    <div class="text-center py-8 text-slate-400 dark:text-dark-500">
+                        <p class="text-sm">No activity logs recorded yet today.</p>
+                    </div>
+                    @endforelse
+                </div>
             </div>
 
-            <div class="divide-y divide-slate-100 dark:divide-dark-800 max-h-96 overflow-y-auto">
-                @forelse($recentActivities as $act)
-                <div class="p-3.5 sm:px-5 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-dark-800 transition">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-dark-800 text-black dark:text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            {{ strtoupper(substr($act->causer?->name ?? 'S', 0, 1)) }}
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold text-black dark:text-white truncate">
-                                {{ $act->causer?->name ?? 'System Event' }}
-                                <span class="font-normal text-black dark:text-white">— {{ $act->description }}</span>
-                            </p>
-                            <p class="text-[11px] text-black dark:text-white truncate">
-                                Log: {{ $act->log_name ?? 'default' }}
-                                @if($act->subject_type)
-                                    · {{ class_basename($act->subject_type) }} #{{ $act->subject_id }}
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                    <span class="text-[11px] text-black dark:text-white flex-shrink-0 whitespace-nowrap">
-                        {{ $act->created_at->diffForHumans() }}
-                    </span>
+            <!-- Table Pagination Controls -->
+            @if(count($recentActivities) > 5)
+            <div class="p-3 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-800/40 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
+                <div>
+                    Page <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="page"></span> of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="maxPage"></span>
                 </div>
-                @empty
-                <div class="text-center py-8 text-black dark:text-white">
-                    <p class="text-sm">No activity logs recorded yet today.</p>
+                <div class="flex items-center gap-1">
+                    <button type="button" @click="page = Math.max(1, page - 1)" :disabled="page === 1"
+                            :class="page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        &larr; Prev
+                    </button>
+                    <button type="button" @click="page = Math.min(maxPage, page + 1)" :disabled="page >= maxPage"
+                            :class="page >= maxPage ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                            class="px-2 py-0.5 rounded border border-slate-200 dark:border-dark-700 transition">
+                        Next &rarr;
+                    </button>
                 </div>
-                @endforelse
             </div>
+            @endif
         </div>
 
     </div>
@@ -608,21 +997,76 @@ function isDarkMode() {
 }
 
 function getTickColor() {
-    return isDarkMode() ? '#ffffff' : '#64748b';
+    return isDarkMode() ? '#94a3b8' : '#64748b';
 }
 
 function getGridColor() {
     return isDarkMode() ? '#1e293b' : '#f1f5f9';
 }
 
+// Chart Pagination Component Logic (Alpine.js)
+let liveRevenueChart = null;
+
+function chartPaginator() {
+    return {
+        currentPage: 0,
+        metricMode: 'revenue', // 'revenue' or 'orders'
+        pages: {!! json_encode($chartPagination['pages'] ?? []) !!},
+        goToPage(index) {
+            this.currentPage = index;
+            this.updateChart();
+        },
+        prevPage() {
+            if (this.currentPage > 0) {
+                this.currentPage--;
+                this.updateChart();
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.pages.length - 1) {
+                this.currentPage++;
+                this.updateChart();
+            }
+        },
+        setMetric(mode) {
+            this.metricMode = mode;
+            this.updateChart();
+        },
+        updateChart() {
+            if (!liveRevenueChart) return;
+            const current = this.pages[this.currentPage];
+            liveRevenueChart.data.labels = current.labels;
+            
+            if (this.metricMode === 'revenue') {
+                liveRevenueChart.data.datasets[0].label = 'Revenue (Br)';
+                liveRevenueChart.data.datasets[0].data = current.revenue;
+                liveRevenueChart.data.datasets[0].borderColor = '#06b6d4';
+                liveRevenueChart.data.datasets[0].pointBackgroundColor = '#06b6d4';
+                liveRevenueChart.options.scales.y.ticks.callback = function(value) {
+                    return 'Br ' + Number(value).toLocaleString();
+                };
+            } else {
+                liveRevenueChart.data.datasets[0].label = 'Orders Count';
+                liveRevenueChart.data.datasets[0].data = current.orders;
+                liveRevenueChart.data.datasets[0].borderColor = '#6366f1';
+                liveRevenueChart.data.datasets[0].pointBackgroundColor = '#6366f1';
+                liveRevenueChart.options.scales.y.ticks.callback = function(value) {
+                    return Number(value).toLocaleString() + ' orders';
+                };
+            }
+            liveRevenueChart.update();
+        }
+    };
+}
+
 function buildCharts() {
-    // 1. Revenue Trajectory Chart (Line / Area)
+    // 1. Revenue Trajectory Chart (Line / Area with dynamic dataset switching)
     const revCtx = document.getElementById('revenueTrendChart');
     if (revCtx) {
         const revLabels = @json($revenueChart['labels'] ?? []);
         const revData   = @json($revenueChart['data'] ?? []);
 
-        const revChart = new Chart(revCtx, {
+        liveRevenueChart = new Chart(revCtx, {
             type: 'line',
             data: {
                 labels: revLabels,
@@ -635,7 +1079,7 @@ function buildCharts() {
                         const {ctx, chartArea} = chart;
                         if (!chartArea) return null;
                         const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                        gradient.addColorStop(0, 'rgba(6, 182, 212, 0.22)');
+                        gradient.addColorStop(0, 'rgba(6, 182, 212, 0.24)');
                         gradient.addColorStop(1, 'rgba(6, 182, 212, 0.01)');
                         return gradient;
                     },
@@ -662,7 +1106,11 @@ function buildCharts() {
                         cornerRadius: 8,
                         callbacks: {
                             label: function(context) {
-                                return ' Revenue: Br ' + Number(context.raw).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                if (context.dataset.label.includes('Revenue')) {
+                                    return ' Revenue: Br ' + Number(context.raw).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                } else {
+                                    return ' Orders: ' + Number(context.raw).toLocaleString() + ' orders';
+                                }
                             }
                         }
                     }
@@ -689,12 +1137,12 @@ function buildCharts() {
 
         // Update chart colors when theme changes
         window.addEventListener('themechanged', function() {
-            revChart.options.scales.x.ticks.color = getTickColor();
-            revChart.options.scales.y.ticks.color = getTickColor();
-            revChart.options.scales.y.grid.color = getGridColor();
-            revChart.options.plugins.tooltip.backgroundColor = isDarkMode() ? '#1e293b' : '#0f172a';
-            revChart.data.datasets[0].pointBorderColor = isDarkMode() ? '#0f172a' : '#ffffff';
-            revChart.update();
+            liveRevenueChart.options.scales.x.ticks.color = getTickColor();
+            liveRevenueChart.options.scales.y.ticks.color = getTickColor();
+            liveRevenueChart.options.scales.y.grid.color = getGridColor();
+            liveRevenueChart.options.plugins.tooltip.backgroundColor = isDarkMode() ? '#1e293b' : '#0f172a';
+            liveRevenueChart.data.datasets[0].pointBorderColor = isDarkMode() ? '#0f172a' : '#ffffff';
+            liveRevenueChart.update();
         });
     }
 
@@ -750,6 +1198,35 @@ function buildCharts() {
 
 document.addEventListener('DOMContentLoaded', buildCharts);
 </script>
+<style>
+@media print {
+    #sidebar, .sidebar, .topbar, .print\:hidden, header, footer, button:not(.print-include), form, .btn-primary, .btn-secondary, a[href*="export"] {
+        display: none !important;
+    }
+    .page-content, main, .page-inner {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        break-inside: avoid;
+        margin-bottom: 1rem !important;
+    }
+    .dark * {
+        color: #000000 !important;
+        background: transparent !important;
+    }
+}
+</style>
 @endpush
 @endif
 @endsection
