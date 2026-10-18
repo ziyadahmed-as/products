@@ -2,63 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UnitOfMeasure;
 use Illuminate\Http\Request;
 
 class UnitOfMeasureController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        return redirect('/admin/unit-of-measures');
+        $units = UnitOfMeasure::withCount('products')
+            ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%")
+                ->orWhere('code', 'like', "%{$request->search}%"))
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('units.index', compact('units'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('units.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:80|unique:unit_of_measures,name',
+            'code' => 'required|string|max:20|unique:unit_of_measures,code',
+        ]);
+
+        $unit = UnitOfMeasure::create($data);
+
+        return redirect()->route('units.index')->with('success', "Unit «{$unit->name}» created.");
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(UnitOfMeasure $unit)
     {
-        //
+        $unit->loadCount('products');
+        return view('units.show', compact('unit'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(UnitOfMeasure $unit)
     {
-        //
+        return view('units.edit', compact('unit'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, UnitOfMeasure $unit)
     {
-        //
+        $data = $request->validate([
+            'name' => "required|string|max:80|unique:unit_of_measures,name,{$unit->id}",
+            'code' => "required|string|max:20|unique:unit_of_measures,code,{$unit->id}",
+        ]);
+
+        $unit->update($data);
+
+        return redirect()->route('units.index')->with('success', "Unit «{$unit->name}» updated.");
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(UnitOfMeasure $unit)
     {
-        //
+        if ($unit->products()->count() > 0) {
+            return back()->with('error', 'Cannot delete unit that is used by products.');
+        }
+
+        $unit->delete();
+        return redirect()->route('units.index')->with('success', 'Unit removed.');
     }
 }

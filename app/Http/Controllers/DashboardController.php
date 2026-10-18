@@ -15,7 +15,7 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (auth()->check()) {
             $user = auth()->user();
@@ -101,22 +101,58 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        // Period metrics for KPI cards (matching business period trend)
-        $startDate = Carbon::now()->startOfMonth();
-        $endDate   = Carbon::now()->endOfMonth();
-        $diffDays  = $startDate->diffInDays($endDate) + 1;
+        // Period metrics for KPI cards & Dashboard Reporting
+        $period = $request->input('period', 'this_month');
+        $from = $request->input('from');
+        $to = $request->input('to');
+
+        if ($from && $to) {
+            $startDate = Carbon::parse($from)->startOfDay();
+            $endDate   = Carbon::parse($to)->endOfDay();
+            $periodLabel = $startDate->format('M d, Y') . ' – ' . $endDate->format('M d, Y');
+            $period = 'custom';
+        } else {
+            switch ($period) {
+                case 'today':
+                    $startDate = Carbon::today()->startOfDay();
+                    $endDate   = Carbon::today()->endOfDay();
+                    $periodLabel = 'Today (' . $startDate->format('M d, Y') . ')';
+                    break;
+                case 'this_week':
+                    $startDate = Carbon::now()->startOfWeek();
+                    $endDate   = Carbon::now()->endOfWeek();
+                    $periodLabel = 'This Week (' . $startDate->format('M d') . ' – ' . $endDate->format('M d, Y') . ')';
+                    break;
+                case 'this_year':
+                    $startDate = Carbon::now()->startOfYear();
+                    $endDate   = Carbon::now()->endOfYear();
+                    $periodLabel = 'This Year (' . $startDate->format('Y') . ')';
+                    break;
+                case 'this_month':
+                default:
+                    $period = 'this_month';
+                    $startDate = Carbon::now()->startOfMonth();
+                    $endDate   = Carbon::now()->endOfMonth();
+                    $periodLabel = 'This Month (' . $startDate->format('F Y') . ')';
+                    break;
+            }
+        }
+
+        $diffDays  = max(1, $startDate->diffInDays($endDate) + 1);
         $prevStartDate = (clone $startDate)->subDays($diffDays);
         $prevEndDate   = (clone $endDate)->subDays($diffDays);
 
-        $salesThisPeriod = (clone $salesQuery)->whereIn('sales.status', ['confirmed', 'processing', 'shipped', 'completed'])
-            ->whereBetween('sales.created_at', [$startDate, $endDate])
-            ->sum('total');
-        $salesPrevPeriod = (clone $salesQuery)->whereIn('sales.status', ['confirmed', 'processing', 'shipped', 'completed'])
-            ->whereBetween('sales.created_at', [$prevStartDate, $prevEndDate])
-            ->sum('total');
+        $periodSalesQuery = (clone $salesQuery)->whereBetween('sales.created_at', [$startDate, $endDate]);
+        $salesThisPeriod = (clone $periodSalesQuery)->sum('total');
+        $salesCountThisPeriod = (clone $periodSalesQuery)->count();
+        $salesPaidThisPeriod = (clone $periodSalesQuery)->sum('paid_amount');
+        $salesUnpaidThisPeriod = max(0, $salesThisPeriod - $salesPaidThisPeriod);
+        $avgOrderValueThisPeriod = $salesCountThisPeriod > 0 ? round($salesThisPeriod / $salesCountThisPeriod, 2) : 0;
+
+        $salesPrevPeriod = (clone $salesQuery)->whereBetween('sales.created_at', [$prevStartDate, $prevEndDate])->sum('total');
         $revenueGrowth = $salesPrevPeriod > 0
             ? round((($salesThisPeriod - $salesPrevPeriod) / $salesPrevPeriod) * 100, 1)
-            : 100;
+            : ($salesThisPeriod > 0 ? 100 : 0);
 
         $ordersTodayCount = (clone $salesQuery)->whereDate('sales.created_at', today())->count();
         $pendingSalesOrders = Sale::whereIn('status', ['pending'])->count();
@@ -124,59 +160,205 @@ class DashboardController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate])
             ->when($branchIds !== null, fn ($q) => $q->whereHas('storageLocation', fn ($sl) => $sl->whereIn('branch_id', $branchIds)))
             ->count();
+        $completedMfgUnitsThisPeriod = ManufacturingOrder::whereIn('status', ['completed', 'Completed'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->when($branchIds !== null, fn ($q) => $q->whereHas('storageLocation', fn ($sl) => $sl->whereIn('branch_id', $branchIds)))
+            ->sum('good_quantity');
+
+        // Top selling product in the period
+        $topSellingProductThisPeriod = SaleLine::whereHas('sale', function ($q) use ($branchIds, $startDate, $endDate) {
+            $q->whereIn('status', ['confirmed', 'processing', 'shipped', 'completed'])
+              ->whereBetween('created_at', [$startDate, $endDate]);
+            if ($branchIds !== null) {
+                $q->whereIn('branch_id', $branchIds);
+            }
+        })
+        ->with('product')
+        ->selectRaw('product_id, SUM(quantity) as total_qty, SUM(total) as total_revenue')
+        ->groupBy('product_id')
+        ->orderByDesc('total_revenue')
+        ->first();
+
+        $periodReport = [
+            'period'               => $period,
+            'label'                => $periodLabel,
+            'from'                 => $from ?? $startDate->format('Y-m-d'),
+            'to'                   => $to ?? $endDate->format('Y-m-d'),
+            'sales_revenue'        => $salesThisPeriod,
+            'sales_count'          => $salesCountThisPeriod,
+            'paid_amount'          => $salesPaidThisPeriod,
+            'unpaid_amount'        => $salesUnpaidThisPeriod,
+            'avg_order_value'      => $avgOrderValueThisPeriod,
+            'revenue_growth'       => $revenueGrowth,
+            'completed_mfg_orders' => $completedMfgThisPeriod,
+            'completed_mfg_units'  => (float) $completedMfgUnitsThisPeriod,
+            'top_product'          => $topSellingProductThisPeriod?->product?->name ?? 'None recorded',
+            'top_product_revenue'  => (float) ($topSellingProductThisPeriod?->total_revenue ?? 0),
+        ];
 
         // Consolidated Stats
         $yesterdaySales = (clone $salesQuery)->whereDate('sales.created_at', Carbon::yesterday())->sum('total');
 
         $stats = [
-            'total_products'           => Product::where('is_active', true)->count(),
-            'total_revenue'            => $totalRevenue,
-            'selected_revenue'         => $salesThisPeriod,
-            'today_sales'              => $todaySales,
-            'today_sales_count'        => $ordersTodayCount,
-            'orders_today'             => $ordersTodayCount,
-            'pending_sales_orders'     => $pendingSalesOrders,
-            'month_sales'              => $monthSales,
-            'yesterday_sales'          => $yesterdaySales,
-            'revenue_growth'           => $revenueGrowth,
-            'revenue_trend'            => $revenueGrowth,
-            'low_stock'                => (clone $lowStockQuery)->count(),
-            'low_stock_count'          => (clone $lowStockQuery)->count(),
-            'active_orders'            => (clone $ordersQuery)->count(),
-            'active_production_orders' => (clone $ordersQuery)->count(),
-            'pending_orders'           => (clone $ordersQuery)->whereIn('status', ['draft', 'pending_approval', 'planned'])->count(),
-            'in_progress_orders'       => (clone $ordersQuery)->whereIn('status', ['approved', 'materials_issued', 'in_progress'])->count(),
-            'completed_production'     => $completedProductionUnits,
-            'completed_production_period' => $completedMfgThisPeriod,
-            'scrap_rate'               => $scrapRate,
-            'raw_materials_count'      => Product::where('type', 'raw_material')->where('is_active', true)->count(),
-            'raw_materials_stock'      => $rawMaterialsStockUnits,
-            'raw_materials_valuation'  => $rawMaterialsValuation,
-            'finished_goods_valuation' => $finishedGoodsValuation,
-            'total_inventory_valuation'=> $totalInventoryValuation,
-            'low_stock_raw_materials'  => $lowStockRawCount,
-            'today_activities_count'   => Activity::whereDate('created_at', today())->count(),
+            'total_products'                    => Product::where('is_active', true)->count(),
+            'total_revenue'                     => $totalRevenue,
+            'selected_revenue'                  => $salesThisPeriod,
+            'selected_sales_count'              => $salesCountThisPeriod,
+            'today_sales'                       => $todaySales,
+            'today_sales_count'                 => $ordersTodayCount,
+            'orders_today'                      => $ordersTodayCount,
+            'pending_sales_orders'              => $pendingSalesOrders,
+            'month_sales'                       => $monthSales,
+            'yesterday_sales'                   => $yesterdaySales,
+            'revenue_growth'                    => $revenueGrowth,
+            'revenue_trend'                     => $revenueGrowth,
+            'low_stock'                         => (clone $lowStockQuery)->count(),
+            'low_stock_count'                   => (clone $lowStockQuery)->count(),
+            'active_orders'                     => (clone $ordersQuery)->count(),
+            'active_production_orders'          => (clone $ordersQuery)->count(),
+            'pending_orders'                    => (clone $ordersQuery)->whereIn('status', ['draft', 'pending_approval', 'planned'])->count(),
+            'in_progress_orders'                => (clone $ordersQuery)->whereIn('status', ['approved', 'materials_issued', 'in_progress'])->count(),
+            'completed_production'              => $completedProductionUnits,
+            'completed_production_period'       => $completedMfgThisPeriod,
+            'completed_production_units_period' => (float) $completedMfgUnitsThisPeriod,
+            'period_label'                      => $periodLabel,
+            'scrap_rate'                        => $scrapRate,
+            'raw_materials_count'               => Product::where('type', 'raw_material')->where('is_active', true)->count(),
+            'raw_materials_stock'               => $rawMaterialsStockUnits,
+            'raw_materials_valuation'           => $rawMaterialsValuation,
+            'finished_goods_valuation'          => $finishedGoodsValuation,
+            'total_inventory_valuation'         => $totalInventoryValuation,
+            'low_stock_raw_materials'           => $lowStockRawCount,
+            'today_activities_count'            => Activity::whereDate('created_at', today())->count(),
         ];
 
-        // Chart 1: 14-Day Revenue Trend (Real Data)
-        $daysCount = 14;
-        $dailySales = (clone $salesQuery)
-            ->where('sales.created_at', '>=', now()->subDays($daysCount - 1)->startOfDay())
-            ->selectRaw('DATE(sales.created_at) as sale_date, SUM(sales.total) as total')
-            ->groupBy('sale_date')
-            ->pluck('total', 'sale_date');
-
+        // Chart 1: Revenue Trend (Period-aware Real Data)
         $revenueChartLabels = [];
         $revenueChartData = [];
-        for ($i = $daysCount - 1; $i >= 0; $i--) {
-            $dt = now()->subDays($i);
-            $dStr = $dt->format('Y-m-d');
-            $revenueChartLabels[] = $dt->format('M d');
-            $revenueChartData[] = (float) ($dailySales[$dStr] ?? 0);
+
+        if ($period === 'today') {
+            $hourlySales = (clone $salesQuery)
+                ->whereDate('sales.created_at', today())
+                ->selectRaw('HOUR(sales.created_at) as hr, SUM(sales.total) as total')
+                ->groupBy('hr')
+                ->pluck('total', 'hr');
+
+            for ($h = 6; $h <= 22; $h += 2) {
+                $revenueChartLabels[] = sprintf('%02d:00', $h);
+                $val = (float)($hourlySales[$h] ?? 0) + (float)($hourlySales[$h + 1] ?? 0);
+                $revenueChartData[] = $val;
+            }
+        } elseif ($period === 'this_year') {
+            $monthlySales = (clone $salesQuery)
+                ->whereBetween('sales.created_at', [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()])
+                ->selectRaw('MONTH(sales.created_at) as mo, SUM(sales.total) as total')
+                ->groupBy('mo')
+                ->pluck('total', 'mo');
+
+            for ($m = 1; $m <= 12; $m++) {
+                $revenueChartLabels[] = Carbon::create(null, $m, 1)->format('M');
+                $revenueChartData[]   = (float) ($monthlySales[$m] ?? 0);
+            }
+        } else {
+            $chartSpanDays = min(30, max(7, (int) $diffDays));
+            $dailySales = (clone $salesQuery)
+                ->whereBetween('sales.created_at', [(clone $endDate)->subDays($chartSpanDays - 1)->startOfDay(), $endDate])
+                ->selectRaw('DATE(sales.created_at) as sale_date, SUM(sales.total) as total')
+                ->groupBy('sale_date')
+                ->pluck('total', 'sale_date');
+
+            for ($i = $chartSpanDays - 1; $i >= 0; $i--) {
+                $dt = (clone $endDate)->subDays($i);
+                $dStr = $dt->format('Y-m-d');
+                $revenueChartLabels[] = $dt->format('M d');
+                $revenueChartData[]   = (float) ($dailySales[$dStr] ?? 0);
+            }
         }
+
         $revenueChart = [
             'labels' => $revenueChartLabels,
             'data'   => $revenueChartData,
+        ];
+
+        // Prepare multi-page / paginated chart datasets (Page 1: Recent 14 Days, Page 2: Prior 14 Days, Page 3: Full 30 Days)
+        $dailySalesCurrent = (clone $salesQuery)
+            ->whereBetween('sales.created_at', [Carbon::now()->subDays(13)->startOfDay(), Carbon::now()->endOfDay()])
+            ->selectRaw('DATE(sales.created_at) as sale_date, SUM(sales.total) as total, COUNT(*) as orders_count')
+            ->groupBy('sale_date')
+            ->get()
+            ->keyBy('sale_date');
+
+        $p1Labels = []; $p1Rev = []; $p1Orders = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $dt = Carbon::now()->subDays($i);
+            $dStr = $dt->format('Y-m-d');
+            $p1Labels[] = $dt->format('M d');
+            $p1Rev[]    = (float) ($dailySalesCurrent[$dStr]->total ?? 0);
+            $p1Orders[] = (int) ($dailySalesCurrent[$dStr]->orders_count ?? 0);
+        }
+
+        $dailySalesPrev = (clone $salesQuery)
+            ->whereBetween('sales.created_at', [Carbon::now()->subDays(27)->startOfDay(), Carbon::now()->subDays(14)->endOfDay()])
+            ->selectRaw('DATE(sales.created_at) as sale_date, SUM(sales.total) as total, COUNT(*) as orders_count')
+            ->groupBy('sale_date')
+            ->get()
+            ->keyBy('sale_date');
+
+        $p2Labels = []; $p2Rev = []; $p2Orders = [];
+        for ($i = 27; $i >= 14; $i--) {
+            $dt = Carbon::now()->subDays($i);
+            $dStr = $dt->format('Y-m-d');
+            $p2Labels[] = $dt->format('M d');
+            $p2Rev[]    = (float) ($dailySalesPrev[$dStr]->total ?? 0);
+            $p2Orders[] = (int) ($dailySalesPrev[$dStr]->orders_count ?? 0);
+        }
+
+        $dailySales30 = (clone $salesQuery)
+            ->whereBetween('sales.created_at', [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()])
+            ->selectRaw('DATE(sales.created_at) as sale_date, SUM(sales.total) as total, COUNT(*) as orders_count')
+            ->groupBy('sale_date')
+            ->get()
+            ->keyBy('sale_date');
+
+        $p3Labels = []; $p3Rev = []; $p3Orders = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $dt = Carbon::now()->subDays($i);
+            $dStr = $dt->format('Y-m-d');
+            $p3Labels[] = $dt->format('M d');
+            $p3Rev[]    = (float) ($dailySales30[$dStr]->total ?? 0);
+            $p3Orders[] = (int) ($dailySales30[$dStr]->orders_count ?? 0);
+        }
+
+        $chartPagination = [
+            'pages' => [
+                [
+                    'id'          => 'p1',
+                    'name'        => 'Recent 14 Days',
+                    'labels'      => $p1Labels,
+                    'revenue'     => $p1Rev,
+                    'orders'      => $p1Orders,
+                    'total_rev'   => array_sum($p1Rev),
+                    'total_count' => array_sum($p1Orders),
+                ],
+                [
+                    'id'          => 'p2',
+                    'name'        => 'Prior 14 Days',
+                    'labels'      => $p2Labels,
+                    'revenue'     => $p2Rev,
+                    'orders'      => $p2Orders,
+                    'total_rev'   => array_sum($p2Rev),
+                    'total_count' => array_sum($p2Orders),
+                ],
+                [
+                    'id'          => 'p3',
+                    'name'        => 'Full 30 Days',
+                    'labels'      => $p3Labels,
+                    'revenue'     => $p3Rev,
+                    'orders'      => $p3Orders,
+                    'total_rev'   => array_sum($p3Rev),
+                    'total_count' => array_sum($p3Orders),
+                ],
+            ]
         ];
 
         // Chart 2: Category / Distribution (Real Data)
@@ -228,22 +410,22 @@ class DashboardController extends Controller
             ->pluck('count', 'status')
             ->toArray();
 
-        // Recent System Activity Logs
-        $recentActivities = Activity::with('causer')->latest('id')->limit(8)->get();
+        // Recent System Activity Logs (Expanded for pagination)
+        $recentActivities = Activity::with('causer')->latest('id')->limit(25)->get();
 
-        // Recent Sales
-        $recentSales = (clone $salesQuery)->with(['user', 'branch'])->latest('id')->limit(8)->get();
+        // Recent Sales (Expanded for pagination)
+        $recentSales = (clone $salesQuery)->with(['user', 'branch'])->latest('id')->limit(25)->get();
 
-        // Low stock items
+        // Low stock items (Expanded for pagination)
         $lowStockItems = (clone $lowStockQuery)->with(['product', 'storageLocation'])
             ->select('inventory_balances.*')
-            ->limit(6)
+            ->limit(25)
             ->get();
 
-        // Open Manufacturing Orders
+        // Open Manufacturing Orders (Expanded for pagination)
         $openOrders = (clone $ordersQuery)->with(['product.unit', 'storageLocation.branch'])
             ->latest('id')
-            ->limit(6)
+            ->limit(25)
             ->get();
 
         // ── Staff & User Performance Report Data ──
@@ -372,7 +554,9 @@ class DashboardController extends Controller
             'rawMaterialsList',
             'userPerformances',
             'isSeller',
-            'sellerData'
+            'sellerData',
+            'periodReport',
+            'chartPagination'
         ));
     }
 }

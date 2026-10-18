@@ -12,4 +12,9 @@ class StorageLocation extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function inventoryBalances()
+    {
+        return $this->hasMany(InventoryBalance::class);
+    }
 }
