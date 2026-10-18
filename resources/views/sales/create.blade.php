@@ -7,11 +7,11 @@
     {{-- Header --}}
     <div class="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-white tracking-tight">Point of Sale</h1>
-            <p class="text-dark-400 text-sm mt-1">
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Point of Sale</h1>
+            <p class="text-slate-500 dark:text-dark-400 text-sm mt-1">
                 Quick sale terminal — {{ auth()->user()->name }} &bull;
                 @if(auth()->user()->hasRole('Seller'))
-                    Branch: <span class="text-primary-300 font-medium">{{ $defaultBranch?->name ?? 'Unassigned' }}</span>
+                    Branch: <span class="text-sky-600 dark:text-primary-300 font-semibold">{{ $defaultBranch?->name ?? 'Unassigned' }}</span>
                 @else
                     Select branch below
                 @endif
@@ -26,8 +26,8 @@
     </div>
 
     @if (session('success'))
-        <div class="alert-success flex items-center gap-3 p-4 rounded-xl bg-emerald-950/70 border border-emerald-700 text-emerald-300">
-            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <div class="alert-success flex items-center gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300">
+            <svg class="w-5 h-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
             </svg>
             <span class="font-medium">{{ session('success') }}</span>
@@ -35,8 +35,8 @@
     @endif
 
     @if (session('error'))
-        <div class="flex items-center gap-3 p-4 rounded-xl bg-rose-950/70 border border-rose-700 text-rose-300">
-            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <div class="flex items-center gap-3 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-700 text-rose-800 dark:text-rose-300">
+            <svg class="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
             </svg>
             <span class="font-medium">{{ session('error') }}</span>
@@ -52,11 +52,11 @@
 
                 {{-- Branch / Location Selector (admin/manager only) --}}
                 @hasanyrole('Super Admin|Manager')
-                <div class="card p-4 bg-dark-900 border border-dark-800 rounded-2xl">
+                <div class="card p-4 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 rounded-2xl shadow-xs">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="form-group mb-0">
-                            <label class="form-label text-xs">Branch <span class="text-rose-400">*</span></label>
-                            <select name="branch_id" id="branch_id" class="form-input text-sm" x-model="selectedBranchId" @change="fetchLocations()">
+                            <label class="form-label text-xs">Branch <span class="text-rose-500">*</span></label>
+                            <select name="branch_id" id="branch_id" class="form-select text-sm" x-model="selectedBranchId" @change="fetchLocations()">
                                 <option value="">— Select Branch —</option>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
@@ -67,7 +67,7 @@
                         </div>
                         <div class="form-group mb-0">
                             <label class="form-label text-xs">Storage Location</label>
-                            <select name="storage_location_id" id="storage_location_id" class="form-input text-sm">
+                            <select name="storage_location_id" id="storage_location_id" class="form-select text-sm">
                                 <option value="">— Auto (Branch Default) —</option>
                                 @foreach($locations as $loc)
                                     <option value="{{ $loc->id }}" {{ old('storage_location_id') == $loc->id ? 'selected' : '' }}>
@@ -84,36 +84,36 @@
                 @endhasanyrole
 
                 {{-- Product Search --}}
-                <div class="card p-4 bg-dark-900 border border-dark-800 rounded-2xl">
+                <div class="card p-4 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 rounded-2xl shadow-xs">
                     <label class="form-label text-xs mb-2">Search & Add Products</label>
                     <div class="relative">
                         <input type="text" id="product-search" placeholder="Search by product name or SKU..."
                                class="form-input pl-10 text-sm w-full"
                                autocomplete="off"
                                x-on:input.debounce.300ms="searchProducts($event.target.value)">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
 
                     {{-- Search Results Dropdown --}}
                     <div x-show="searchResults.length > 0" x-cloak
-                         class="mt-2 rounded-xl border border-dark-700 bg-dark-800 divide-y divide-dark-700 overflow-hidden shadow-xl max-h-64 overflow-y-auto">
+                         class="mt-2 rounded-xl border border-slate-200 dark:border-dark-700 bg-white dark:bg-dark-800 divide-y divide-slate-100 dark:divide-dark-700 overflow-hidden shadow-xl max-h-64 overflow-y-auto">
                         <template x-for="product in searchResults" :key="product.id">
                             <button type="button"
-                                    class="w-full text-left px-4 py-3 hover:bg-dark-700/80 transition flex items-center justify-between"
+                                    class="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-dark-700/80 transition flex items-center justify-between"
                                     @click="addToCart(product)">
                                 <div>
-                                    <div class="text-sm font-medium text-white" x-text="product.name"></div>
-                                    <div class="text-xs text-dark-400 mt-0.5">
+                                    <div class="text-sm font-semibold text-slate-900 dark:text-white" x-text="product.name"></div>
+                                    <div class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">
                                         SKU: <span x-text="product.sku || '—'"></span> &bull;
-                                        Stock: <span x-text="product.quantity" :class="product.quantity <= 0 ? 'text-rose-400' : 'text-emerald-400'"></span>
+                                        Stock: <span x-text="product.quantity" :class="product.quantity <= 0 ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'"></span>
                                         <span x-text="product.unit_code"></span>
                                     </div>
                                 </div>
                                 <div class="text-right flex-shrink-0 ml-4">
-                                    <div class="text-sm font-bold text-white">Br<span x-text="formatMoney(product.selling_price)"></span></div>
-                                    <div class="text-xs text-dark-500">per unit</div>
+                                    <div class="text-sm font-bold text-slate-900 dark:text-white">Br<span x-text="formatMoney(product.selling_price)"></span></div>
+                                    <div class="text-xs text-slate-400 dark:text-dark-500">per unit</div>
                                 </div>
                             </button>
                         </template>
@@ -121,25 +121,25 @@
                 </div>
 
                 {{-- Cart / Sale Lines --}}
-                <div class="card p-0 bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden">
-                    <div class="p-4 border-b border-dark-800 flex items-center justify-between">
-                        <h2 class="text-base font-bold text-white">Cart Items</h2>
-                        <span class="text-xs text-dark-400" x-text="cart.length + ' item(s) in cart'"></span>
+                <div class="card p-0 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 rounded-2xl overflow-hidden shadow-xs">
+                    <div class="p-4 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between">
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Cart Items</h2>
+                        <span class="text-xs text-slate-500 dark:text-dark-400 font-medium" x-text="cart.length + ' item(s) in cart'"></span>
                     </div>
 
                     {{-- Empty Cart Message --}}
-                    <div x-show="cart.length === 0" class="p-12 text-center text-dark-500">
-                        <svg class="w-10 h-10 mx-auto mb-3 text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div x-show="cart.length === 0" class="p-12 text-center text-slate-400 dark:text-dark-500">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
-                        <p class="text-sm">No items in cart. Search and add products above.</p>
+                        <p class="text-sm font-medium">No items in cart. Search and add products above.</p>
                     </div>
 
                     {{-- Cart Table --}}
                     <div x-show="cart.length > 0" class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left text-xs uppercase tracking-wider text-dark-400 bg-dark-950/60 border-b border-dark-800">
+                                <tr class="text-left text-xs uppercase tracking-wider text-slate-500 dark:text-dark-400 bg-slate-50 dark:bg-dark-950/60 border-b border-slate-200 dark:border-dark-800">
                                     <th class="py-3 px-4">Product</th>
                                     <th class="py-3 px-4 text-right">Unit Price</th>
                                     <th class="py-3 px-4 text-center">Qty</th>
@@ -147,12 +147,12 @@
                                     <th class="py-3 px-4 text-center">Remove</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-dark-800">
+                            <tbody class="divide-y divide-slate-100 dark:divide-dark-800">
                                 <template x-for="(item, index) in cart" :key="item.product_id">
-                                    <tr class="hover:bg-dark-800/40 transition">
+                                    <tr class="hover:bg-slate-50/70 dark:hover:bg-dark-800/40 transition">
                                         <td class="py-3 px-4">
-                                            <div class="font-medium text-white text-sm" x-text="item.name"></div>
-                                            <div class="text-xs text-dark-500 mt-0.5">SKU: <span x-text="item.sku || '—'"></span></div>
+                                            <div class="font-semibold text-slate-900 dark:text-white text-sm" x-text="item.name"></div>
+                                            <div class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">SKU: <span x-text="item.sku || '—'"></span></div>
                                             {{-- Hidden inputs for form submission --}}
                                             <input type="hidden" :name="'lines[' + index + '][product_id]'" :value="item.product_id">
                                             <input type="hidden" :name="'lines[' + index + '][unit_price]'" :value="item.unit_price">
@@ -160,30 +160,31 @@
                                         </td>
                                         <td class="py-3 px-4 text-right">
                                             <input type="number" step="0.01" min="0"
-                                                   class="w-28 text-right bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:border-primary-500"
+                                                   class="w-28 text-right bg-white dark:bg-dark-800 border border-slate-300 dark:border-dark-700 rounded-lg px-2 py-1 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                                                    x-model.number="item.unit_price"
                                                    @input="calculateTotals()">
                                         </td>
                                         <td class="py-3 px-4 text-center">
                                             <div class="flex items-center justify-center gap-1">
                                                 <button type="button"
-                                                        class="w-7 h-7 rounded-lg bg-dark-700 hover:bg-dark-600 text-white text-sm font-bold transition flex items-center justify-center"
+                                                        class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-dark-700 dark:hover:bg-dark-600 text-slate-700 dark:text-white text-sm font-bold transition flex items-center justify-center border border-slate-200 dark:border-dark-600"
                                                         @click="decrementQty(index)">−</button>
                                                 <input type="number" step="0.01" min="0.01"
-                                                       class="w-16 text-center bg-dark-800 border border-dark-700 rounded-lg px-1 py-1 text-sm text-white focus:outline-none focus:border-primary-500"
+                                                       class="w-16 text-center bg-white dark:bg-dark-800 border border-slate-300 dark:border-dark-700 rounded-lg px-1 py-1 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                                                        x-model.number="item.quantity"
                                                        @input="calculateTotals()">
                                                 <button type="button"
-                                                        class="w-7 h-7 rounded-lg bg-dark-700 hover:bg-dark-600 text-white text-sm font-bold transition flex items-center justify-center"
+                                                        class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-dark-700 dark:hover:bg-dark-600 text-slate-700 dark:text-white text-sm font-bold transition flex items-center justify-center border border-slate-200 dark:border-dark-600"
                                                         @click="incrementQty(index)">+</button>
                                             </div>
                                         </td>
-                                        <td class="py-3 px-4 text-right font-bold text-white whitespace-nowrap">
+                                        <td class="py-3 px-4 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
                                             Br<span x-text="formatMoney(item.unit_price * item.quantity)"></span>
                                         </td>
                                         <td class="py-3 px-4 text-center">
                                             <button type="button" @click="removeFromCart(index)"
-                                                    class="w-7 h-7 rounded-lg bg-rose-900/50 hover:bg-rose-700/50 text-rose-400 transition flex items-center justify-center mx-auto">
+                                                    class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-900/40 hover:bg-rose-100 dark:hover:bg-rose-800/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 transition flex items-center justify-center mx-auto"
+                                                    title="Remove item">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                 </svg>
@@ -202,36 +203,36 @@
             <div class="xl:col-span-2 space-y-4">
 
                 {{-- Order Summary --}}
-                <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl">
-                    <h2 class="text-base font-bold text-white mb-4">Order Summary</h2>
+                <div class="card p-5 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 rounded-2xl shadow-xs">
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Order Summary</h2>
 
                     <div class="space-y-2 text-sm">
-                        <div class="flex items-center justify-between text-dark-300">
+                        <div class="flex items-center justify-between text-slate-600 dark:text-dark-300">
                             <span>Subtotal</span>
-                            <span class="font-mono">Br<span x-text="formatMoney(subtotal)"></span></span>
+                            <span class="font-mono font-semibold text-slate-900 dark:text-white">Br<span x-text="formatMoney(subtotal)"></span></span>
                         </div>
-                        <div class="flex items-center justify-between text-dark-300">
+                        <div class="flex items-center justify-between text-slate-600 dark:text-dark-300">
                             <span>Discount</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-dark-500">Br</span>
+                                <span class="text-slate-400 dark:text-dark-500">Br</span>
                                 <input type="number" name="discount" id="discount" step="0.01" min="0"
-                                       class="w-24 text-right bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-sm text-rose-300 focus:outline-none focus:border-primary-500"
+                                       class="w-24 text-right bg-white dark:bg-dark-800 border border-slate-300 dark:border-dark-700 rounded-lg px-2 py-1 text-sm text-rose-600 dark:text-rose-300 font-semibold focus:outline-none focus:border-sky-500"
                                        x-model.number="discount" @input="calculateTotals()">
                             </div>
                         </div>
-                        <div class="flex items-center justify-between text-dark-300">
+                        <div class="flex items-center justify-between text-slate-600 dark:text-dark-300">
                             <span>Tax</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-dark-500">Br</span>
+                                <span class="text-slate-400 dark:text-dark-500">Br</span>
                                 <input type="number" name="tax" id="tax" step="0.01" min="0"
-                                       class="w-24 text-right bg-dark-800 border border-dark-700 rounded-lg px-2 py-1 text-sm text-amber-300 focus:outline-none focus:border-primary-500"
+                                       class="w-24 text-right bg-white dark:bg-dark-800 border border-slate-300 dark:border-dark-700 rounded-lg px-2 py-1 text-sm text-amber-600 dark:text-amber-300 font-semibold focus:outline-none focus:border-sky-500"
                                        x-model.number="tax" @input="calculateTotals()">
                             </div>
                         </div>
-                        <div class="h-px bg-dark-800 my-2"></div>
-                        <div class="flex items-center justify-between text-white font-bold text-base">
+                        <div class="h-px bg-slate-200 dark:bg-dark-800 my-2"></div>
+                        <div class="flex items-center justify-between text-slate-900 dark:text-white font-bold text-base">
                             <span>Total</span>
-                            <span class="text-emerald-400 text-xl font-bold">Br<span x-text="formatMoney(total)"></span></span>
+                            <span class="text-emerald-600 dark:text-emerald-400 text-xl font-extrabold">Br<span x-text="formatMoney(total)"></span></span>
                         </div>
                         {{-- Hidden totals for form --}}
                         <input type="hidden" name="subtotal" :value="subtotal">
@@ -239,10 +240,10 @@
                     </div>
 
                     {{-- Payment --}}
-                    <div class="mt-4 pt-4 border-t border-dark-800 space-y-3">
+                    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-dark-800 space-y-3">
                         <div class="form-group mb-0">
-                            <label class="form-label text-xs">Payment Status <span class="text-rose-400">*</span></label>
-                            <select name="payment_status" id="payment_status" class="form-input text-sm" x-model="paymentStatus" @change="updatePaidAmount()">
+                            <label class="form-label text-xs">Payment Status <span class="text-rose-500">*</span></label>
+                            <select name="payment_status" id="payment_status" class="form-select text-sm" x-model="paymentStatus" @change="updatePaidAmount()">
                                 <option value="Unpaid">Unpaid (Credit / Later)</option>
                                 <option value="Partial">Partial Payment</option>
                                 <option value="Paid">Fully Paid (Cash/Card)</option>
@@ -258,10 +259,10 @@
                                    :class="paymentStatus === 'Unpaid' ? 'opacity-40 cursor-not-allowed' : ''">
                         </div>
                         <div x-show="paymentStatus !== 'Unpaid' && paidAmount > 0 && total > 0"
-                             class="p-3 rounded-xl bg-dark-800/60 text-xs">
-                            <div class="flex justify-between text-dark-300">
+                             class="p-3 rounded-xl bg-slate-100 dark:bg-dark-800/60 border border-slate-200 dark:border-dark-700 text-xs">
+                            <div class="flex justify-between text-slate-600 dark:text-dark-300">
                                 <span>Change / Balance Due:</span>
-                                <span :class="paidAmount >= total ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'">
+                                <span :class="paidAmount >= total ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'">
                                     Br<span x-text="formatMoney(Math.abs(paidAmount - total))"></span>
                                     <span x-text="paidAmount >= total ? '(Change)' : '(Remaining)'"></span>
                                 </span>
@@ -271,8 +272,8 @@
                 </div>
 
                 {{-- Customer Information --}}
-                <div class="card p-5 bg-dark-900 border border-dark-800 rounded-2xl">
-                    <h2 class="text-base font-bold text-white mb-4">Customer Information</h2>
+                <div class="card p-5 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 rounded-2xl shadow-xs">
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white mb-4">Customer Information</h2>
                     <div class="space-y-3">
                         <div class="form-group mb-0">
                             <label class="form-label text-xs">Customer Name</label>
@@ -289,7 +290,7 @@
                                    placeholder="+251912345678"
                                    pattern="^\+251[0-9]{9}$"
                                    title="Must start with +251 followed by 9 digits (total 12 digits, e.g. +251912345678)">
-                            <span class="text-[11px] text-gray-400 mt-1 block">Format: +251 followed by 9 digits (e.g. +251912345678)</span>
+                            <span class="text-[11px] text-slate-500 dark:text-gray-400 mt-1 block">Format: +251 followed by 9 digits (e.g. +251912345678)</span>
                             @error('customer_phone')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div class="form-group mb-0">

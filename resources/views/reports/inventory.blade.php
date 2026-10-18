@@ -45,15 +45,23 @@
 
         <div class="card p-5">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-400">Total Stock on Hand</span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-400">Total Stock on Hand (By Unit)</span>
                 <div class="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800/50 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-gray-900 dark:text-white mt-3">{{ number_format($totalStockUnits, 2) }} <span class="text-sm font-normal text-gray-500 dark:text-dark-400">units</span></div>
-            <div class="text-xs text-gray-500 dark:text-dark-400 mt-1">Across all authorized stores</div>
+            <div class="mt-3 flex flex-wrap gap-1.5 items-center">
+                @forelse($stockByUnit ?? [] as $uCode => $uQty)
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-50 dark:bg-cyan-950/70 text-cyan-800 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800">
+                        {{ number_format($uQty, 2) }} <span class="text-[11px] font-medium text-cyan-600 dark:text-cyan-400">{{ $uCode }}</span>
+                    </span>
+                @empty
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">0.00</div>
+                @endforelse
+            </div>
+            <div class="text-xs text-gray-500 dark:text-dark-400 mt-2">Across all authorized stores</div>
         </div>
 
         <div class="card p-5">

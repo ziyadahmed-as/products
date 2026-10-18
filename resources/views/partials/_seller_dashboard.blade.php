@@ -50,9 +50,10 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
         <!-- 1. Today's Sales Revenue — Emerald Accent -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs" style="border-bottom: 3px solid #10b981;">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Today's Sales</span>
+                <span class="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wide">Today's Sales</span>
                 <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -60,7 +61,7 @@
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">Br {{ number_format($sellerData['today_sales'] ?? 0, 2) }}</div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Br {{ number_format($sellerData['today_sales'] ?? 0, 2) }}</div>
             <div class="flex items-center gap-1.5 text-xs">
                 <span class="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/70 dark:text-emerald-400 px-2 py-0.5 rounded-full">
                     {{ $sellerData['today_count'] ?? 0 }} orders
@@ -70,9 +71,10 @@
         </div>
 
         <!-- 2. This Month's Sales Volume — Sky Accent -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs" style="border-bottom: 3px solid #0284c7;">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-sky-500 to-blue-500"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">This Month's Sales</span>
+                <span class="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wide">This Month's Sales</span>
                 <div class="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -80,7 +82,7 @@
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">Br {{ number_format($sellerData['month_sales'] ?? 0, 2) }}</div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Br {{ number_format($sellerData['month_sales'] ?? 0, 2) }}</div>
             <div class="flex items-center gap-1.5 text-xs">
                 <span class="inline-flex items-center gap-1 font-semibold text-sky-700 bg-sky-50 dark:bg-sky-950/70 dark:text-sky-400 px-2 py-0.5 rounded-full">
                     {{ $sellerData['month_count'] ?? 0 }} orders
@@ -90,9 +92,10 @@
         </div>
 
         <!-- 3. Payments Collected — Amber Accent -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs" style="border-bottom: 3px solid #f59e0b;">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 to-orange-400"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Collected Payments</span>
+                <span class="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wide">Collected Payments</span>
                 <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -100,7 +103,7 @@
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">Br {{ number_format($sellerData['total_paid'] ?? 0, 2) }}</div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Br {{ number_format($sellerData['total_paid'] ?? 0, 2) }}</div>
             <div class="flex items-center gap-1.5 text-xs">
                 @if(($sellerData['total_unpaid'] ?? 0) > 0)
                     <span class="inline-flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 dark:bg-rose-950/70 dark:text-rose-400 px-2 py-0.5 rounded-full">
@@ -115,9 +118,10 @@
         </div>
 
         <!-- 4. Average Order Value (AOV) — Purple Accent -->
-        <div class="bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs" style="border-bottom: 3px solid #8b5cf6;">
+        <div class="relative overflow-hidden bg-gradient-to-br from-white to-slate-50/70 dark:from-dark-900 dark:to-dark-800/90 rounded-2xl border border-slate-200/80 dark:border-dark-800 p-5 shadow-xs hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out group">
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-black dark:text-white uppercase tracking-wide">Avg. Order Value</span>
+                <span class="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wide">Avg. Order Value</span>
                 <div class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -125,7 +129,7 @@
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-bold text-black dark:text-white mb-2">Br {{ number_format($sellerData['avg_order_value'] ?? 0, 2) }}</div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Br {{ number_format($sellerData['avg_order_value'] ?? 0, 2) }}</div>
             <div class="flex items-center gap-1.5 text-xs">
                 <span class="inline-flex items-center gap-1 font-medium text-purple-700 bg-purple-50 dark:bg-purple-950/70 dark:text-purple-300 px-2 py-0.5 rounded-full">
                     Lifetime: {{ $sellerData['total_count'] ?? 0 }} orders

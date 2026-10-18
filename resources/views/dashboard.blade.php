@@ -152,6 +152,30 @@
         </div>
     </div>
 
+    <!-- Unit-Based Inventory Stock KPI Bar -->
+    <div class="card p-4 sm:p-5 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-dark-800">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                <h3 class="text-xs uppercase font-extrabold tracking-wider text-slate-800 dark:text-dark-200">
+                    📦 Product Stock on Hand (By Unit of Measure)
+                </h3>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">Quantities tracked independently by unit &bull; Never combined</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5 pt-3">
+            @forelse($stats['stock_by_unit'] ?? [] as $unitCode => $uQty)
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 shadow-2xs">
+                    <span class="text-xs text-slate-500 dark:text-dark-400">Total Stock:</span>
+                    <span class="text-sm font-extrabold text-cyan-600 dark:text-cyan-400 font-mono">{{ number_format($uQty, 2) }}</span>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">{{ $unitCode }}</span>
+                </div>
+            @empty
+                <span class="text-xs text-slate-400 italic">No inventory registered yet.</span>
+            @endforelse
+        </div>
+    </div>
+
     <!-- Core KPI Summary Cards Row (6 Cards — Professional Executive Design) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
@@ -515,24 +539,52 @@
         </div>
     </div>
 
-    <!-- Staff & User Performance Table with Professional Pagination -->
+    <!-- Staff & User Performance Table with Professional Search & Pagination -->
     @hasanyrole('Super Admin|Manager|Admin')
     <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs"
          x-data="{
+             userSearch: '',
              page: 1,
              perPage: 5,
-             total: {{ count($userPerformances) }},
-             get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); }
+             items: {{ json_encode($userPerformances) }},
+             get filtered() {
+                 if (!this.userSearch.trim()) return this.items;
+                 const q = this.userSearch.toLowerCase();
+                 return this.items.filter(u => 
+                     (u.user?.name || '').toLowerCase().includes(q) ||
+                     (u.user?.email || '').toLowerCase().includes(q) ||
+                     (u.role || '').toLowerCase().includes(q) ||
+                     (u.branches || '').toLowerCase().includes(q)
+                 );
+             },
+             get total() { return this.filtered.length; },
+             get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); },
+             get pagedItems() {
+                 const start = (this.page - 1) * this.perPage;
+                 return this.filtered.slice(start, start + this.perPage);
+             }
          }">
-        <div class="p-5 border-b border-slate-100 dark:border-dark-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="p-5 border-b border-slate-100 dark:border-dark-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h2 class="text-base font-bold text-slate-900 dark:text-white">Staff &amp; Operational Team Performance</h2>
-                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Personnel production records, sales metrics, and activity tracking</p>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Staff &amp; Team Operational Performance</h2>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200" x-text="total + ' Members'"></span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Personnel productivity metrics, sales ledger contributions, and live activity tracking</p>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200">
-                    {{ count($userPerformances) }} Staff Members
-                </span>
+            <div class="flex items-center gap-3">
+                <div class="relative w-48 sm:w-64">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <input type="text" x-model="userSearch" @input="page = 1" placeholder="Search staff by name, role, branch..."
+                           class="form-input text-xs pl-8 pr-3 py-1.5 w-full bg-slate-50 dark:bg-dark-800 border-slate-200 dark:border-dark-700 rounded-lg">
+                </div>
+                <a href="{{ route('reports.users.export') }}" class="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 rounded-lg shadow-2xs shrink-0" title="Export Staff Performance CSV">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Export</span>
+                </a>
             </div>
         </div>
 
@@ -540,78 +592,101 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>User / Employee</th>
-                        <th>Role</th>
-                        <th>Assigned Branch</th>
-                        <th>Sales Output</th>
-                        <th>Mfg Orders</th>
-                        <th>Activity Count</th>
-                        <th>Last Active</th>
+                        <th>User / Team Member</th>
+                        <th>Assigned Role</th>
+                        <th>Authorized Branch</th>
+                        <th>Sales Volume</th>
+                        <th>Manufacturing Output</th>
+                        <th>Activity Logs</th>
+                        <th>Last Activity</th>
                         <th class="text-right">Performance Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($userPerformances as $index => $perf)
-                    <tr x-show="{{ $index }} >= (page - 1) * perPage && {{ $index }} < page * perPage">
-                        <td>
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-300 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                                    {{ strtoupper(substr($perf['user']->name ?? 'U', 0, 1)) }}
+                    <template x-for="(perf, idx) in pagedItems" :key="perf.user?.id || idx">
+                        <tr class="hover:bg-slate-50/70 dark:hover:bg-dark-800/40 transition">
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-xs flex-shrink-0"
+                                         x-text="(perf.user?.name || 'U').charAt(0).toUpperCase()">
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-slate-900 dark:text-white text-sm truncate" x-text="perf.user?.name"></div>
+                                        <div class="text-xs text-slate-500 dark:text-dark-400 truncate" x-text="perf.user?.email"></div>
+                                    </div>
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="font-semibold text-slate-900 dark:text-white text-sm truncate">{{ $perf['user']->name }}</div>
-                                    <div class="text-xs text-slate-500 dark:text-dark-400 truncate">{{ $perf['user']->email }}</div>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      :class="{
+                                          'badge-purple': perf.role === 'Super Admin',
+                                          'badge-blue': perf.role === 'Manager',
+                                          'badge-green': perf.role === 'Seller',
+                                          'badge-yellow': perf.role === 'Production Officer',
+                                          'badge-gray': !['Super Admin','Manager','Seller','Production Officer'].includes(perf.role)
+                                      }"
+                                      x-text="perf.role">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-1.5 text-xs text-slate-700 dark:text-dark-300 font-medium">
+                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                    <span class="truncate max-w-[130px]" x-text="perf.branches" :title="perf.branches"></span>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge {{ $perf['role'] === 'Super Admin' ? 'badge-purple' : ($perf['role'] === 'Manager' ? 'badge-blue' : ($perf['role'] === 'Seller' ? 'badge-green' : 'badge-gray')) }}">
-                                {{ $perf['role'] }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="text-xs font-medium text-slate-700 dark:text-dark-300">{{ $perf['branches'] }}</span>
-                        </td>
-                        <td>
-                            <div class="font-semibold text-slate-900 dark:text-white text-sm">Br {{ number_format($perf['sales_volume'], 2) }}</div>
-                            <div class="text-xs text-slate-500 dark:text-dark-400">{{ $perf['sales_count'] }} transactions</div>
-                        </td>
-                        <td>
-                            <div class="font-semibold text-slate-900 dark:text-white text-sm">{{ number_format($perf['mfg_output']) }} units</div>
-                            <div class="text-xs text-slate-500 dark:text-dark-400">{{ $perf['mfg_count'] }} orders</div>
-                        </td>
-                        <td>
-                            <span class="font-mono text-xs font-semibold text-slate-700 dark:text-dark-200 bg-slate-100 dark:bg-dark-800 px-2 py-0.5 rounded">{{ $perf['activities'] }}</span>
-                        </td>
-                        <td>
-                            <span class="text-xs text-slate-500 dark:text-dark-400">
-                                {{ $perf['last_action'] ? \Carbon\Carbon::parse($perf['last_action'])->diffForHumans() : 'No recent logs' }}
-                            </span>
-                        </td>
-                        <td class="text-right">
-                            <span class="badge {{ $perf['status'] === 'Top Performer' ? 'badge-green' : ($perf['status'] === 'Active' ? 'badge-blue' : 'badge-gray') }}">
-                                {{ $perf['status'] }}
-                            </span>
+                            </td>
+                            <td>
+                                <div class="font-bold text-slate-900 dark:text-white text-xs font-mono">
+                                    Br <span x-text="Number(perf.sales_volume || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 dark:text-dark-400">
+                                    <span x-text="perf.sales_count"></span> sales orders
+                                </div>
+                            </td>
+                            <td>
+                                <div class="font-semibold text-slate-900 dark:text-white text-xs">
+                                    <span x-text="Number(perf.mfg_output || 0).toLocaleString()"></span> units
+                                </div>
+                                <div class="text-[11px] text-slate-500 dark:text-dark-400">
+                                    <span x-text="perf.mfg_count"></span> production batches
+                                </div>
+                            </td>
+                            <td>
+                                <span class="font-mono text-xs font-semibold text-slate-700 dark:text-dark-200 bg-slate-100 dark:bg-dark-800 px-2 py-0.5 rounded border border-slate-200/60 dark:border-dark-700"
+                                      x-text="perf.activities + ' events'">
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-xs text-slate-500 dark:text-dark-400" x-text="perf.last_action ? new Date(perf.last_action).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'No recent logs'"></span>
+                            </td>
+                            <td class="text-right">
+                                <span class="badge"
+                                      :class="{
+                                          'badge-green': perf.status === 'Top Performer',
+                                          'badge-blue': perf.status === 'Active',
+                                          'badge-gray': perf.status !== 'Top Performer' && perf.status !== 'Active'
+                                      }">
+                                    <span x-text="perf.status"></span>
+                                </span>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="filtered.length === 0">
+                        <td colspan="8" class="text-center py-8 text-slate-400 dark:text-dark-500">
+                            No team members match the search query.
                         </td>
                     </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-6 text-slate-400 dark:text-dark-500">No staff performance records available.</td>
-                    </tr>
-                    @endforelse
                 </tbody>
             </table>
         </div>
 
-        <!-- Professional Table Pagination Footer -->
-        @if(count($userPerformances) > 5)
+        <!-- Table Pagination Footer -->
         <div class="p-3.5 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-800/40 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
             <div>
-                Showing <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="Math.min(total, ((page - 1) * perPage) + 1)"></span>
+                Showing <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="total === 0 ? 0 : ((page - 1) * perPage) + 1"></span>
                 to <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="Math.min(total, page * perPage)"></span>
-                of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="total"></span> members
+                of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="total"></span> staff members
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5" x-show="total > perPage">
                 <button type="button" @click="page = Math.max(1, page - 1)" :disabled="page === 1"
                         :class="page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
                         class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-dark-700 transition">
@@ -627,9 +702,205 @@
                 </button>
             </div>
         </div>
-        @endif
     </div>
     @endhasanyrole
+
+    <!-- Professional Product Catalog & Stock Overview Table -->
+    <div class="card p-0 overflow-hidden bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs"
+         x-data="{
+             prodSearch: '',
+             prodType: 'all',
+             page: 1,
+             perPage: 5,
+             items: {{ json_encode($productsList->map(fn($p) => [
+                 'id' => $p->id,
+                 'name' => $p->name,
+                 'sku' => $p->sku,
+                 'type' => $p->type,
+                 'category' => $p->category?->name ?? 'General',
+                 'unit' => $p->unit?->code ?? $p->unit?->name ?? 'units',
+                 'selling_price' => (float)$p->selling_price,
+                 'purchase_cost' => (float)$p->purchase_cost,
+                 'quantity' => (float)$p->quantity,
+                 'min_stock' => (float)$p->minimum_stock_level,
+                 'branches' => $p->branches->pluck('name')->join(', ') ?: 'Primary Branch',
+                 'is_low' => $p->minimum_stock_level > 0 && (float)$p->quantity <= (float)$p->minimum_stock_level,
+                 'is_out' => (float)$p->quantity <= 0,
+             ])) }},
+             get filtered() {
+                 let list = this.items;
+                 if (this.prodType !== 'all') {
+                     list = list.filter(p => p.type === this.prodType);
+                 }
+                 if (!this.prodSearch.trim()) return list;
+                 const q = this.prodSearch.toLowerCase();
+                 return list.filter(p => 
+                     p.name.toLowerCase().includes(q) ||
+                     (p.sku || '').toLowerCase().includes(q) ||
+                     p.category.toLowerCase().includes(q) ||
+                     p.branches.toLowerCase().includes(q)
+                 );
+             },
+             get total() { return this.filtered.length; },
+             get maxPage() { return Math.max(1, Math.ceil(this.total / this.perPage)); },
+             get pagedItems() {
+                 const start = (this.page - 1) * this.perPage;
+                 return this.filtered.slice(start, start + this.perPage);
+             }
+         }">
+        <div class="p-5 border-b border-slate-100 dark:border-dark-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Product Catalog &amp; Real-Time Inventory</h2>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200" x-text="total + ' Products'"></span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Live merchandise balances, price cards, minimum stock safety alerts, and branch allocations</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <!-- Type Filter Pills -->
+                <div class="inline-flex rounded-lg p-0.5 bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-xs">
+                    <button type="button" @click="prodType = 'all'; page = 1"
+                            :class="prodType === 'all' ? 'bg-white dark:bg-dark-700 text-slate-900 dark:text-white shadow-xs font-bold' : 'text-slate-600 dark:text-dark-400 font-medium'"
+                            class="px-2.5 py-1 rounded-md transition">All</button>
+                    <button type="button" @click="prodType = 'product'; page = 1"
+                            :class="prodType === 'product' ? 'bg-white dark:bg-dark-700 text-slate-900 dark:text-white shadow-xs font-bold' : 'text-slate-600 dark:text-dark-400 font-medium'"
+                            class="px-2.5 py-1 rounded-md transition">Finished Goods</button>
+                    <button type="button" @click="prodType = 'raw_material'; page = 1"
+                            :class="prodType === 'raw_material' ? 'bg-white dark:bg-dark-700 text-slate-900 dark:text-white shadow-xs font-bold' : 'text-slate-600 dark:text-dark-400 font-medium'"
+                            class="px-2.5 py-1 rounded-md transition">Raw Materials</button>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative w-44 sm:w-56">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <input type="text" x-model="prodSearch" @input="page = 1" placeholder="Search SKU or name..."
+                           class="form-input text-xs pl-8 pr-3 py-1.5 w-full bg-slate-50 dark:bg-dark-800 border-slate-200 dark:border-dark-700 rounded-lg">
+                </div>
+
+                @hasanyrole('Super Admin|Manager|Admin')
+                <a href="{{ route('filament.admin.resources.products.create') }}" class="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 rounded-lg shadow-xs shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>New Product</span>
+                </a>
+                @endhasanyrole
+            </div>
+        </div>
+
+        <div class="table-wrapper border-0 rounded-none shadow-none">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product / Catalog Item</th>
+                        <th>Classification</th>
+                        <th>Registered Unit</th>
+                        <th>Pricing (Selling / Cost)</th>
+                        <th>Stock on Hand</th>
+                        <th>Branch Allocation</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(prod, idx) in pagedItems" :key="prod.id || idx">
+                        <tr class="hover:bg-slate-50/70 dark:hover:bg-dark-800/40 transition">
+                            <td>
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex items-center justify-center text-slate-700 dark:text-dark-300 font-bold text-xs shrink-0">
+                                        4
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[200px]" x-text="prod.name"></div>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="font-mono text-[11px] text-slate-500 dark:text-dark-400 font-semibold" x-text="prod.sku || 'NO-SKU'"></span>
+                                            <span class="text-[10px] text-slate-400 dark:text-dark-500">&bull;</span>
+                                            <span class="text-[11px] text-slate-500 dark:text-dark-400 truncate max-w-[100px]" x-text="prod.category"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      :class="prod.type === 'raw_material' ? 'badge-yellow' : 'badge-blue'"
+                                      x-text="prod.type === 'raw_material' ? 'Raw Material' : 'Finished Good'">
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 font-mono" x-text="prod.unit"></span>
+                            </td>
+                            <td>
+                                <div class="font-bold text-slate-900 dark:text-white text-xs font-mono">
+                                    Br <span x-text="Number(prod.selling_price || 0).toFixed(2)"></span>
+                                </div>
+                                <div class="text-[11px] text-slate-400 font-mono">
+                                    Cost: Br <span x-text="Number(prod.purchase_cost || 0).toFixed(2)"></span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-extrabold text-xs font-mono"
+                                          :class="prod.is_out ? 'text-rose-600 dark:text-rose-400' : (prod.is_low ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')"
+                                          x-text="Number(prod.quantity).toFixed(2)">
+                                    </span>
+                                    <span class="text-[11px] text-slate-500 dark:text-dark-400" x-text="prod.unit"></span>
+                                    <span class="badge text-[10px] py-0 px-1.5"
+                                          :class="prod.is_out ? 'badge-red' : (prod.is_low ? 'badge-yellow' : 'badge-green')"
+                                          x-text="prod.is_out ? 'Out of Stock' : (prod.is_low ? 'Low Stock' : 'Healthy')">
+                                    </span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">
+                                    Safety Min: <span x-text="Number(prod.min_stock).toFixed(2)"></span> <span x-text="prod.unit"></span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-xs text-slate-600 dark:text-dark-300 font-medium truncate max-w-[140px] block" x-text="prod.branches" :title="prod.branches"></span>
+                            </td>
+                            <td class="text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a :href="'/sales/create'" class="btn-primary text-[11px] py-1 px-2.5 rounded-lg shadow-2xs" title="Make quick sale">
+                                        POS
+                                    </a>
+                                    <a :href="'/admin/products/' + prod.id + '/edit'" class="btn-secondary text-[11px] py-1 px-2.5 rounded-lg" title="Edit in admin">
+                                        Edit
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="filtered.length === 0">
+                        <td colspan="7" class="text-center py-8 text-slate-400 dark:text-dark-500">
+                            No products match your search or filter.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Pagination Footer -->
+        <div class="p-3.5 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-800/40 flex items-center justify-between text-xs text-slate-500 dark:text-dark-400">
+            <div>
+                Showing <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="total === 0 ? 0 : ((page - 1) * perPage) + 1"></span>
+                to <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="Math.min(total, page * perPage)"></span>
+                of <span class="font-semibold text-slate-800 dark:text-dark-200" x-text="total"></span> products
+            </div>
+            <div class="flex items-center gap-1.5" x-show="total > perPage">
+                <button type="button" @click="page = Math.max(1, page - 1)" :disabled="page === 1"
+                        :class="page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                        class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-dark-700 transition">
+                    &larr; Prev
+                </button>
+                <span class="px-2 font-semibold text-slate-700 dark:text-dark-200">
+                    Page <span x-text="page"></span> of <span x-text="maxPage"></span>
+                </span>
+                <button type="button" @click="page = Math.min(maxPage, page + 1)" :disabled="page >= maxPage"
+                        :class="page >= maxPage ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-dark-700 text-slate-700 dark:text-dark-200 shadow-2xs'"
+                        class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-dark-700 transition">
+                    Next &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Live Transactions & Open Manufacturing Orders (2-Column Grid with Pagination) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -865,9 +1136,11 @@
                                 </td>
                                 <td>
                                     <span class="font-bold text-rose-600 dark:text-rose-400 text-xs">{{ number_format($item->quantity, 2) }}</span>
+                                    <span class="text-[11px] text-slate-400">{{ $item->product?->unit?->code ?? $item->product?->unit?->name ?? '' }}</span>
                                 </td>
                                 <td>
                                     <span class="text-xs text-slate-500 dark:text-dark-400">{{ number_format($item->product?->minimum_stock_level ?? 0, 2) }}</span>
+                                    <span class="text-[11px] text-slate-400">{{ $item->product?->unit?->code ?? $item->product?->unit?->name ?? '' }}</span>
                                 </td>
                                 <td class="text-right">
                                     <a href="{{ route('stock-receipts.create') }}" class="btn-secondary text-[11px] py-1 px-2.5">

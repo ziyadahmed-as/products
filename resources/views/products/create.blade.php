@@ -192,63 +192,124 @@
                 </div>
             </div>
 
-            <!-- Branch Allocation -->
-            <div class="pt-3 border-t border-slate-200 dark:border-dark-800">
-                <label class="form-label text-xs mb-2">Authorized Branches for Item</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                    @foreach($branches as $branch)
-                        <label class="p-2.5 rounded-xl border border-slate-200 dark:border-dark-800 bg-slate-50/60 dark:bg-dark-950/60 hover:border-slate-300 dark:hover:border-dark-700 cursor-pointer flex items-center gap-2 text-xs text-slate-700 dark:text-dark-300 transition">
-                            <input type="checkbox" name="branches[]" value="{{ $branch->id }}" checked
-                                   class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="truncate">{{ $branch->name }}</span>
+            <!-- Branch & Location Allocation -->
+            <div class="pt-3 border-t border-slate-200 dark:border-dark-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="form-label text-xs font-bold text-slate-800 dark:text-dark-200">
+                            Registration Branch & Storage Location <span class="text-rose-500">*</span>
                         </label>
-                    @endforeach
+                        <p class="text-[11px] text-slate-400">Stock entries are automatically registered to your active branch and designated location.</p>
+                    </div>
+                    @if(!$canChangeBranch)
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 border border-slate-200 dark:border-dark-700">
+                            🔒 Locked to Assigned Branch
+                        </span>
+                    @endif
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label text-xs">Primary Branch</label>
+                        @if($canChangeBranch)
+                            <select name="branch_id" id="branch_select" class="form-select text-sm" onchange="filterStorageLocations()">
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" {{ old('branch_id', $defaultBranchId) == $branch->id ? 'selected' : '' }}>
+                                        🏢 {{ $branch->name }} ({{ $branch->code }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input type="hidden" name="branch_id" id="branch_select" value="{{ $defaultBranchId }}">
+                            <div class="form-input text-sm bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-300 font-medium cursor-not-allowed">
+                                🏢 {{ $branches->firstWhere('id', $defaultBranchId)?->name ?? 'Assigned Branch' }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label text-xs">Designated Storage Location</label>
+                        <select name="initial_storage_location_id" id="storage_location_select" class="form-select text-sm">
+                            <option value="">-- Select Storage Location --</option>
+                            @foreach($storageLocations as $loc)
+                                <option value="{{ $loc->id }}"
+                                        data-branch-id="{{ $loc->branch_id }}"
+                                        {{ old('initial_storage_location_id', $defaultLocationId) == $loc->id ? 'selected' : '' }}>
+                                    📦 {{ $loc->name }} ({{ $loc->branch->name ?? 'Main' }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                @if($canChangeBranch)
+                <!-- Multi-Branch Distribution (Optional for authorized users) -->
+                <div class="pt-2 border-t border-slate-100 dark:border-dark-800" x-data="{ showMultiBranch: false }">
+                    <button type="button" @click="showMultiBranch = !showMultiBranch"
+                            class="text-xs text-sky-600 dark:text-sky-400 font-semibold hover:underline flex items-center gap-1">
+                        <span x-text="showMultiBranch ? '▼ Close Multi-Branch Distribution' : '▶ Distribute initial stock across multiple branches (Optional)'"></span>
+                    </button>
+
+                    <div x-show="showMultiBranch" x-cloak class="mt-3 p-4 rounded-xl bg-slate-50 dark:bg-dark-950/60 border border-slate-200 dark:border-dark-800 space-y-3">
+                        <p class="text-[11px] text-slate-500 dark:text-dark-400">
+                            Allocate specific portions of initial stock to different branches without duplication.
+                        </p>
+                        <div class="space-y-2.5">
+                            @foreach($branches as $idx => $b)
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center p-2 rounded-lg bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800">
+                                <div class="text-xs font-semibold text-slate-800 dark:text-dark-200 truncate">
+                                    🏢 {{ $b->name }}
+                                    <input type="hidden" name="branch_allocations[{{ $idx }}][branch_id]" value="{{ $b->id }}">
+                                </div>
+                                <div>
+                                    <select name="branch_allocations[{{ $idx }}][storage_location_id]" class="form-select text-xs py-1">
+                                        @foreach($storageLocations->where('branch_id', $b->id) as $loc)
+                                            <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="number" step="any" min="0" name="branch_allocations[{{ $idx }}][quantity]"
+                                           class="form-input text-xs py-1 font-mono" placeholder="Allocated Qty (0.00)">
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
-        <!-- Section 3: Optional Initial Opening Stock -->
+        <!-- Section 3: Initial Opening Stock Quantity -->
         <div class="card p-6 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-dark-800 pb-3">
                 <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span class="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">3</span>
-                    Initial Opening Stock (Optional)
+                    Opening Stock Quantity (Optional)
                 </h2>
-                <span class="text-[11px] text-slate-400">Record existing stock upon registration</span>
+                <span class="text-[11px] text-slate-400">Initial balance on hand</span>
             </div>
 
             <p class="text-xs text-slate-500 dark:text-dark-400">
-                If physical stock already exists, specify initial quantity below. It will automatically generate an opening stock transaction and balance.
-                Future deliveries should be received via <a href="{{ route('stock-receipts.create') }}" class="text-sky-600 dark:text-sky-400 hover:underline">Stock Receipts</a>.
+                If physical stock already exists, enter quantity below. It will be recorded strictly for your designated branch and storage location.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                <div class="form-group">
-                    <label class="form-label text-xs">Storage Location</label>
-                    <select name="initial_storage_location_id" class="form-select text-sm">
-                        <option value="">-- Select Storage Location --</option>
-                        @foreach($storageLocations as $loc)
-                            <option value="{{ $loc->id }}" {{ old('initial_storage_location_id') == $loc->id ? 'selected' : '' }}>
-                                {{ $loc->name }} ({{ $loc->branch->name ?? 'Main' }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
                 <div class="form-group">
                     <label class="form-label text-xs">Opening Quantity</label>
                     <input type="number" step="any" min="0" name="initial_quantity" value="{{ old('initial_quantity', 0) }}"
                            class="form-input text-sm font-mono"
                            placeholder="0.00">
                 </div>
-            </div>
 
-            <div class="flex items-center gap-2 pt-2">
-                <input type="checkbox" name="is_active" id="is_active" value="1" checked
-                       class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                <label for="is_active" class="text-xs text-slate-700 dark:text-dark-300 cursor-pointer">
-                    Active (Item is available for operations and manufacturing orders)
-                </label>
+                <div class="flex items-center gap-2 pt-6">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" checked
+                           class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
+                    <label for="is_active" class="text-xs text-slate-700 dark:text-dark-300 cursor-pointer">
+                        Active (Item is available for operations and sales)
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -291,11 +352,38 @@ function selectType(type) {
     }
 }
 
+function filterStorageLocations() {
+    const branchSelect = document.getElementById('branch_select');
+    const locSelect = document.getElementById('storage_location_select');
+    if (!branchSelect || !locSelect) return;
+
+    const branchId = branchSelect.value;
+    let firstFound = false;
+
+    Array.from(locSelect.options).forEach((opt, idx) => {
+        if (idx === 0) return; // Header option
+        const bId = opt.getAttribute('data-branch-id');
+        if (!branchId || bId === branchId) {
+            opt.style.display = '';
+            if (!firstFound) {
+                opt.selected = true;
+                firstFound = true;
+            }
+        } else {
+            opt.style.display = 'none';
+            if (opt.selected) {
+                opt.selected = false;
+            }
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const checked = document.querySelector('input[name="type"]:checked');
     if (checked) {
         selectType(checked.value);
     }
+    filterStorageLocations();
 });
 </script>
 @endsection

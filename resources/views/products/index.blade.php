@@ -109,9 +109,23 @@
         </form>
     </div>
 
-    <!-- Table -->
+    {{-- ── Product Table ── --}}
     <div class="card p-0 overflow-hidden shadow-xs">
-        <div class="table-wrapper">
+        <div class="px-5 py-4 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between flex-wrap gap-2">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Inventory Catalog</h2>
+                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">{{ $products->total() }} item{{ $products->total() !== 1 ? 's' : '' }} found</p>
+            </div>
+            @hasanyrole('Super Admin|Manager')
+            <div class="flex items-center gap-2">
+                <a href="{{ route('stock-receipts.create') }}" class="btn-secondary text-xs flex items-center gap-1.5 py-1.5">
+                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                    Receive Stock
+                </a>
+            </div>
+            @endhasanyrole
+        </div>
+        <div class="overflow-x-auto">
             <table class="table">
                 <thead>
                     <tr>
@@ -228,7 +242,7 @@
             </table>
         </div>
         @if($products->hasPages())
-        <div class="px-6 py-4 border-t border-slate-200 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-900/60">
+        <div class="px-5 py-4 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-900/40">
             {{ $products->links() }}
         </div>
         @endif

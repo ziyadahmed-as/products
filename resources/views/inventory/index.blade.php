@@ -78,9 +78,15 @@
         </form>
     </div>
 
-    <!-- Inventory Table -->
+    {{-- Inventory Table --}}
     <div class="card p-0 overflow-hidden shadow-xs">
-        <div class="table-wrapper">
+        <div class="px-5 py-4 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Stock Balances</h2>
+                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">{{ $balances->total() }} record{{ $balances->total() !== 1 ? 's' : '' }} found</p>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
             <table class="table">
                 <thead>
                     <tr>
@@ -164,8 +170,16 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-14 text-slate-400 dark:text-dark-500">
-                            No stock records match the selected filters.
+                        <td colspan="9" class="py-16 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-dark-800 flex items-center justify-center">
+                                    <svg class="w-7 h-7 text-slate-400 dark:text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-700 dark:text-dark-300">No stock records found</p>
+                                    <p class="text-xs text-slate-400 dark:text-dark-500 mt-0.5">Try adjusting your filters or receive new stock.</p>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     @endforelse
@@ -173,7 +187,7 @@
             </table>
         </div>
         @if($balances->hasPages())
-        <div class="px-6 py-4 border-t border-slate-200 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-900/60">
+        <div class="px-5 py-4 border-t border-slate-100 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-900/40">
             {{ $balances->links() }}
         </div>
         @endif
