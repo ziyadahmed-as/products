@@ -45,11 +45,15 @@ class SettingController extends Controller
     {
         $this->authorizeAccess();
 
+        if ($request->filled('contact_phone')) {
+            $request->merge(['contact_phone' => str_replace(' ', '', $request->contact_phone)]);
+        }
+
         $validated = $request->validate([
             'site_name'       => 'nullable|string|max:100',
             'site_tagline'    => 'nullable|string|max:255',
             'contact_email'   => 'nullable|email|max:150',
-            'contact_phone'   => 'nullable|string|max:50',
+            'contact_phone'   => ['nullable', 'string', new \App\Rules\EthiopianPhone],
             'contact_address' => 'nullable|string|max:255',
             'logo'            => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:4096',
         ]);

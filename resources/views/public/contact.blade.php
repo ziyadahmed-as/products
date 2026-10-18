@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <h4>Call Us</h4>
-                    <p>{{ \App\Models\Setting::get('contact_phone', '+1 (234) 567-8900') }}</p>
+                    <p>{{ \App\Models\Setting::get('contact_phone', '+251 900 000 000') }}</p>
                 </div>
             </div>
 
@@ -57,7 +57,10 @@
                 <div class="pub-form-grid">
                     <div class="pub-form-group">
                         <label for="name" class="pub-form-label">Name <span class="req">*</span></label>
-                        <input type="text" id="name" name="name" class="pub-input" required>
+                        <input type="text" id="name" name="name" class="pub-input" placeholder="Mohammed" list="contact_name_suggestions" required>
+                        <datalist id="contact_name_suggestions">
+                            <option value="Mohammed">
+                        </datalist>
                     </div>
                     <div class="pub-form-group">
                         <label for="email" class="pub-form-label">Email <span class="req">*</span></label>

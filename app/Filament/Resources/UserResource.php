@@ -31,6 +31,8 @@ class UserResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('name')
                         ->required()
+                        ->placeholder('Mohammed')
+                        ->datalist(['Mohammed'])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('email')
                         ->email()
@@ -39,6 +41,9 @@ class UserResource extends Resource
                         ->maxLength(255),
                     Forms\Components\TextInput::make('phone')
                         ->tel()
+                        ->placeholder('+251912345678')
+                        ->rule(new \App\Rules\EthiopianPhone)
+                        ->helperText('Format: +251 followed by 9 digits (total 12 digits, e.g. +251912345678)')
                         ->maxLength(30),
                 ])->columns(3),
 

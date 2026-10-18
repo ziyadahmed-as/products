@@ -112,11 +112,15 @@ class SaleController extends Controller
     {
         $user = auth()->user();
 
+        if ($request->filled('customer_phone')) {
+            $request->merge(['customer_phone' => str_replace(' ', '', $request->customer_phone)]);
+        }
+
         $validated = $request->validate([
             'branch_id'          => 'nullable|integer|exists:branches,id',
             'storage_location_id'=> 'nullable|integer|exists:storage_locations,id',
             'customer_name'      => 'nullable|string|max:200',
-            'customer_phone'     => 'nullable|string|max:50',
+            'customer_phone'     => ['nullable', 'string', new \App\Rules\EthiopianPhone],
             'order_notes'        => 'nullable|string|max:1000',
             'payment_status'     => 'required|in:Unpaid,Partial,Paid',
             'paid_amount'        => 'nullable|numeric|min:0',

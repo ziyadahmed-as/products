@@ -200,12 +200,15 @@ class QuickSell extends Page implements HasForms
                     ->schema([
                         Forms\Components\TextInput::make('customer_name')
                             ->label('Full Name')
-                            ->placeholder('Walk-in customer')
+                            ->placeholder('Mohammed')
+                            ->datalist(['Mohammed'])
                             ->maxLength(255),
                         Forms\Components\TextInput::make('customer_phone')
                             ->label('Phone Number')
                             ->tel()
-                            ->placeholder('+1 234 567 8900')
+                            ->placeholder('+251912345678')
+                            ->rule(new \App\Rules\EthiopianPhone)
+                            ->helperText('Format: +251 followed by 9 digits (total 12 digits, e.g. +251912345678)')
                             ->maxLength(50),
                         Forms\Components\TextInput::make('customer_email')
                             ->label('Email Address')
@@ -411,6 +414,8 @@ class QuickSell extends Page implements HasForms
                     'branch_id'           => $branch->id,        // ← Validated branch
                     'storage_location_id' => $location->id,
                     'customer_name'       => $data['customer_name'] ?: null,
+                    'customer_phone'      => !empty($data['customer_phone']) ? str_replace(' ', '', $data['customer_phone']) : null,
+                    'customer_email'      => $data['customer_email'] ?: null,
                     'subtotal'            => $subtotal,
                     'discount'            => 0,
                     'tax'                 => 0,

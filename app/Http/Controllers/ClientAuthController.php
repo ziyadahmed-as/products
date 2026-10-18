@@ -54,10 +54,14 @@ class ClientAuthController extends Controller
 
     public function register(Request $request)
     {
+        if ($request->filled('phone')) {
+            $request->merge(['phone' => str_replace(' ', '', $request->phone)]);
+        }
+
         $request->validate([
             'name'                  => 'required|string|max:255',
             'email'                 => 'required|email|unique:users,email',
-            'phone'                 => 'nullable|string|max:30',
+            'phone'                 => ['nullable', 'string', new \App\Rules\EthiopianPhone],
             'password'              => 'required|min:8|confirmed',
             'password_confirmation' => 'required',
         ]);

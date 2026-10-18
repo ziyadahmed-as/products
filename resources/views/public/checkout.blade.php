@@ -47,16 +47,24 @@
                     <div class="pub-form-group">
                         <label for="customer_name" class="pub-form-label">Full Name <span class="req">*</span></label>
                         <input type="text" id="customer_name" name="customer_name" class="pub-input"
-                               placeholder="John Doe"
+                               placeholder="Mohammed"
+                               list="checkout_name_suggestions"
                                value="{{ old('customer_name', $authUser?->name) }}"
                                {{ $authUser ? 'readonly' : '' }}
                                style="{{ $authUser ? 'opacity:.8;cursor:not-allowed;' : '' }}">
+                        <datalist id="checkout_name_suggestions">
+                            <option value="Mohammed">
+                        </datalist>
                     </div>
                     <div class="pub-form-group">
                         <label for="phone" class="pub-form-label">Phone Number <span class="req">*</span></label>
                         <input type="tel" id="phone" name="phone" class="pub-input"
-                               placeholder="+1 (555) 000-0000"
+                               placeholder="+251912345678"
+                               pattern="^\+251[0-9]{9}$"
+                               title="Must start with +251 followed by 9 digits (total 12 digits, e.g. +251912345678)"
+                               required
                                value="{{ old('phone', $authUser?->phone) }}">
+                        <div style="font-size:.72rem;color:var(--text-3);margin-top:.25rem;">Format: +251 followed by 9 digits (e.g. +251912345678)</div>
                     </div>
                 </div>
 

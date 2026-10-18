@@ -127,9 +127,14 @@ class ClientDashboardController extends Controller
     public function updateProfile(\Illuminate\Http\Request $request)
     {
         $user = Auth::user();
+
+        if ($request->filled('phone')) {
+            $request->merge(['phone' => str_replace(' ', '', $request->phone)]);
+        }
+
         $request->validate([
-            'name'         => 'required|string|max:255',
-            'phone'        => 'nullable|string|max:30',
+            'name'                  => 'required|string|max:255',
+            'phone'                 => ['nullable', 'string', new \App\Rules\EthiopianPhone],
             'current_password'      => 'nullable|string',
             'password'              => 'nullable|min:8|confirmed|required_with:current_password',
             'password_confirmation' => 'nullable',

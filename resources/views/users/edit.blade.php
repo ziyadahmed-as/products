@@ -21,7 +21,10 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
                 <label class="form-label">Full Name <span class="text-rose-500">*</span></label>
-                <input type="text" name="name" value="{{ old('name', $user->name) }}" class="form-input @error('name') border-rose-400 @enderror" required>
+                <input type="text" name="name" value="{{ old('name', $user->name) }}" placeholder="Mohammed" list="edit_user_name_suggestions" class="form-input @error('name') border-rose-400 @enderror" required>
+                <datalist id="edit_user_name_suggestions">
+                    <option value="Mohammed">
+                </datalist>
                 @error('name')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
             <div>
@@ -30,8 +33,10 @@
                 @error('email')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="form-label">Phone Number</label>
-                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="form-input">
+                <label class="form-label">Phone Number <span class="text-slate-400 font-normal text-xs">(+251...)</span></label>
+                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="+251912345678" pattern="^\+251[0-9]{9}$" title="Must start with +251 followed by 9 digits (total 12 digits, e.g. +251912345678)" class="form-input @error('phone') border-rose-400 @enderror">
+                <span class="text-xs text-slate-400 mt-1 block">Format: +251 followed by 9 digits (e.g. +251912345678)</span>
+                @error('phone')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="form-label">Role <span class="text-rose-500">*</span></label>

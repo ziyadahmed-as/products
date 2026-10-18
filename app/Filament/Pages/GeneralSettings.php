@@ -73,7 +73,11 @@ class GeneralSettings extends Page implements HasForms
                             ->label('Email Address')
                             ->email(),
                         TextInput::make('contact_phone')
-                            ->label('Phone Number'),
+                            ->label('Phone Number')
+                            ->tel()
+                            ->placeholder('+251912345678')
+                            ->rule(new \App\Rules\EthiopianPhone)
+                            ->helperText('Format: +251 followed by 9 digits (total 12 digits, e.g. +251912345678)'),
                         TextInput::make('contact_address')
                             ->label('Physical Address'),
                     ]),

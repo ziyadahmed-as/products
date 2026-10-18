@@ -36,11 +36,15 @@
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                             <div>
                                 <label class="pub-form-label">Full Name *</label>
-                                <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="pub-input" style="width:100%;">
+                                <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="pub-input" style="width:100%;" placeholder="Mohammed" list="profile_name_suggestions">
+                                <datalist id="profile_name_suggestions">
+                                    <option value="Mohammed">
+                                </datalist>
                             </div>
                             <div>
-                                <label class="pub-form-label">Phone</label>
-                                <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" class="pub-input" style="width:100%;" placeholder="+1 555 000">
+                                <label class="pub-form-label">Phone <span style="font-size:0.75rem;color:var(--text-3);font-weight:normal;">(+251...)</span></label>
+                                <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" class="pub-input" style="width:100%;" placeholder="+251912345678" pattern="^\+251[0-9]{9}$" title="Must start with +251 followed by 9 digits (total 12 digits, e.g. +251912345678)">
+                                <div style="font-size:.72rem;color:var(--text-3);margin-top:.25rem;">Format: +251 followed by 9 digits</div>
                             </div>
                         </div>
                         <div>

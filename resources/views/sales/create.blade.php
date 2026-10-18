@@ -277,12 +277,20 @@
                         <div class="form-group mb-0">
                             <label class="form-label text-xs">Customer Name</label>
                             <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name') }}"
-                                   class="form-input text-sm" placeholder="Walk-in Customer">
+                                   class="form-input text-sm" placeholder="Mohammed" list="sale_customer_name_suggestions">
+                            <datalist id="sale_customer_name_suggestions">
+                                <option value="Mohammed">
+                            </datalist>
                         </div>
                         <div class="form-group mb-0">
-                            <label class="form-label text-xs">Phone Number</label>
+                            <label class="form-label text-xs">Phone Number <span class="text-slate-400 font-normal">(+251...)</span></label>
                             <input type="text" name="customer_phone" id="customer_phone" value="{{ old('customer_phone') }}"
-                                   class="form-input text-sm" placeholder="+251 9XX XXX XXXX">
+                                   class="form-input text-sm @error('customer_phone') border-rose-400 @enderror"
+                                   placeholder="+251912345678"
+                                   pattern="^\+251[0-9]{9}$"
+                                   title="Must start with +251 followed by 9 digits (total 12 digits, e.g. +251912345678)">
+                            <span class="text-[11px] text-gray-400 mt-1 block">Format: +251 followed by 9 digits (e.g. +251912345678)</span>
+                            @error('customer_phone')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div class="form-group mb-0">
                             <label class="form-label text-xs">Order Notes</label>

@@ -241,7 +241,11 @@
                     <label style="display:block; font-size:0.8rem; font-weight:600; color:#e2e8f0; margin-bottom:0.4rem;">Your Name *</label>
                     <input type="text" name="reviewer_name" value="{{ old('reviewer_name') }}" required
                         style="width:100%; background:rgba(10,15,29,0.8); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.875rem; outline:none; font-family:'Inter',sans-serif;"
-                        placeholder="John Doe">
+                        placeholder="Mohammed"
+                        list="reviewer_name_suggestions">
+                    <datalist id="reviewer_name_suggestions">
+                        <option value="Mohammed">
+                    </datalist>
                     @error('reviewer_name')<p style="color:#f87171;font-size:0.75rem;margin-top:0.25rem;">{{ $message }}</p>@enderror
                 </div>
                 <div>

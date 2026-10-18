@@ -57,10 +57,14 @@ class UserController extends Controller implements HasMiddleware
 
     public function store(Request $request)
     {
+        if ($request->filled('phone')) {
+            $request->merge(['phone' => str_replace(' ', '', $request->phone)]);
+        }
+
         $data = $request->validate([
             'name'      => 'required|string|max:120',
             'email'     => 'required|email|unique:users,email',
-            'phone'     => 'nullable|string|max:30',
+            'phone'     => ['nullable', 'string', new \App\Rules\EthiopianPhone],
             'password'  => 'required|string|min:8|confirmed',
             'role'      => 'required|exists:roles,name',
             'branches'  => 'nullable|array',
@@ -101,10 +105,14 @@ class UserController extends Controller implements HasMiddleware
 
     public function update(Request $request, User $user)
     {
+        if ($request->filled('phone')) {
+            $request->merge(['phone' => str_replace(' ', '', $request->phone)]);
+        }
+
         $data = $request->validate([
             'name'      => 'required|string|max:120',
             'email'     => "required|email|unique:users,email,{$user->id}",
-            'phone'     => 'nullable|string|max:30',
+            'phone'     => ['nullable', 'string', new \App\Rules\EthiopianPhone],
             'password'  => 'nullable|string|min:8|confirmed',
             'role'      => 'required|exists:roles,name',
             'branches'  => 'nullable|array',

@@ -142,4 +142,59 @@ class AdminDashboardRedesignTest extends TestCase
         $response = $this->actingAs($seller)->get(route('reports.activity'));
         $response->assertStatus(403);
     }
+
+    public function test_all_admin_sidebar_routes_open_within_consolidated_dashboard(): void
+    {
+        $admin = User::firstOrCreate(
+            ['email' => 'sidebar_tester@example.com'],
+            ['name' => 'Sidebar Tester', 'password' => bcrypt('password123'), 'is_active' => true]
+        );
+        $admin->syncRoles(['Super Admin']);
+
+        $routesToTest = [
+            'users.index',
+            'branches.index',
+            'storage-locations.index',
+            'categories.index',
+            'units.index',
+            'products.index',
+            'stock-receipts.index',
+            'inventory.index',
+            'manufacturing.dashboard',
+            'manufacturing-orders.index',
+            'recipes.index',
+            'sales.create',
+            'sales.index',
+            'sale-returns.index',
+            'reports.index',
+            'reports.sales',
+            'reports.inventory',
+            'reports.production',
+            'reports.branches',
+            'reports.transfers',
+            'reports.activity',
+            'settings.index',
+        ];
+
+        foreach ($routesToTest as $routeName) {
+            $response = $this->actingAs($admin)->get(route($routeName));
+            $response->assertStatus(200);
+            $response->assertSee('sidebar-nav');
+            // Ensure no redirect to old /admin/ path
+            $this->assertFalse($response->isRedirect());
+        }
+    }
+
+    public function test_admin_url_redirects_to_new_dashboard(): void
+    {
+        $admin = User::firstOrCreate(
+            ['email' => 'admin_redirect_test@example.com'],
+            ['name' => 'Admin Redirect Test', 'password' => bcrypt('password123'), 'is_active' => true]
+        );
+        $admin->syncRoles(['Super Admin']);
+
+        $response = $this->actingAs($admin)->get('/admin');
+        $response->assertRedirect(route('dashboard'));
+    }
 }
+

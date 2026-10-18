@@ -205,7 +205,16 @@ class SaleResource extends Resource
             Forms\Components\Section::make('Customer & Branch')
                 ->schema([
                     Forms\Components\TextInput::make('customer_name')
+                        ->placeholder('Mohammed')
+                        ->datalist(['Mohammed'])
                         ->maxLength(255),
+                    Forms\Components\TextInput::make('customer_phone')
+                        ->label('Customer Phone')
+                        ->tel()
+                        ->placeholder('+251912345678')
+                        ->rule(new \App\Rules\EthiopianPhone)
+                        ->helperText('Format: +251 followed by 9 digits (total 12 digits, e.g. +251912345678)')
+                        ->maxLength(50),
 
                     // ── Processed By (locked to authenticated user) ──
                     // We display the current user's name as read-only text.

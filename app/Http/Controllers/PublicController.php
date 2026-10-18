@@ -164,10 +164,14 @@ class PublicController extends Controller
 
     public function placeOrder(Request $request)
     {
+        if ($request->filled('phone')) {
+            $request->merge(['phone' => str_replace(' ', '', $request->phone)]);
+        }
+
         $rules = [
             'customer_name'  => 'required|string|max:255',
             'customer_email' => 'required|email|max:255',
-            'phone'          => 'required|string|max:30',
+            'phone'          => ['required', 'string', new \App\Rules\EthiopianPhone],
             'address'        => 'required|string|max:1000',
             'notes'          => 'nullable|string|max:1000',
         ];

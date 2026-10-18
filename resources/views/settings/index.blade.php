@@ -167,11 +167,14 @@
                 {{-- Contact Phone --}}
                 <div class="space-y-1.5">
                     <label for="contact_phone" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        Official Phone Number
+                        Official Phone Number <span class="text-xs text-slate-400 font-normal">(+251...)</span>
                     </label>
                     <input type="text" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $settings['contact_phone']) }}"
                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:outline-hidden transition"
-                           placeholder="+251 900 000 000" />
+                           placeholder="+251912345678"
+                           pattern="^\+251[0-9]{9}$"
+                           title="Must start with +251 followed by 9 digits (total 12 digits, e.g. +251912345678)" />
+                    <span class="text-[11px] text-slate-400 block">Format: +251 followed by 9 digits (total 12 digits, e.g. +251912345678)</span>
                 </div>
 
                 {{-- Address (Full width) --}}

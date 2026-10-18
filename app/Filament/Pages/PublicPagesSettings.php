@@ -59,7 +59,12 @@ class PublicPagesSettings extends Page implements HasForms
                 Section::make('Contact Page')
                     ->schema([
                         TextInput::make('contact_email')->email()->required(),
-                        TextInput::make('contact_phone')->required(),
+                        TextInput::make('contact_phone')
+                            ->tel()
+                            ->placeholder('+251912345678')
+                            ->rule(new \App\Rules\EthiopianPhone)
+                            ->helperText('Format: +251 followed by 9 digits (total 12 digits, e.g. +251912345678)')
+                            ->required(),
                         Textarea::make('contact_address')->rows(2)->required(),
                     ]),
             ])
