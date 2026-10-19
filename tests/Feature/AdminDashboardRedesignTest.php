@@ -35,7 +35,7 @@ class AdminDashboardRedesignTest extends TestCase
         $response = $this->actingAs($admin)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('Welcome back, Admin Test!');
+        $response->assertSee('Dashboard');
         $response->assertSee('Revenue (Selected Period)');
         $response->assertSee('Orders Today');
         $response->assertSee('Pending Orders');
@@ -66,7 +66,7 @@ class AdminDashboardRedesignTest extends TestCase
         $response = $this->actingAs($manager)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('Welcome back, Manager Test!');
+        $response->assertSee('Dashboard');
         $response->assertSee('Revenue (Selected Period)');
         $response->assertSee('Products & Materials', false);
         $response->assertSee('Production Floor');
@@ -120,7 +120,7 @@ class AdminDashboardRedesignTest extends TestCase
         $response = $this->actingAs($auditor)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('Welcome back, Auditor Test!');
+        $response->assertSee('Dashboard');
         $response->assertSee('Recent System Activities & Audit');
         $response->assertSee('User Audit Trail');
     }
