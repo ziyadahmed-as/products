@@ -39,8 +39,9 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        $selectedType = $request->query('type') ?? $request->route('type');
+        if (!empty($selectedType)) {
+            $query->where('type', $selectedType);
         }
 
         if ($request->filled('category_id')) {
@@ -111,7 +112,7 @@ class ProductController extends Controller
         }
 
         $defaultLocationId = StorageLocation::where('branch_id', $defaultBranchId)->where('is_active', true)->first()?->id;
-        $defaultType = $request->query('type', 'raw_material');
+        $defaultType = $request->query('type') ?? $request->route('type') ?? 'raw_material';
 
         return view('products.create', compact('categories', 'units', 'branches', 'storageLocations', 'defaultType', 'defaultBranchId', 'defaultLocationId', 'canChangeBranch'));
     }
@@ -127,6 +128,28 @@ class ProductController extends Controller
             403,
             'Only Super Admin and Managers can register new raw materials and products.'
         );
+
+        // Pre-process branch allocations: drop any empty or non-positive rows so optional table lines don't fail validation
+        if ($request->has('branch_allocations')) {
+            $allocations = $request->input('branch_allocations');
+            if (is_array($allocations)) {
+                $filtered = array_values(array_filter($allocations, function ($alloc) {
+                    if (!is_array($alloc)) {
+                        return false;
+                    }
+                    $qty = $alloc['quantity'] ?? null;
+                    return $qty !== null && trim((string) $qty) !== '' && is_numeric($qty) && (float) $qty > 0;
+                }));
+
+                if (empty($filtered)) {
+                    $request->request->remove('branch_allocations');
+                } else {
+                    $request->merge(['branch_allocations' => $filtered]);
+                }
+            } else {
+                $request->request->remove('branch_allocations');
+            }
+        }
 
         $validated = $request->validate([
             'name'                        => 'required|string|max:255',
@@ -151,9 +174,13 @@ class ProductController extends Controller
             'branch_allocations.*.quantity'            => 'required_with:branch_allocations|numeric|min:0.01',
         ]);
 
-        // Selling price is required for resale and manufactured products
-        if (in_array($validated['type'], ['resale_product', 'manufactured_product']) && empty($validated['selling_price'])) {
-            $validated['selling_price'] = 0;
+        // Specific business rules per item type
+        if ($validated['type'] === 'raw_material') {
+            $validated['selling_price'] = null; // Raw materials are for production, not retail sale
+        } elseif (in_array($validated['type'], ['resale_product', 'manufactured_product'])) {
+            if (empty($validated['selling_price'])) {
+                $validated['selling_price'] = 0;
+            }
         }
 
         // Auto-generate SKU if omitted
@@ -281,7 +308,13 @@ class ProductController extends Controller
             return $product;
         });
 
-        $typeLabel = $product->type === 'raw_material' ? 'Raw Material' : 'Product';
+        $typeLabel = match($product->type) {
+            'raw_material'         => 'Raw Material',
+            'manufactured_product' => 'Manufactured Product',
+            'resale_product'       => 'Resale Product',
+            'consumable'           => 'Consumable Item',
+            default                => 'Item',
+        };
 
         return redirect()->route('products.show', $product)
             ->with('success', "{$typeLabel} '{$product->name}' registered successfully.");

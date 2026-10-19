@@ -10,20 +10,68 @@
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Product & Raw Material Inventory</h1>
             <p class="text-slate-500 dark:text-dark-400 text-sm mt-1">Manage catalog items, register new raw materials, and oversee available stock.</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
             @hasanyrole('Super Admin|Manager')
-            <a href="{{ route('stock-receipts.create') }}" class="btn-secondary flex items-center gap-2">
+            <a href="{{ route('stock-receipts.create') }}" class="btn-secondary text-xs flex items-center gap-1.5 py-2 px-3">
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
                 </svg>
                 <span>Receive Stock</span>
             </a>
-            <a href="{{ route('products.create') }}" class="btn-primary flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                <span>Register Item</span>
-            </a>
+
+            <!-- Registration Dropdown -->
+            <div x-data="{ openReg: false }" class="relative">
+                <button @click="openReg = !openReg" type="button" class="btn-primary text-xs flex items-center gap-2 py-2 px-3 shadow-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>Register New Item</span>
+                    <svg class="w-3.5 h-3.5 ml-1 transition-transform" :class="{ 'rotate-180': openReg }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <div x-show="openReg" @click.away="openReg = false" x-cloak
+                     class="absolute right-0 mt-2 w-64 rounded-xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-dark-800 shadow-xl z-50 p-1.5 space-y-1">
+                    <a href="{{ route('raw-materials.create') }}"
+                       class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-slate-700 dark:text-dark-200 transition">
+                        <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold shrink-0">🌾</span>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900 dark:text-white">Raw Material</div>
+                            <div class="text-[10px] text-slate-400">Ingredients, chemicals & packaging</div>
+                        </div>
+                    </a>
+
+                    <a href="{{ route('manufactured-products.create') }}"
+                       class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/40 text-slate-700 dark:text-dark-200 transition">
+                        <span class="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs font-bold shrink-0">🏭</span>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900 dark:text-white">Manufactured Product</div>
+                            <div class="text-[10px] text-slate-400">In-house produced finished goods</div>
+                        </div>
+                    </a>
+
+                    <a href="{{ route('resale-products.create') }}"
+                       class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-950/40 text-slate-700 dark:text-dark-200 transition">
+                        <span class="w-7 h-7 rounded-lg bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0">🛒</span>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900 dark:text-white">Resale Goods</div>
+                            <div class="text-[10px] text-slate-400">Ready-made items for direct sale</div>
+                        </div>
+                    </a>
+
+                    <div class="border-t border-slate-100 dark:border-dark-800 my-1"></div>
+
+                    <a href="{{ route('products.create', ['type' => 'consumable']) }}"
+                       class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-dark-200 transition">
+                        <span class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold shrink-0">📦</span>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900 dark:text-white">Consumable Item</div>
+                            <div class="text-[10px] text-slate-400">Factory & lab supplies</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
             @endhasanyrole
         </div>
     </div>
@@ -35,21 +83,21 @@
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-dark-400">All Items</span>
             <div class="text-xl font-bold text-slate-900 dark:text-white mt-1">{{ number_format($counts['all']) }}</div>
         </a>
-        <a href="{{ route('products.index', ['type' => 'raw_material']) }}"
+        <a href="{{ route('raw-materials.index') }}"
            class="p-4 rounded-xl bg-white dark:bg-dark-900 border transition shadow-xs {{ request('type') === 'raw_material' ? 'border-amber-500 shadow-amber-500/10' : 'border-slate-200/80 dark:border-dark-800 hover:border-slate-300 dark:hover:border-dark-700' }}">
             <span class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-amber-500"></span> Raw Materials
             </span>
             <div class="text-xl font-bold text-slate-900 dark:text-white mt-1">{{ number_format($counts['raw_material']) }}</div>
         </a>
-        <a href="{{ route('products.index', ['type' => 'manufactured_product']) }}"
+        <a href="{{ route('manufactured-products.index') }}"
            class="p-4 rounded-xl bg-white dark:bg-dark-900 border transition shadow-xs {{ request('type') === 'manufactured_product' ? 'border-purple-500 shadow-purple-500/10' : 'border-slate-200/80 dark:border-dark-800 hover:border-slate-300 dark:hover:border-dark-700' }}">
             <span class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-purple-500"></span> Manufactured
             </span>
             <div class="text-xl font-bold text-slate-900 dark:text-white mt-1">{{ number_format($counts['manufactured']) }}</div>
         </a>
-        <a href="{{ route('products.index', ['type' => 'resale_product']) }}"
+        <a href="{{ route('resale-products.index') }}"
            class="p-4 rounded-xl bg-white dark:bg-dark-900 border transition shadow-xs {{ request('type') === 'resale_product' ? 'border-cyan-500 shadow-cyan-500/10' : 'border-slate-200/80 dark:border-dark-800 hover:border-slate-300 dark:hover:border-dark-700' }}">
             <span class="text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Resale Goods

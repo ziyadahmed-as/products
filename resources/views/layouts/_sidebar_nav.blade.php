@@ -82,7 +82,7 @@
     {{-- ── 3. CATALOG (Collapsible Group) ── --}}
     @hasanyrole('Super Admin|Manager|Production Officer|Admin')
     @php
-        $catalogActive = request()->routeIs('products.*') || request()->routeIs('categories.*') || request()->routeIs('units.*');
+        $catalogActive = request()->routeIs('products.*') || request()->routeIs('raw-materials.*') || request()->routeIs('manufactured-products.*') || request()->routeIs('resale-products.*') || request()->routeIs('categories.*') || request()->routeIs('units.*');
     @endphp
     <div x-data="{ open: {{ $catalogActive ? 'true' : 'false' }} }" class="sidebar-group">
         <button type="button" @click="open = !open"
@@ -102,9 +102,24 @@
         </button>
 
         <div x-show="open" style="display: {{ $catalogActive ? 'block' : 'none' }};" class="space-y-1 pl-1 pt-1">
-            <a href="{{ route('products.index') }}" class="sidebar-subitem {{ request()->routeIs('products.*') ? 'active' : '' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('products.*') ? 'bg-cyan-500' : 'bg-slate-400' }}"></span>
+            <a href="{{ route('products.index') }}" class="sidebar-subitem {{ (request()->routeIs('products.index') && !request('type')) ? 'active' : '' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ (request()->routeIs('products.index') && !request('type')) ? 'bg-cyan-500' : 'bg-slate-400' }}"></span>
                 <span>Products & Materials</span>
+            </a>
+
+            <a href="{{ route('raw-materials.index') }}" class="sidebar-subitem {{ (request()->routeIs('raw-materials.*') || (request()->routeIs('products.*') && request('type') === 'raw_material')) ? 'active' : '' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ (request()->routeIs('raw-materials.*') || (request()->routeIs('products.*') && request('type') === 'raw_material')) ? 'bg-amber-500' : 'bg-slate-400' }}"></span>
+                <span>Raw Materials</span>
+            </a>
+
+            <a href="{{ route('manufactured-products.index') }}" class="sidebar-subitem {{ (request()->routeIs('manufactured-products.*') || (request()->routeIs('products.*') && request('type') === 'manufactured_product')) ? 'active' : '' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ (request()->routeIs('manufactured-products.*') || (request()->routeIs('products.*') && request('type') === 'manufactured_product')) ? 'bg-purple-500' : 'bg-slate-400' }}"></span>
+                <span>Manufactured Goods</span>
+            </a>
+
+            <a href="{{ route('resale-products.index') }}" class="sidebar-subitem {{ (request()->routeIs('resale-products.*') || (request()->routeIs('products.*') && request('type') === 'resale_product')) ? 'active' : '' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ (request()->routeIs('resale-products.*') || (request()->routeIs('products.*') && request('type') === 'resale_product')) ? 'bg-cyan-500' : 'bg-slate-400' }}"></span>
+                <span>Resale Goods</span>
             </a>
 
             @hasanyrole('Super Admin|Manager|Admin')

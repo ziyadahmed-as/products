@@ -76,6 +76,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/admin', fn() => redirect()->route('dashboard'));
 
+    // Type-Specific Registration & Inventory Routes
+    Route::get('/raw-materials',                   [ProductController::class, 'index'])->defaults('type', 'raw_material')->name('raw-materials.index');
+    Route::get('/raw-materials/create',            [ProductController::class, 'create'])->defaults('type', 'raw_material')->name('raw-materials.create');
+    Route::get('/manufactured-products',           [ProductController::class, 'index'])->defaults('type', 'manufactured_product')->name('manufactured-products.index');
+    Route::get('/manufactured-products/create',    [ProductController::class, 'create'])->defaults('type', 'manufactured_product')->name('manufactured-products.create');
+    Route::get('/resale-products',                 [ProductController::class, 'index'])->defaults('type', 'resale_product')->name('resale-products.index');
+    Route::get('/resale-products/create',          [ProductController::class, 'create'])->defaults('type', 'resale_product')->name('resale-products.create');
+
     // Inventory
     Route::resource('products',      ProductController::class);
     Route::resource('stock-receipts', StockReceiptController::class);

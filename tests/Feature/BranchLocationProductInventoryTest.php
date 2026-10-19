@@ -319,4 +319,87 @@ class BranchLocationProductInventoryTest extends TestCase
         // Product total quantity remains preserved (70 + 30 = 100)
         $this->assertEquals(100.00, (float) $product->fresh()->quantity);
     }
+
+    /**
+     * Test fixing the error: when empty/blank branch allocations are submitted,
+     * it does NOT trigger validation failure and registers raw material successfully.
+     */
+    public function test_raw_material_registration_with_blank_branch_allocations_succeeds(): void
+    {
+        $response = $this->actingAs($this->superAdmin)->post(route('products.store'), [
+            'name'                        => 'Seed',
+            'type'                        => 'raw_material',
+            'sku'                         => 'seed-001',
+            'unit_of_measure_id'          => $this->unitKg->id,
+            'package_size'                => '250kg',
+            'specification'               => 'High Quality',
+            'purchase_cost'               => 320.00,
+            'selling_price'               => '',
+            'minimum_stock_level'         => 10,
+            'branch_id'                   => $this->branchA->id,
+            'initial_storage_location_id' => $this->locationA->id,
+            'initial_quantity'            => 250.00,
+            'is_active'                   => 1,
+            // Simulates empty inputs from collapsed multi-branch distribution accordion
+            'branch_allocations'          => [
+                [
+                    'branch_id'           => $this->branchA->id,
+                    'storage_location_id' => $this->locationA->id,
+                    'quantity'            => '', // Blank quantity left by user
+                ],
+                [
+                    'branch_id'           => $this->branchB->id,
+                    'storage_location_id' => $this->locationB->id,
+                    'quantity'            => null,
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $product = Product::where('sku', 'seed-001')->first();
+        $this->assertNotNull($product);
+        $this->assertEquals('raw_material', $product->type);
+        $this->assertNull($product->selling_price); // Raw material selling price is null
+        $this->assertEquals(250.00, (float) $product->quantity);
+
+        // Verify balance in Location A is 250
+        $balanceA = InventoryBalance::where('product_id', $product->id)
+            ->where('storage_location_id', $this->locationA->id)
+            ->first();
+        $this->assertNotNull($balanceA);
+        $this->assertEquals(250.00, (float) $balanceA->quantity);
+    }
+
+    /**
+     * Test separated routes for Raw Materials, Manufactured Products, and Resale Goods.
+     */
+    public function test_separated_item_type_routes_and_processes(): void
+    {
+        // 1. Raw Materials Create Page
+        $resRaw = $this->actingAs($this->superAdmin)->get(route('raw-materials.create'));
+        $resRaw->assertOk();
+        $resRaw->assertSee('Register Raw Material');
+
+        // 2. Manufactured Products Create Page
+        $resMfg = $this->actingAs($this->superAdmin)->get(route('manufactured-products.create'));
+        $resMfg->assertOk();
+        $resMfg->assertSee('Register Manufactured Product');
+
+        // 3. Resale Goods Create Page
+        $resRes = $this->actingAs($this->superAdmin)->get(route('resale-products.create'));
+        $resRes->assertOk();
+        $resRes->assertSee('Register Resale Goods');
+
+        // 4. Listing Filters
+        $resRawIndex = $this->actingAs($this->superAdmin)->get(route('raw-materials.index'));
+        $resRawIndex->assertOk();
+
+        $resMfgIndex = $this->actingAs($this->superAdmin)->get(route('manufactured-products.index'));
+        $resMfgIndex->assertOk();
+
+        $resResIndex = $this->actingAs($this->superAdmin)->get(route('resale-products.index'));
+        $resResIndex->assertOk();
+    }
 }
