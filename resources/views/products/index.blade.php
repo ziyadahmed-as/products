@@ -193,10 +193,17 @@
                     @forelse($products as $product)
                     <tr>
                         <td>
-                            <a href="{{ route('products.show', $product) }}" class="font-semibold text-slate-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 transition flex items-center gap-2">
-                                <span>{{ $product->name }}</span>
-                            </a>
-                            <span class="font-mono text-xs text-sky-600 dark:text-sky-400 block mt-0.5">{{ $product->sku }}</span>
+                            <div class="flex items-center gap-2.5">
+                                @if($product->image && in_array($product->type, ['resale_product', 'manufactured_product']))
+                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-dark-700 shrink-0 shadow-2xs">
+                                @endif
+                                <div class="min-w-0">
+                                    <a href="{{ route('products.show', $product) }}" class="font-semibold text-slate-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 transition flex items-center gap-2">
+                                        <span class="truncate">{{ $product->name }}</span>
+                                    </a>
+                                    <span class="font-mono text-xs text-sky-600 dark:text-sky-400 block mt-0.5">{{ $product->sku }}</span>
+                                </div>
+                            </div>
                         </td>
                         <td>
                             @if($product->type === 'raw_material')

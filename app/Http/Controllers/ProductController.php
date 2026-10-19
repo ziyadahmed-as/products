@@ -12,6 +12,7 @@ use App\Models\UnitOfMeasure;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -163,6 +164,7 @@ class ProductController extends Controller
             'purchase_cost'               => 'nullable|numeric|min:0',
             'selling_price'               => 'nullable|numeric|min:0',
             'is_active'                   => 'nullable|boolean',
+            'image'                       => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
             'branch_id'                   => 'nullable|exists:branches,id',
             'branches'                    => 'nullable|array',
             'branches.*'                  => 'exists:branches,id',
@@ -181,6 +183,13 @@ class ProductController extends Controller
             if (empty($validated['selling_price'])) {
                 $validated['selling_price'] = 0;
             }
+        }
+
+        // Image attribute handling: strictly for resalable and manufactured products
+        if ($request->hasFile('image') && in_array($validated['type'], ['resale_product', 'manufactured_product'])) {
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        } else {
+            unset($validated['image']);
         }
 
         // Auto-generate SKU if omitted
@@ -388,6 +397,8 @@ class ProductController extends Controller
             'purchase_cost'       => 'nullable|numeric|min:0',
             'selling_price'       => 'nullable|numeric|min:0',
             'is_active'           => 'nullable|boolean',
+            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
+            'remove_image'        => 'nullable|boolean',
             'branches'            => 'nullable|array',
             'branches.*'          => 'exists:branches,id',
         ]);
@@ -396,6 +407,27 @@ class ProductController extends Controller
         $validated['minimum_stock_level'] = $validated['minimum_stock_level'] ?? 0;
         $validated['purchase_cost'] = $validated['purchase_cost'] ?? 0;
         $validated['selling_price'] = $validated['selling_price'] ?? 0;
+
+        // Image attribute handling: strictly for resalable and manufactured products
+        if (!in_array($validated['type'], ['resale_product', 'manufactured_product'])) {
+            // Raw materials and consumables do not support images
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = null;
+        } elseif ($request->boolean('remove_image')) {
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = null;
+        } elseif ($request->hasFile('image')) {
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        } else {
+            unset($validated['image']);
+        }
 
         DB::transaction(function () use ($product, $validated, $user) {
             $product->update($validated);
@@ -447,6 +479,10 @@ class ProductController extends Controller
             // Cannot hard delete without breaking audit trail; deactivate instead
             $product->update(['is_active' => false]);
             return back()->with('success', "'{$product->name}' has existing inventory transactions and was deactivated instead of deleted.");
+        }
+
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
         }
 
         $product->branches()->detach();

@@ -184,7 +184,6 @@
         <div class="p-4 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between">
             <div>
                 <h2 class="text-base font-bold text-slate-900 dark:text-white">Branch Operations & Financial Performance</h2>
-                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Direct comparative figures across authorized branch locations.</p>
             </div>
             <a href="{{ route('reports.branches') }}" class="text-xs text-sky-600 dark:text-sky-400 hover:underline font-medium">
                 Detailed Branch Report →
@@ -244,7 +243,6 @@
         <div class="p-4 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between">
             <div>
                 <h2 class="text-base font-bold text-slate-900 dark:text-white">Recent Transactions</h2>
-                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Most recent sales orders recorded in authorized scope.</p>
             </div>
             <a href="{{ route('reports.sales') }}" class="text-xs text-sky-600 dark:text-sky-400 hover:underline font-medium">
                 View All Sales Reports →

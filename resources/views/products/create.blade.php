@@ -83,7 +83,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('products.store') }}" id="product-form" class="space-y-6">
+    <form method="POST" action="{{ route('products.store') }}" id="product-form" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
         <!-- Section 1: Item Classification & Identification -->
@@ -183,7 +183,7 @@
             </div>
 
             <!-- Category, Unit, Package Size -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 gap-4" :class="currentType === 'raw_material' ? 'md:grid-cols-2' : 'md:grid-cols-3'">
                 <div class="form-group">
                     <label class="form-label text-xs">Category</label>
                     <select name="category_id" class="form-select text-sm">
@@ -211,21 +211,62 @@
                     <span class="text-[11px] text-slate-400 mt-1 block">Supported: kilograms, liters, bottles, bags, etc.</span>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" x-show="currentType !== 'raw_material'" x-cloak>
                     <label class="form-label text-xs">Package Size / Packing Spec</label>
                     <input type="text" name="package_size" value="{{ old('package_size') }}"
                            class="form-input text-sm"
-                           :placeholder="currentType === 'raw_material' ? 'e.g. 50kg bag, 200L drum' : (currentType === 'manufactured_product' ? 'e.g. 1L bottle, Carton of 12' : 'e.g. Pack of 100, Box')">
+                           :disabled="currentType === 'raw_material'"
+                           :placeholder="currentType === 'manufactured_product' ? 'e.g. 1L bottle, Carton of 12' : 'e.g. Pack of 100, Box'">
                 </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" x-show="currentType !== 'raw_material'" x-cloak>
                 <label class="form-label text-xs">Specification / Quality Notes</label>
                 <textarea name="specification" rows="2"
                           class="form-textarea text-sm"
-                          :placeholder="currentType === 'raw_material'
-                              ? 'Quality purity grade, moisture content %, chemical specifications, harvest origin...'
-                              : 'Product features, manufacturing tolerances, shelf life, regulatory compliance...' ">{{ old('specification') }}</textarea>
+                          :disabled="currentType === 'raw_material'"
+                          placeholder="Product features, manufacturing tolerances, shelf life, regulatory compliance...">{{ old('specification') }}</textarea>
+            </div>
+
+            <!-- Product Image (Strictly for Resale & Manufactured Products) -->
+            <div class="form-group pt-2 border-t border-slate-100 dark:border-dark-800"
+                 x-show="currentType === 'manufactured_product' || currentType === 'resale_product'"
+                 x-cloak
+                 x-data="{ imagePreview: null }">
+                <label class="form-label text-xs flex items-center justify-between mb-1.5">
+                    <span class="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-dark-200">
+                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Product Image
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-normal">PNG, JPG, WEBP up to 5MB</span>
+                </label>
+
+                <div class="flex items-center gap-4 p-3.5 rounded-xl border border-dashed border-slate-300 dark:border-dark-700 bg-slate-50/60 dark:bg-dark-900/40 hover:bg-slate-50 dark:hover:bg-dark-850 transition">
+                    <!-- Image Preview / Placeholder -->
+                    <div class="relative w-16 h-16 rounded-xl bg-slate-200 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                        <template x-if="imagePreview">
+                            <img :src="imagePreview" alt="Product Image Preview" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="!imagePreview">
+                            <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </template>
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <input type="file" name="image" id="create_product_image" accept="image/png,image/jpeg,image/webp,image/gif"
+                               :disabled="currentType !== 'manufactured_product' && currentType !== 'resale_product'"
+                               class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 dark:file:bg-sky-950/60 dark:file:text-sky-300 cursor-pointer"
+                               @change="const file = $event.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => { imagePreview = e.target.result; }; reader.readAsDataURL(file); } else { imagePreview = null; }">
+                        <p class="text-[11px] text-slate-400 mt-1">Displayed across storefront catalog, POS terminals, inventory cards, and customer invoices.</p>
+                    </div>
+
+                    <template x-if="imagePreview">
+                        <button type="button" @click="imagePreview = null; document.getElementById('create_product_image').value = ''"
+                                class="btn-icon text-rose-500 hover:text-rose-700 shrink-0" title="Remove selected image">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </template>
+                </div>
             </div>
         </div>
 
@@ -408,7 +449,6 @@
                 @endif
             </div>
         </div>
-
         <!-- Section 3: Initial Opening Stock Quantity -->
         <div class="card p-6 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-dark-800 pb-3">

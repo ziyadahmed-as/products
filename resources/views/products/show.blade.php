@@ -260,6 +260,20 @@
         <!-- Column 3: Master Details & Specifications Sidebar -->
         <div class="space-y-6">
 
+            @if($product->image && in_array($product->type, ['resale_product', 'manufactured_product']))
+            <div class="card p-4 space-y-2 shadow-xs overflow-hidden">
+                <div class="w-full h-56 rounded-xl overflow-hidden bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex items-center justify-center">
+                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1">
+                    <span>Product Image</span>
+                    <a href="{{ asset('storage/' . $product->image) }}" target="_blank" class="text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 font-medium">
+                        View Full Size &nearr;
+                    </a>
+                </div>
+            </div>
+            @endif
+
             <div class="card p-5 space-y-4 shadow-xs">
                 <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-dark-800 pb-2">
                     Master Specifications

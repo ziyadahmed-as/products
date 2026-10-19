@@ -181,10 +181,12 @@ class ViewProduct extends ViewRecord
                 // ── Image / Specification ──────────────────────────────────
                 Section::make('Description & Image')
                     ->icon('heroicon-o-photo')
+                    ->visible(fn ($record) => $record->type !== 'raw_material')
                     ->schema([
                         ImageEntry::make('image')
                             ->circular()
                             ->size(120)
+                            ->visible(fn ($record) => in_array($record->type, ['resale_product', 'manufactured_product']))
                             ->placeholder('No image uploaded'),
                         TextEntry::make('specification')
                             ->label('Specification / Description')

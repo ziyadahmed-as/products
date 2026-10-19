@@ -106,75 +106,6 @@
         </form>
     </div>
 
-    <!-- Executive Business Intelligence & Summary Banner -->
-    <div class="card p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl shadow-sm border border-slate-800">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-700/60">
-            <div>
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-xs uppercase tracking-wider font-extrabold text-cyan-300">Executive Report Snapshot</span>
-                    <span class="px-2 py-0.5 rounded-full bg-white/10 text-white text-[11px] font-semibold">
-                        {{ $periodReport['label'] ?? 'Selected Period' }}
-                    </span>
-                </div>
-                <h2 class="text-lg font-bold text-white mt-1">Consolidated Operations &amp; Financial Highlights</h2>
-            </div>
-            <div class="flex items-center gap-3 text-xs">
-                <span class="text-slate-300">Total Asset Valuation:</span>
-                <span class="font-bold text-white font-mono bg-white/10 px-2.5 py-1 rounded-lg">Br {{ number_format($stats['total_inventory_valuation'] ?? 0, 2) }}</span>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 text-xs">
-            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-slate-400 font-medium mb-1">Period Invoices</div>
-                <div class="text-xl font-bold text-white">{{ number_format($periodReport['sales_count'] ?? 0) }}</div>
-                <div class="text-[11px] text-cyan-300 mt-1">Avg Ticket: Br {{ number_format($periodReport['avg_order_value'] ?? 0, 2) }}</div>
-            </div>
-
-            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-slate-400 font-medium mb-1">Cash Realized vs Due</div>
-                <div class="text-xl font-bold text-emerald-400">Br {{ number_format($periodReport['paid_amount'] ?? 0, 2) }}</div>
-                <div class="text-[11px] text-rose-300 mt-1">Unpaid: Br {{ number_format($periodReport['unpaid_amount'] ?? 0, 2) }}</div>
-            </div>
-
-            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-slate-400 font-medium mb-1">Manufacturing Output</div>
-                <div class="text-xl font-bold text-purple-300">{{ number_format($periodReport['completed_mfg_units'] ?? 0, 0) }} <span class="text-xs font-normal text-slate-300">units</span></div>
-                <div class="text-[11px] text-slate-300 mt-1">{{ $periodReport['completed_mfg_orders'] ?? 0 }} batches completed</div>
-            </div>
-
-            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-slate-400 font-medium mb-1">Top Selling Item</div>
-                <div class="text-sm font-bold text-amber-300 truncate" title="{{ $periodReport['top_product'] ?? 'None' }}">{{ $periodReport['top_product'] ?? 'None recorded' }}</div>
-                <div class="text-[11px] text-slate-300 mt-1">Br {{ number_format($periodReport['top_product_revenue'] ?? 0, 2) }} volume</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Unit-Based Inventory Stock KPI Bar -->
-    <div class="card p-4 sm:p-5 bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-dark-800 shadow-xs">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-dark-800">
-            <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
-                <h3 class="text-xs uppercase font-extrabold tracking-wider text-slate-800 dark:text-dark-200">
-                    📦 Product Stock on Hand (By Unit of Measure)
-                </h3>
-            </div>
-            <span class="text-[11px] text-slate-400 font-medium">Quantities tracked independently by unit &bull; Never combined</span>
-        </div>
-        <div class="flex flex-wrap items-center gap-2.5 pt-3">
-            @forelse($stats['stock_by_unit'] ?? [] as $unitCode => $uQty)
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 shadow-2xs">
-                    <span class="text-xs text-slate-500 dark:text-dark-400">Total Stock:</span>
-                    <span class="text-sm font-extrabold text-cyan-600 dark:text-cyan-400 font-mono">{{ number_format($uQty, 2) }}</span>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">{{ $unitCode }}</span>
-                </div>
-            @empty
-                <span class="text-xs text-slate-400 italic">No inventory registered yet.</span>
-            @endforelse
-        </div>
-    </div>
 
     <!-- Core KPI Summary Cards Row (6 Cards — Professional Executive Design) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -355,7 +286,6 @@
                             Dynamic Analytics
                         </span>
                     </div>
-                    <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Daily confirmed sales volume across active branch registers</p>
                 </div>
 
                 <!-- Professional Chart Pagination & Mode Toggle Controls -->
@@ -425,7 +355,6 @@
                 <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-dark-800">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Orders by Type</h2>
-                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Online, POS &amp; Direct breakdown</p>
                     </div>
                     <span class="text-xs font-semibold text-slate-600 dark:text-dark-300 bg-slate-100 dark:bg-dark-800 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-dark-700">Distribution</span>
                 </div>
@@ -462,7 +391,6 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Important Metrics &amp; Marketing Reports</h3>
-                    <p class="text-xs text-slate-500 dark:text-dark-400">Key marketing performance indicators, CSV exports, and executive analytics</p>
                 </div>
             </div>
             @hasanyrole('Super Admin|Manager|Auditor')
@@ -571,7 +499,6 @@
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Staff &amp; Team Operational Performance</h2>
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200" x-text="total + ' Members'"></span>
                 </div>
-                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Personnel productivity metrics, sales ledger contributions, and live activity tracking</p>
             </div>
             <div class="flex items-center gap-3">
                 <div class="relative w-48 sm:w-64">
@@ -755,7 +682,6 @@
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Product Catalog &amp; Real-Time Inventory</h2>
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200" x-text="total + ' Products'"></span>
                 </div>
-                <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Live merchandise balances, price cards, minimum stock safety alerts, and branch allocations</p>
             </div>
             <div class="flex flex-wrap items-center gap-2.5">
                 <!-- Type Filter Pills -->
@@ -917,7 +843,6 @@
                 <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Recent Sales Transactions</h2>
-                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Live transaction log across store registers</p>
                     </div>
                     <a href="{{ route('sales.index') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
                         View All Sales &rarr;
@@ -1009,7 +934,6 @@
                 <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Active Production Batches</h2>
-                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Orders currently on the manufacturing floor</p>
                     </div>
                     <a href="{{ route('manufacturing-orders.index') }}" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 hover:underline">
                         View All Orders &rarr;
@@ -1106,7 +1030,6 @@
                 <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Low Stock Reorder Alerts</h2>
-                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Items reaching or falling below safety stock threshold</p>
                     </div>
                     <a href="{{ route('inventory.index') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">
                         Stock Balances &rarr;
@@ -1195,7 +1118,6 @@
                 <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Recent System Activities &amp; Audit</h2>
-                        <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Real-time log of administrative and operational actions</p>
                     </div>
                     @hasanyrole('Super Admin|Auditor')
                     <a href="{{ route('reports.activity') }}" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">

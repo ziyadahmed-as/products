@@ -100,6 +100,7 @@ class ProductResource extends Resource
                                 ]),
                             Forms\Components\TextInput::make('package_size')
                                 ->placeholder('e.g. 50kg bag, 1L bottle')
+                                ->visible(fn (Forms\Get $get) => $get('type') !== 'raw_material')
                                 ->maxLength(100),
                         ])->columns(2),
 
@@ -160,13 +161,18 @@ class ProductResource extends Resource
                             Forms\Components\Textarea::make('specification')
                                 ->label('Specification / Description')
                                 ->rows(4)
+                                ->visible(fn (Forms\Get $get) => $get('type') !== 'raw_material')
                                 ->columnSpanFull(),
                             Forms\Components\FileUpload::make('image')
+                                ->label('Product Image')
                                 ->image()
                                 ->directory('products')
-                                ->maxSize(2048)
+                                ->maxSize(5120)
+                                ->visible(fn (Forms\Get $get) => in_array($get('type'), ['resale_product', 'manufactured_product']))
                                 ->columnSpanFull(),
-                        ])->collapsible(),
+                        ])
+                        ->visible(fn (Forms\Get $get) => $get('type') !== 'raw_material')
+                        ->collapsible(),
                 ])
                 ->columnSpan(['lg' => 2]),
 

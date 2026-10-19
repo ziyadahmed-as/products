@@ -153,7 +153,6 @@
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Sellable Products & Stock Lookup
                         </h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Quick price check and current shelf inventory for counter sales</p>
                     </div>
                     <!-- Live Search Input -->
                     <div class="flex items-center gap-2">
@@ -229,7 +228,6 @@
                             <span class="w-2 h-2 rounded-full bg-sky-500"></span>
                             My Recent Sales Transactions
                         </h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Live register logs, invoices, and customer receipt records</p>
                     </div>
                     <a href="{{ route('sales.index') }}" class="btn-secondary py-1.5 px-3 text-xs">
                         View All ({{ $sellerData['total_count'] ?? 0 }})
@@ -317,7 +315,6 @@
                 <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-dark-800">
                     <div>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Payment Breakdown</h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Settlement channels for your sales</p>
                     </div>
                 </div>
 
@@ -348,7 +345,6 @@
                 <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-dark-800">
                     <div>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Top Selling Items</h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Your highest volume products</p>
                     </div>
                 </div>
 

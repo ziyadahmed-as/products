@@ -166,7 +166,6 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Production Intelligence & Export Center</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Download production batch records, raw material logs, and batch yield metrics</p>
                 </div>
             </div>
             <a href="{{ route('manufacturing-orders.index') }}" class="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 w-fit">
@@ -261,7 +260,6 @@
             <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Active Production Batches</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Orders requiring material issuance, production monitoring, or completion.</p>
                 </div>
                 <a href="{{ route('manufacturing-orders.index') }}" class="btn-secondary text-xs py-1.5 px-3">View All</a>
             </div>
@@ -336,7 +334,6 @@
             <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-dark-800">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Raw Material Stock</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Available component inventory for production</p>
                 </div>
             </div>
 
@@ -375,7 +372,6 @@
             <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Recent Completed Production</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Finished goods registered to inventory</p>
                 </div>
             </div>
 
@@ -416,7 +412,6 @@
             <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Manufacturing Stock Movements</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Traceable raw material deductions and finished product additions</p>
                 </div>
             </div>
 

@@ -2,7 +2,11 @@
 @section('title', 'Edit ' . ($product->type === 'raw_material' ? 'Raw Material' : 'Product') . ' — ' . $product->name)
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-4xl mx-auto space-y-6" x-data="{
+    currentType: '{{ old('type', $product->type) }}',
+    imagePreview: null,
+    removeExisting: false
+}">
 
     <!-- Header -->
     <div class="flex items-center justify-between">
@@ -69,7 +73,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('products.update', $product) }}" class="space-y-6">
+    <form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
 
@@ -92,7 +96,7 @@
                     <label class="form-label text-xs">
                         Item Type <span class="text-rose-500">*</span>
                     </label>
-                    <select name="type" required class="form-select text-sm">
+                    <select name="type" required class="form-select text-sm" x-model="currentType">
                         <option value="raw_material" {{ old('type', $product->type) === 'raw_material' ? 'selected' : '' }}>Raw Material</option>
                         <option value="manufactured_product" {{ old('type', $product->type) === 'manufactured_product' ? 'selected' : '' }}>Manufactured Product</option>
                         <option value="resale_product" {{ old('type', $product->type) === 'resale_product' ? 'selected' : '' }}>Resale Product</option>
@@ -138,10 +142,11 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="form-group">
+                <div class="form-group" x-show="currentType !== 'raw_material'" x-cloak>
                     <label class="form-label text-xs">Package Size / Packing Spec</label>
                     <input type="text" name="package_size" value="{{ old('package_size', $product->package_size) }}"
                            class="form-input text-sm"
+                           :disabled="currentType === 'raw_material'"
                            placeholder="e.g. 50kg bag, 1L bottle">
                 </div>
 
@@ -155,10 +160,76 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" x-show="currentType !== 'raw_material'" x-cloak>
                 <label class="form-label text-xs">Specification / Description</label>
                 <textarea name="specification" rows="3"
+                          :disabled="currentType === 'raw_material'"
                           class="form-textarea text-sm">{{ old('specification', $product->specification) }}</textarea>
+            </div>
+
+            <!-- Product Image (Strictly for Resale & Manufactured Products) -->
+            <div class="form-group pt-4 border-t border-slate-100 dark:border-dark-800"
+                 x-show="currentType === 'manufactured_product' || currentType === 'resale_product'"
+                 x-cloak>
+                <label class="form-label text-xs flex items-center justify-between mb-2">
+                    <span class="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-dark-200">
+                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Product Image
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-normal">PNG, JPG, WEBP up to 5MB</span>
+                </label>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl border border-dashed border-slate-300 dark:border-dark-700 bg-slate-50/60 dark:bg-dark-900/40">
+                    <!-- Image Thumbnail Preview / Current Image -->
+                    <div class="relative w-20 h-20 rounded-xl bg-slate-200 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                        <template x-if="imagePreview">
+                            <img :src="imagePreview" alt="New Image Preview" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="!imagePreview && !removeExisting">
+                            @if($product->image)
+                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                            @else
+                                <div class="text-center p-1 text-slate-400">
+                                    <svg class="w-7 h-7 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span class="text-[9px] block">No Image</span>
+                                </div>
+                            @endif
+                        </template>
+                        <template x-if="removeExisting && !imagePreview">
+                            <div class="text-center p-1 text-rose-500">
+                                <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <span class="text-[9px] font-bold block">Removing</span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="flex-1 min-w-0 space-y-1.5">
+                        <input type="file" name="image" id="edit_product_image" accept="image/png,image/jpeg,image/webp,image/gif"
+                               :disabled="currentType !== 'manufactured_product' && currentType !== 'resale_product'"
+                               class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 dark:file:bg-sky-950/60 dark:file:text-sky-300 cursor-pointer"
+                               @change="const file = $event.target.files[0]; if (file) { removeExisting = false; const reader = new FileReader(); reader.onload = (e) => { imagePreview = e.target.result; }; reader.readAsDataURL(file); } else { imagePreview = null; }">
+                        <p class="text-[11px] text-slate-400">Upload a new image to replace the existing one, or check remove to delete it.</p>
+
+                        @if($product->image)
+                            <div class="pt-1 flex items-center gap-2">
+                                <input type="checkbox" name="remove_image" id="remove_image" value="1"
+                                       x-model="removeExisting"
+                                       @change="if(removeExisting) { imagePreview = null; document.getElementById('edit_product_image').value = ''; }"
+                                       class="rounded border-slate-300 text-rose-600 focus:ring-rose-500">
+                                <label for="remove_image" class="text-xs text-rose-600 dark:text-rose-400 cursor-pointer font-medium">
+                                    Remove current product image
+                                </label>
+                            </div>
+                        @endif
+                    </div>
+
+                    <template x-if="imagePreview">
+                        <button type="button" @click="imagePreview = null; document.getElementById('edit_product_image').value = ''"
+                                class="btn-icon text-rose-500 hover:text-rose-700 shrink-0" title="Cancel new image selection">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </template>
+                </div>
             </div>
         </div>
 
