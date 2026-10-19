@@ -7,23 +7,69 @@
 @else
 <div class="space-y-6">
 
-    <!-- Dashboard Title matching Image 1 -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
-            <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Welcome back, {{ auth()->user()->name }}! Real-time operations, inventory, and sales performance.</p>
-        </div>
-        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-dark-400 font-medium">
-            @if(auth()->user()->branches->isNotEmpty())
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 font-semibold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-                    Branch: {{ auth()->user()->branches->pluck('name')->join(', ') }}
-                </span>
-            @endif
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 font-semibold">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                {{ auth()->user()->roles->first()?->name ?? 'Administrator' }}
-            </span>
+    <!-- Dashboard Profile Header Banner -->
+    <div class="relative overflow-hidden rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/90 dark:border-dark-800 p-5 sm:p-6 shadow-xs">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            {{-- Left Profile Greeting Block --}}
+            <div class="flex items-center gap-4">
+                <div class="relative shrink-0">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600 via-indigo-600 to-sky-500 p-0.5 shadow-md">
+                        <div class="w-full h-full rounded-[14px] bg-slate-900 text-white font-black text-lg flex items-center justify-center">
+                            {{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}
+                        </div>
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-dark-900 shadow-xs" title="Active"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
+                        <span class="text-xs font-bold text-slate-400">•</span>
+                        <span class="text-xs font-semibold text-slate-600 dark:text-dark-300">Welcome back, {{ auth()->user()->name }}!</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-dark-400 mt-0.5">Real-time enterprise operations, inventory tracking, and sales performance.</p>
+
+                    <div class="mt-2.5 flex items-center gap-2 flex-wrap">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                            {{ auth()->user()->roles->first()?->name ?? 'Staff' }}
+                        </span>
+                        @if(auth()->user()->branches->isNotEmpty())
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-dark-200 border border-slate-200 dark:border-dark-700">
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                {{ auth()->user()->branches->pluck('name')->join(', ') }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 border border-slate-200 dark:border-dark-700">
+                                Global Headquarters
+                            </span>
+                        @endif
+                        <span class="text-[11px] text-slate-400 hidden sm:inline">
+                            Logged in as <span class="font-medium text-slate-600 dark:text-dark-300">{{ auth()->user()->email }}</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Right Quick Action Buttons for Profile & Password --}}
+            <div class="flex items-center gap-2 self-start lg:self-center shrink-0">
+                <a href="{{ route('profile.index', ['tab' => 'profile']) }}"
+                   class="btn-secondary text-xs py-2 px-3.5 flex items-center gap-2 rounded-xl border-slate-200 dark:border-dark-700 hover:border-cyan-400 dark:hover:border-cyan-600 hover:text-cyan-600 dark:hover:text-cyan-400 transition group shadow-2xs">
+                    <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="font-bold">My Profile</span>
+                </a>
+
+                <a href="{{ route('profile.index', ['tab' => 'password']) }}"
+                   class="btn-secondary text-xs py-2 px-3.5 flex items-center gap-2 rounded-xl border-slate-200 dark:border-dark-700 hover:border-indigo-400 dark:hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition group shadow-2xs">
+                    <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    <span class="font-bold">Change Password</span>
+                </a>
+            </div>
         </div>
     </div>
 

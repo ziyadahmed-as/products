@@ -14,6 +14,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StorageLocationController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\PublicController;
@@ -113,6 +114,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin
     Route::resource('users', UserController::class);
+
+    // Profile & Password Management (All authenticated staff/admins)
+    Route::get('/profile',              [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile',              [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/password',     [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     // System Settings & Branding (Super Admin & Admin)
     Route::get('/settings',             [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');

@@ -82,8 +82,15 @@ class ManufacturingService
 
             $reference = !empty($data['reference']) ? $data['reference'] : $this->generateOrderNumber();
             $storageLocationId = $data['storage_location_id'];
-            $recipeId = $data['recipe_id'] ?? null;
             $unitId = $data['unit_of_measure_id'] ?? $product->unit_of_measure_id;
+
+            // Resolve recipe: use explicitly selected one, otherwise fall back to the product's own recipe
+            $recipeId = $data['recipe_id'] ?? null;
+            if (!$recipeId) {
+                // Auto-link to the product's recipe if one exists
+                $productRecipe = \App\Models\Recipe::where('product_id', $product->id)->first();
+                $recipeId = $productRecipe?->id;
+            }
 
             $order = ManufacturingOrder::create([
                 'reference'                => $reference,

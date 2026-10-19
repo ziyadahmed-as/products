@@ -96,25 +96,44 @@
         <!-- Dynamic Nav Links by Authenticated Role -->
         @include('layouts._sidebar_nav')
 
-        <!-- Sidebar User Footer -->
-        <div class="p-3.5 border-t border-slate-100 dark:border-dark-800 bg-slate-50/70 dark:bg-dark-900/60">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-slate-900 dark:bg-dark-700 flex items-center justify-center text-xs font-bold text-white shadow-xs flex-shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-slate-800 dark:text-white truncate leading-tight">{{ auth()->user()->name ?? 'User' }}</p>
-                    <p class="text-xs text-slate-600 dark:text-dark-400 truncate leading-normal">{{ auth()->user()->email ?? '' }}</p>
-                </div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn-icon hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-950/50 dark:hover:border-rose-900" title="Sign Out">
+        <!-- Sidebar User Profile Card -->
+        <div class="p-3 border-t border-slate-200/80 dark:border-dark-800 bg-white dark:bg-dark-900/90">
+            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-dark-800/60 border border-slate-200/60 dark:border-dark-700/60 flex items-center gap-2.5">
+                <a href="{{ route('profile.index') }}" class="flex items-center gap-2.5 flex-1 min-w-0 group" title="My Profile & Settings">
+                    <div class="relative shrink-0">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 via-indigo-600 to-sky-500 text-white font-black text-xs flex items-center justify-center shadow-xs ring-1 ring-black/10 group-hover:scale-105 transition">
+                            {{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}
+                        </div>
+                        <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-dark-900 shadow-2xs"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-slate-800 dark:text-white truncate leading-tight group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition">{{ auth()->user()->name ?? 'User' }}</p>
+                        <p class="text-[10px] font-semibold text-slate-500 dark:text-dark-400 truncate leading-tight mt-0.5 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                            {{ auth()->user()->roles->first()?->name ?? 'Staff' }}
+                        </p>
+                    </div>
+                </a>
+
+                <div class="flex items-center gap-0.5 shrink-0">
+                    <a href="{{ route('profile.index', ['tab' => 'password']) }}"
+                       class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400 transition"
+                       title="Change Password">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                         </svg>
-                    </button>
-                </form>
+                    </a>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 dark:hover:text-rose-400 transition" title="Sign Out">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </aside>
@@ -182,9 +201,100 @@
                 </svg>
             </button>
 
-            <!-- User Circular Avatar with Initials (Dashboard 1 style) -->
-            <div class="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs" title="{{ auth()->user()->name }}">
-                {{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}
+            <!-- User Dropdown Menu (Top Right) -->
+            <div class="relative" x-data="{ userMenuOpen: false }">
+                <button type="button"
+                        @click="userMenuOpen = !userMenuOpen"
+                        @click.outside="userMenuOpen = false"
+                        class="flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-full hover:bg-slate-100 dark:hover:bg-dark-800 border border-transparent hover:border-slate-200 dark:hover:border-dark-700 transition focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                        id="user-menu-button"
+                        aria-expanded="false"
+                        :aria-expanded="userMenuOpen.toString()">
+                    <div class="w-8 h-8 rounded-full bg-slate-900 dark:bg-cyan-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-xs ring-2 ring-white dark:ring-dark-900">
+                        {{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}
+                    </div>
+                    <div class="hidden lg:flex flex-col text-left leading-none">
+                        <span class="text-xs font-semibold text-slate-800 dark:text-white truncate max-w-[110px]">{{ auth()->user()->name }}</span>
+                        <span class="text-[10px] text-slate-600 dark:text-dark-300 truncate max-w-[110px]">{{ auth()->user()->roles->first()?->name ?? 'Staff' }}</span>
+                    </div>
+                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <!-- Dropdown Popover Menu -->
+                <div x-show="userMenuOpen"
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                     class="absolute right-0 mt-2 w-64 bg-white dark:bg-dark-900 rounded-2xl shadow-xl border border-slate-200/90 dark:border-dark-800 py-1.5 z-50 divide-y divide-slate-100 dark:divide-dark-800"
+                     style="display: none;">
+
+                    <!-- User Header -->
+                    <div class="px-4 py-3">
+                        <p class="text-[11px] font-medium text-slate-600 dark:text-dark-400 uppercase tracking-wider">Signed in as</p>
+                        <p class="text-sm font-bold text-slate-900 dark:text-white truncate mt-0.5">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-slate-600 dark:text-dark-300 truncate">{{ auth()->user()->email }}</p>
+                        <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                            <span class="inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                                {{ auth()->user()->roles->first()?->name ?? 'Staff' }}
+                            </span>
+                            @if(auth()->user()->branches->isNotEmpty())
+                                <span class="inline-flex px-2 py-0.5 text-[10px] font-medium rounded-md bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-dark-300 border border-slate-200 dark:border-dark-700 truncate max-w-[130px]" title="{{ auth()->user()->branches->pluck('name')->join(', ') }}">
+                                    {{ auth()->user()->branches->first()->name }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Menu Actions -->
+                    <div class="py-1">
+                        <a href="{{ route('profile.index', ['tab' => 'profile']) }}"
+                           class="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-50 dark:hover:bg-dark-800 hover:text-cyan-600 dark:hover:text-cyan-400 transition group">
+                            <div class="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 group-hover:scale-105 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="font-semibold text-slate-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 block">Profile</span>
+                                <span class="text-[11px] text-slate-600 dark:text-dark-300 block">Personal details & contact</span>
+                            </div>
+                        </a>
+
+                        <a href="{{ route('profile.index', ['tab' => 'password']) }}"
+                           class="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-dark-200 hover:bg-slate-50 dark:hover:bg-dark-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition group">
+                            <div class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="font-semibold text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 block">Change Password</span>
+                                <span class="text-[11px] text-slate-600 dark:text-dark-300 block">Update security credentials</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Sign Out Form -->
+                    <div class="py-1">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                    class="w-full flex items-center gap-3 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition group text-left">
+                                <div class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-500 group-hover:bg-rose-100 dark:group-hover:bg-rose-900/60 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                </div>
+                                <span class="font-semibold">Sign Out</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
